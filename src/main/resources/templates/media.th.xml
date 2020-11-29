@@ -1,4 +1,7 @@
 <thLogic>
     <attr sel="#namesList" th:replace="~{fragments/namesList::namesListFragment}"/>
     <attr sel="#mediaConnections" th:text="#{page.mediaConnections}"/>
+    <attr sel="#newMediumLink"
+          th:text="#{page.addMedium}"
+          th:href="@{__${T(com.aniamadej.sublokator.util.Mappings).MEDIUM_ADD}__}"/>
 </thLogic>

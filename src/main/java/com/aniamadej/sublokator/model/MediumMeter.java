@@ -13,6 +13,7 @@ import java.util.Collection;
 @NoArgsConstructor
 public class MediumMeter {
 
+    // == fields ==
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
@@ -21,13 +22,23 @@ public class MediumMeter {
     private boolean active = true;
 
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinColumn(name = "meter_id")
     private Collection<Reading> readings = new ArrayList<>();
 
+    // == constructors ==
     public MediumMeter(String number, String unitName) {
         this.number = number;
         this.unitName = unitName;
+    }
+
+    // == public methods ==
+    public void addReading(Reading reading){
+        readings.add(reading);
+    }
+
+    public void removeReading(Reading reading){
+        readings.remove(reading);
     }
 
 
