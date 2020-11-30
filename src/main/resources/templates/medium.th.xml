@@ -1,7 +1,7 @@
 <thLogic>
     <attr sel="#mediumName" th:text="'[' + ${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}__} + ']'"/>
-    <attr sel="#showInactive" th:if="${(param.inactive == null) or (param.inactive[0] == 'false')}" href="?inactive=true" th:text="#{page.showInactive}"/>
-    <attr sel="#showActive" th:unless="${(param.inactive == null) or (param.inactive[0] == 'false')}" href="?inactive=false" th:text="#{page.showActive}"/>
+    <attr sel="#showInactive" th:if="${(param.inactive == null) or (param.inactive[0] == 'false')}" th:href="@{''(inactive=true)}" th:text="#{page.showInactive}"/>
+    <attr sel="#showActive" th:unless="${(param.inactive == null) or (param.inactive[0] == 'false')}"  th:href="@{''(inactive=false)}" th:text="#{page.showActive}"/>
     <attr sel="#namesList" th:replace="~{fragments/namesList::namesListFragment}"/>
     <attr sel="#meters" th:text="#{page.meters}" />
 </thLogic>
