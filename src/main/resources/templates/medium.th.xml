@@ -1,4 +1,5 @@
 <thLogic>
+    <attr sel="#head" th:replace="~{fragments/head::head}"/>
     <attr sel="#mediumName" th:text="'[' + ${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}__} + ']'"/>
     <attr sel="#showInactive" th:if="${(param.inactive == null) or (param.inactive[0] == 'false')}" th:href="@{''(inactive=true)}" th:text="#{page.showInactive}"/>
     <attr sel="#showActive" th:unless="${(param.inactive == null) or (param.inactive[0] == 'false')}"  th:href="@{''(inactive=false)}" th:text="#{page.showActive}"/>

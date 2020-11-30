@@ -1,0 +1,12 @@
+<thLogic>
+    <attr sel="#head" th:fragment="headFragment">
+        <attr sel="/link[0]" th:rel="stylesheet" th:href="@{/assets/select2-develop/dist/css/select2.css}"/>
+        <attr sel="/link[1]" th:rel="stylesheet"
+              th:href="@{/assets/select2-bootstrap4-theme-master/dist/select2-bootstrap4.css}"/>
+        <attr sel="/link[2]" th:rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.min.css} "/>
+        <attr sel="/script[0]" th:src="@{/webjars/jquery/jquery.min.js}"/>
+        <attr sel="/script[1]" th:src="@{/webjars/popper.js/umd/popper.min.js}"/>
+        <attr sel="/script[2]" th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"/>
+        <attr sel="/script[3]" th:src="@{/assets/select2-develop/dist/js/select2.full.js}"/>
+    </attr>
+</thLogic>
