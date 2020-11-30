@@ -1,4 +1,5 @@
 <thLogic>
+    <attr sel="#addMediumHeader" th:text="#{page.addMedium}"/>
     <attr
             sel="#newMediumForm"
             th:action="@{__${T(com.aniamadej.sublokator.util.Views).ADD_MEDIUM}__}"
