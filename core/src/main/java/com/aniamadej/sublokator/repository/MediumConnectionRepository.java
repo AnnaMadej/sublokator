@@ -2,12 +2,12 @@ package com.aniamadej.sublokator.repository;
 
 import com.aniamadej.sublokator.dto.NameDto;
 import com.aniamadej.sublokator.model.MediumConnection;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface MediumConnectionRepository extends CrudRepository<MediumConnection, Long> {
+public interface MediumConnectionRepository extends JpaRepository<MediumConnection, Long> {
     @Query("select mc.mediumName as name, mc.id as id from MediumConnection mc")
     public List<NameDto> fetchMediaNames();
 
