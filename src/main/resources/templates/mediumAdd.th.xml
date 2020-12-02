@@ -4,28 +4,11 @@
     <attr
             sel="#newMediumForm"
             th:action="@{__${T(com.aniamadej.sublokator.util.Views).ADD_MEDIUM}__}"
-            th:method="post"
-            th:object="${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_FORM}__}"/>
+            th:method="post"/>
 
     <attr sel="#addButton" th:text="#{page.addButton}"/>
 
     <attr sel="#mediumNameLabel" th:text="#{page.mediumName}"/>
     <attr sel="#mediumNameInput"
-          th:field="*{__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}__}"/>
-
-    <attr sel="#meterNumberLabel" th:text="#{page.meterNumber}"/>
-    <attr sel="#meterNumberInput"
-          th:field="*{__${T(com.aniamadej.sublokator.util.Attributes).METER_NUMBER}__}"/>
-
-    <attr sel="#firstReadingLabel" th:text="#{page.firstReading}"/>
-    <attr sel="#firstReadingInput"
-          th:field="*{__${T(com.aniamadej.sublokator.util.Attributes).FIRST_READING}__}"/>
-
-    <attr sel="#meterUnitLabel" th:text="#{page.meterUnit}"/>
-    <attr sel="#meterUnitInput"
-          th:field="*{__${T(com.aniamadej.sublokator.util.Attributes).METER_UNIT}__}"/>
-
-
-
-
+          th:name="${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}"/>
 </thLogic>

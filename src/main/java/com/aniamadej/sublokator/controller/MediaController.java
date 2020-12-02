@@ -1,9 +1,6 @@
 package com.aniamadej.sublokator.controller;
 
-import com.aniamadej.sublokator.dto.MediumConnectionForm;
 import com.aniamadej.sublokator.model.MediumConnection;
-import com.aniamadej.sublokator.model.MediumMeter;
-import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
@@ -11,9 +8,10 @@ import com.aniamadej.sublokator.util.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class MediaController {
@@ -41,27 +39,15 @@ public class MediaController {
     }
 
     @GetMapping(Mappings.MEDIUM_ADD)
-    public String addNewMedium(Model model){
-        model.addAttribute(Attributes.MEDIUM_FORM, new MediumConnectionForm());
+    public String addNewMedium(){
         return Views.ADD_MEDIUM;
     }
 
     @PostMapping(Mappings.MEDIUM_ADD)
-    public String addNewMedium(@ModelAttribute(name=Attributes.MEDIUM_FORM ) MediumConnectionForm newMediumForm){
+    public String addNewMedium(@RequestParam(name= Attributes.MEDIUM_NAME) String mediumName){
         MediumConnection connection = new MediumConnection();
-        connection.setMediumName(newMediumForm.getMediumName());
-        MediumMeter mediumMeter = new MediumMeter();
-        mediumMeter.setNumber(newMediumForm.getMeterNumber());
-        mediumMeter.setUnitName(newMediumForm.getMeterUnit());
-        Reading reading = new Reading();
-        reading.setDate(LocalDate.now());
-        reading.setReading(newMediumForm.getFirstReading());
-        mediumMeter.addReading(reading);
-        connection.addMediumMeter(mediumMeter);
-
+        connection.setMediumName(mediumName);
         mediumConnectionService.save(connection);
-
-
-        return Views.ADD_MEDIUM;
+        return "redirect:" + Mappings.MEDIA_PAGE;
     }
 }
