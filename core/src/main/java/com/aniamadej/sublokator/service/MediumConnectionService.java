@@ -34,4 +34,8 @@ public class MediumConnectionService {
     public String getMediumName(long mediumConnectionId){
         return mediumConnectionRepository.fetchMediumName(mediumConnectionId);
     }
+
+    public boolean existsById(Long mediumConnectionId){
+        return mediumConnectionRepository.existsById(mediumConnectionId);
+    }
 }

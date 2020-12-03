@@ -33,6 +33,10 @@ public class MediaController {
 
     @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
     public String showMedumConnection(Model model, @PathVariable long mediumId, @RequestParam(required = false) boolean inactive, Pageable pageable){
+        if(!mediumConnectionService.existsById(mediumId)){
+            return "redirect:/" + Mappings.MEDIA_PAGE;
+        }
+
         model.addAttribute(Attributes.NAMES, mediumConnectionService.getMeterNumbers(mediumId, inactive, pageable));
         model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.METER_PAGE);
         model.addAttribute(Attributes.MEDIUM_NAME, mediumConnectionService.getMediumName(mediumId));

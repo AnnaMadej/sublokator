@@ -22,4 +22,7 @@ public interface MediumConnectionRepository extends JpaRepository<MediumConnecti
 
     @Query("select mc.mediumName from MediumConnection mc where mc.id = :connectionId")
     public String fetchMediumName(long connectionId);
+
+
+
 }
