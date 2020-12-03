@@ -2,6 +2,8 @@ package com.aniamadej.sublokator.repository;
 
 import com.aniamadej.sublokator.dto.NameDto;
 import com.aniamadej.sublokator.model.MediumConnection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -13,7 +15,7 @@ public interface MediumConnectionRepository extends JpaRepository<MediumConnecti
 
 
     @Query("select mm.number as name, mm.id as id from MediumConnection  mc join mc.mediumMeters mm where mc.id=:connectionId and mm.active=:active")
-    public List<NameDto> fetchMeterNumbers(long connectionId, boolean active);
+    public Page<NameDto> fetchMeterNumbers(long connectionId, boolean active, Pageable pageable);
 
     @Query("select mm.number as name, mm.id as id from MediumConnection  mc join mc.mediumMeters mm where mc.id=:connectionId")
     public List<NameDto> fetchMeterNumbers(long connectionId);

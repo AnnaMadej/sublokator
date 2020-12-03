@@ -4,6 +4,7 @@ import com.aniamadej.sublokator.dto.NameDto;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,8 +27,8 @@ public class MediumConnectionService {
         return mediumConnectionRepository.fetchMediaNames();
     }
 
-    public List<NameDto> getMeterNumbers(long mediumConnectionId, boolean inactive){
-            return mediumConnectionRepository.fetchMeterNumbers(mediumConnectionId, !inactive);
+    public List<NameDto> getMeterNumbers(long mediumConnectionId, boolean inactive, Pageable pageable){
+            return mediumConnectionRepository.fetchMeterNumbers(mediumConnectionId, !inactive, pageable).getContent();
     }
 
     public String getMediumName(long mediumConnectionId){

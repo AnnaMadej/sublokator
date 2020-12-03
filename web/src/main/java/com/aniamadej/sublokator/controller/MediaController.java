@@ -6,6 +6,7 @@ import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,8 +32,8 @@ public class MediaController {
     }
 
     @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
-    public String showMedumConnection(Model model, @PathVariable long mediumId, @RequestParam(required = false) boolean inactive){
-        model.addAttribute(Attributes.NAMES, mediumConnectionService.getMeterNumbers(mediumId, inactive));
+    public String showMedumConnection(Model model, @PathVariable long mediumId, @RequestParam(required = false) boolean inactive, Pageable pageable){
+        model.addAttribute(Attributes.NAMES, mediumConnectionService.getMeterNumbers(mediumId, inactive, pageable));
         model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.METER_PAGE);
         model.addAttribute(Attributes.MEDIUM_NAME, mediumConnectionService.getMediumName(mediumId));
         return Views.MEDIUM_METERS;
