@@ -6,6 +6,7 @@ import javax.persistence.*;
 @Table(name = "media_types")
 public class MediaType {
 
+    // == fields ==
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;

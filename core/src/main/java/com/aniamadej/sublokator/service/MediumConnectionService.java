@@ -12,19 +12,19 @@ import java.util.List;
 @Service
 public class MediumConnectionService {
 
-    private MediumConnectionRepository mediumConnectionRepository;
+    // == fields ==
+    private final MediumConnectionRepository mediumConnectionRepository;
 
+    // == constructors ==
     @Autowired
     public MediumConnectionService(MediumConnectionRepository mediumConnectionRepository) {
         this.mediumConnectionRepository = mediumConnectionRepository;
     }
 
-    public MediumConnection save(MediumConnection mediumConnection){
-        return mediumConnectionRepository.save(mediumConnection);
-    }
 
+    // == public methods ==
     public List<NameDto> getNamesList(){
-        return mediumConnectionRepository.fetchMediaNames();
+        return mediumConnectionRepository.findMediaNames();
     }
 
     public List<NameDto> getMeterNumbers(long mediumConnectionId, boolean inactive, Pageable pageable){
@@ -32,10 +32,16 @@ public class MediumConnectionService {
     }
 
     public String getMediumName(long mediumConnectionId){
-        return mediumConnectionRepository.fetchMediumName(mediumConnectionId);
+        return mediumConnectionRepository.findMediumName(mediumConnectionId).orElse("");
     }
 
     public boolean existsById(Long mediumConnectionId){
         return mediumConnectionRepository.existsById(mediumConnectionId);
+    }
+
+    public void save(String name){
+        MediumConnection connection = new MediumConnection();
+        connection.setMediumName(name);
+        mediumConnectionRepository.save(connection);
     }
 }

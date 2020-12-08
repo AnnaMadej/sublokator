@@ -1,6 +1,5 @@
 package com.aniamadej.sublokator.controller;
 
-import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
@@ -17,12 +16,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class MediaController {
 
-    private MediumConnectionService mediumConnectionService;
+    private final MediumConnectionService mediumConnectionService;
 
     @Autowired
-    public MediaController(MediumConnectionService mediumConnectionService) {
+    MediaController(MediumConnectionService mediumConnectionService) {
         this.mediumConnectionService = mediumConnectionService;
     }
+
 
     @GetMapping(Mappings.MEDIA_PAGE)
     public String showMediaConnections(Model model){
@@ -48,11 +48,12 @@ public class MediaController {
         return Views.ADD_MEDIUM;
     }
 
+
     @PostMapping(Mappings.MEDIUM_ADD)
     public String addNewMedium(@RequestParam(name= Attributes.MEDIUM_NAME) String mediumName){
-        MediumConnection connection = new MediumConnection();
-        connection.setMediumName(mediumName);
-        mediumConnectionService.save(connection);
+        mediumConnectionService.save(mediumName);
         return "redirect:" + Mappings.MEDIA_PAGE;
     }
+
+
 }

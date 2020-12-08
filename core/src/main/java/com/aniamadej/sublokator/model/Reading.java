@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @Table(name="readings")
 public class Reading {
 
+    // == fields ==
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;

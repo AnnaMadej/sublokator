@@ -8,14 +8,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class MediumMeterService {
 
-    private MediumMeterRepository mediumMeterRepository;
 
+    // == fields ==
+    private final MediumMeterRepository mediumMeterRepository;
+
+    // == constructors ==
     @Autowired
     public MediumMeterService(MediumMeterRepository mediumMeterRepository) {
         this.mediumMeterRepository = mediumMeterRepository;
     }
 
-    public MediumMeter save(MediumMeter mediumMeter){
-        return mediumMeterRepository.save(mediumMeter);
+    // == public methods ==
+    public void save(MediumMeter mediumMeter) {
+        mediumMeterRepository.save(mediumMeter);
     }
 }
