@@ -3,7 +3,7 @@
     <attr sel="#addMediumHeader" th:text="#{page.addMedium}"/>
     <attr
             sel="#newMediumForm"
-            th:action="@{__${T(com.aniamadej.sublokator.util.Views).ADD_MEDIUM}__}"
+            th:action="@{__${#httpServletRequest.requestURI}__}"
             th:method="post"/>
 
     <attr sel="#addButton" th:text="#{page.addButton}"/>

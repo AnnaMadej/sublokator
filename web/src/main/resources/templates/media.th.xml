@@ -4,5 +4,5 @@
     <attr sel="#mediaConnections" th:text="#{page.mediaConnections}"/>
     <attr sel="#newMediumLink"
           th:text="#{page.addMedium}"
-          th:href="@{__${T(com.aniamadej.sublokator.util.Mappings).MEDIUM_ADD}__}"/>
+          th:href="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).ADD}__}"/>
 </thLogic>
