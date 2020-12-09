@@ -15,14 +15,18 @@ class MediumMeterForm {
     private String unitName;
     private Double firstReading;
 
-    public MediumMeter toMediumMeter(){
+    public MediumMeter toMediumMeter() {
         MediumMeter mediumMeter = new MediumMeter();
         mediumMeter.setUnitName(this.getUnitName());
         mediumMeter.setNumber(this.getNumber());
-        Reading reading = new Reading();
-        reading.setReading(this.firstReading);
-        reading.setDate(LocalDate.now());
-        mediumMeter.addReading(reading);
+
+        System.out.println(this.firstReading);
+        if (null != this.getFirstReading() && this.getFirstReading() != 0) {
+            Reading reading = new Reading();
+            reading.setReading(this.firstReading);
+            reading.setDate(LocalDate.now());
+            mediumMeter.addReading(reading);
+        }
         return mediumMeter;
     }
 }

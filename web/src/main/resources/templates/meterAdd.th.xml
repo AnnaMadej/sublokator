@@ -10,5 +10,6 @@
     <attr sel="#numberInputLabel" th:text="#{page.meterNumber}"/>
     <attr sel="#unitNameLabel" th:text="#{page.meterUnit}"/>
     <attr sel="#firstReadingLabel" th:text="#{page.firstReading}"/>
+    <attr sel="#firstReadingCheckboxLabel" th:text="#{page.addReading}"/>
 
 </thLogic>
