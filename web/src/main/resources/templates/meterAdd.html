@@ -4,6 +4,11 @@
 </head>
 <body>
 <h1>Add medium meter</h1>
-
+<form id="newMeterForm">
+    <p><label id="numberInputLabel" for="numberInput">Meter number</label><input type="text" name="number" id="numberInput"></p>
+    <p><label id="unitNameLabel" for="unitNameInput">Unit name</label><input type="text" name="unitName" id="unitNameInput"></p>
+    <p><label id="firstReadingLabel" for="firstReadingInput">First reading</label><input type="number" step="0.01" name="firstReading" id="firstReadingInput"></p>
+    <button id="addButton" type="submit" class="btn btn-outline-secondary">SUBMIT</button>
+</form>
 </body>
 </html>

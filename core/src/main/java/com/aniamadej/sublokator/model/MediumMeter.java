@@ -21,7 +21,7 @@ public class MediumMeter {
     private String unitName;
     private boolean active = true;
 
-    @OneToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "meter_id")
     private Collection<Reading> readings = new ArrayList<>();
 

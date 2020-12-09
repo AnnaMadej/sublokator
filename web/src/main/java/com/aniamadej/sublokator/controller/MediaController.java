@@ -1,6 +1,8 @@
 package com.aniamadej.sublokator.controller;
 
+import com.aniamadej.sublokator.dto.MediumMeterForm;
 import com.aniamadej.sublokator.service.MediumConnectionService;
+import com.aniamadej.sublokator.service.MediumMeterService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
@@ -8,21 +10,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class MediaController {
 
     private final MediumConnectionService mediumConnectionService;
+    private final MediumMeterService mediumMeterService;
 
     @Autowired
-    MediaController(MediumConnectionService mediumConnectionService) {
+    MediaController(MediumConnectionService mediumConnectionService, MediumMeterService mediumMeterService) {
         this.mediumConnectionService = mediumConnectionService;
+        this.mediumMeterService = mediumMeterService;
     }
-
 
     @GetMapping(Mappings.MEDIA_PAGE)
     public String showMediaConnections(Model model){
@@ -65,7 +65,17 @@ public class MediaController {
 
     @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE + Mappings.ADD)
     public String addNewMediumMeter(@PathVariable Long mediumId, Model model){
+        model.addAttribute(Attributes.MEDIUM_METER_FORM, new MediumMeterForm());
         return Views.METER_ADD;
     }
+
+
+    @PostMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE + Mappings.ADD)
+    public String addNewMediumMeter(@PathVariable Long mediumId,
+                                    @ModelAttribute(Attributes.MEDIUM_METER_FORM) MediumMeterForm mediumMeterForm){
+        mediumConnectionService.addMedium(mediumId, mediumMeterForm);
+        return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId + Mappings.METERS_SUBPAGE;
+    }
+
 
 }

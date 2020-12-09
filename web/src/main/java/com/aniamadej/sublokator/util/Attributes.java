@@ -9,6 +9,7 @@ public final class Attributes {
     public static final String METER_NUMBER = "meterNumber" ;
     public static final String FIRST_READING = "firstReading" ;
     public static final String METER_UNIT = "meterUnit" ;
+    public static final String MEDIUM_METER_FORM = "mediumMeterForm";
 
     private Attributes(){};
 }

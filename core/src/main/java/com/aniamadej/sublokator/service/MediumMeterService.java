@@ -1,6 +1,6 @@
 package com.aniamadej.sublokator.service;
 
-import com.aniamadej.sublokator.model.MediumMeter;
+import com.aniamadej.sublokator.dto.MediumMeterForm;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,8 @@ public class MediumMeterService {
     }
 
     // == public methods ==
-    public void save(MediumMeter mediumMeter) {
-        mediumMeterRepository.save(mediumMeter);
+    public void save(MediumMeterForm mediumMeterForm) {
+        mediumMeterRepository.save(mediumMeterForm.toMediumMeter());
     }
+
 }

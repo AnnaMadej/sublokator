@@ -19,7 +19,7 @@ public class MediumConnection {
     private long id;
     private String mediumName;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "connection_id")
     private List<MediumMeter> mediumMeters = new ArrayList<>();
 
