@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @Controller
 public class MediaController {
@@ -72,7 +75,11 @@ public class MediaController {
 
     @PostMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE + Mappings.ADD)
     public String addNewMediumMeter(@PathVariable Long mediumId,
-                                    @ModelAttribute(Attributes.MEDIUM_METER_FORM) MediumMeterForm mediumMeterForm){
+                                    @ModelAttribute("mediumMeterForm") @Valid MediumMeterForm mediumMeterForm,
+                                    BindingResult bindingResult){
+        if(bindingResult.hasErrors()) {
+            return Views.METER_ADD;
+        }
         mediumConnectionService.addMedium(mediumId, mediumMeterForm);
         return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId + Mappings.METERS_SUBPAGE;
     }

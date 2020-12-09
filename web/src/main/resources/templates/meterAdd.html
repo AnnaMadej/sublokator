@@ -3,19 +3,22 @@
 <head id="head">
 </head>
 <body>
-<h1>Add medium meter</h1>
+<h1 id="header">Add medium meter</h1>
 <form id="newMeterForm">
     <div cladd="form-group">
         <label id="numberInputLabel" for="numberInput">Meter number</label>
         <input type="text" name="number" id="numberInput" class="form-control">
+        <p id="numberError" class="alert alert-danger">Number error</p>
     </div>
     <div cladd="form-group">
         <label id="unitNameLabel" for="unitNameInput">Unit name</label>
         <input type="text" name="unitName" id="unitNameInput" class="form-control">
+        <p id="unitNameError" class="alert alert-danger">Unit name error</p>
     </div>
     <div class="form-check">
         <input type="checkbox" id="firstReadingCheckBox" class="form-check-input" onclick="check()" />
         <label id="firstReadingCheckboxLabel" for="firstReadingCheckBox">Add a first reading</label>
+        <p id="firstReadingError" class="alert alert-danger">First reading error</p>
     </div>
     <div cladd="form-group" id="firstReadingGroup">
         <label id="firstReadingLabel" for="firstReadingInput">First reading</label>

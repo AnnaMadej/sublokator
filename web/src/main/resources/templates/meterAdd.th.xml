@@ -11,5 +11,9 @@
     <attr sel="#unitNameLabel" th:text="#{page.meterUnit}"/>
     <attr sel="#firstReadingLabel" th:text="#{page.firstReading}"/>
     <attr sel="#firstReadingCheckboxLabel" th:text="#{page.addReading}"/>
+    <attr sel="#header" th:text="#{page.addMeter}"/>
+    <attr sel="#numberError" th:if="${#fields.hasErrors('number')}" th:errors="*{number}"/>
+    <attr sel="#unitNameError" th:if="${#fields.hasErrors('unitName')}" th:errors="*{unitName}"/>
+    <attr sel="#firstReadingError" th:if="${#fields.hasErrors('firstReading')}" th:errors="*{firstReading}"/>
 
 </thLogic>
