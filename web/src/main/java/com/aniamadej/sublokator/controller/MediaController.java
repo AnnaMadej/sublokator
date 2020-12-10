@@ -80,7 +80,7 @@ public class MediaController {
         if(bindingResult.hasErrors()) {
             return Views.METER_ADD;
         }
-        mediumConnectionService.addMedium(mediumId, mediumMeterForm);
+        mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
         return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId + Mappings.METERS_SUBPAGE;
     }
 

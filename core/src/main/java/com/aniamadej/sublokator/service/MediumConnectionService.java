@@ -49,7 +49,7 @@ public class MediumConnectionService {
         mediumConnectionRepository.save(connection);
     }
     // TODO: change error message to international
-    public void addMedium(Long mediumConnectionId, MediumMeterForm mediumMeterForm){
+    public void addMediumMeter(Long mediumConnectionId, MediumMeterForm mediumMeterForm){
         MediumConnection mediumConnection = mediumConnectionRepository.findById(mediumConnectionId)
                 .map(connection -> {
                     MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
