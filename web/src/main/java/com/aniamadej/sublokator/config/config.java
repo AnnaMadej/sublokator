@@ -29,4 +29,6 @@ public class config implements WebMvcConfigurer {
     public Validator validator(){
         return new LocalValidatorFactoryBean();
     }
+
+
 }
