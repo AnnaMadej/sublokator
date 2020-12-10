@@ -54,26 +54,26 @@ public class MediaController {
         return Views.MEDIUM;
     }
 
-    @GetMapping(Mappings.MEDIA_PAGE + Mappings.ADD)
+    @GetMapping(Mappings.MEDIA_ADD)
     public String addNewMedium(){
         return Views.ADD_MEDIUM;
     }
 
 
-    @PostMapping(Mappings.MEDIA_PAGE + Mappings.ADD)
+    @PostMapping(Mappings.MEDIA_ADD)
     public String addNewMedium(@RequestParam(name= Attributes.MEDIUM_NAME) String mediumName){
         mediumConnectionService.save(mediumName);
         return "redirect:" + Mappings.MEDIA_PAGE;
     }
 
-    @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE + Mappings.ADD)
+    @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_ADD_SUBPAGE)
     public String addNewMediumMeter(@PathVariable Long mediumId, Model model){
         model.addAttribute(Attributes.MEDIUM_METER_FORM, new MediumMeterForm());
         return Views.METER_ADD;
     }
 
 
-    @PostMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE + Mappings.ADD)
+    @PostMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_ADD_SUBPAGE)
     public String addNewMediumMeter(@PathVariable Long mediumId,
                                     @ModelAttribute("mediumMeterForm") @Valid MediumMeterForm mediumMeterForm,
                                     BindingResult bindingResult){
