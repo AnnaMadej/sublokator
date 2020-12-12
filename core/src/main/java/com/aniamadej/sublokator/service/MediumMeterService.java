@@ -1,9 +1,12 @@
 package com.aniamadej.sublokator.service;
 
 import com.aniamadej.sublokator.dto.MediumMeterForm;
+import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class MediumMeterService {
@@ -23,4 +26,7 @@ public class MediumMeterService {
         mediumMeterRepository.save(mediumMeterForm.toMediumMeter());
     }
 
+    public Optional<MediumMeter> findById(long meterId) {
+        return mediumMeterRepository.findById(meterId);
+    }
 }

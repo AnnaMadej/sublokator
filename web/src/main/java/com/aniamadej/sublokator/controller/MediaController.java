@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 
 @Controller
 public class MediaController {
@@ -42,9 +43,12 @@ public class MediaController {
     }
 
     @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE)
-    public String showMedumMeters(Model model, @PathVariable long mediumId, @RequestParam(required = false) boolean inactive, Pageable pageable) {
+    public String showMedumMeters(Model model, @PathVariable long mediumId,
+                                  @RequestParam(required = false) boolean inactive,
+                                  Pageable pageable, RedirectAttributes redirectAttributes) {
         if (!mediumConnectionService.existsById(mediumId)) {
-            return "redirect:/" + Mappings.MEDIA_PAGE;
+            return redirectToMainPageWithErrorMessageCode(redirectAttributes,
+                    "error.connectionNotExists");
         }
         model.addAttribute(Attributes.NAMES, mediumConnectionService.getMeterNumbers(mediumId, inactive, pageable));
         model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.METER_PAGE);
@@ -53,9 +57,10 @@ public class MediaController {
     }
 
     @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
-    public String showMedumConnection(Model model, @PathVariable long mediumId) {
+    public String showMedumConnection(Model model, @PathVariable long mediumId, RedirectAttributes redirectAttributes) {
         if (!mediumConnectionService.existsById(mediumId)) {
-            return "redirect:/" + Mappings.MEDIA_PAGE;
+            return redirectToMainPageWithErrorMessageCode(redirectAttributes,
+                    "error_mediumConnecionNotExists");
         }
         model.addAttribute(Attributes.MEDIUM_NAME, mediumConnectionService.getMediumName(mediumId));
         return Views.MEDIUM;
@@ -68,7 +73,7 @@ public class MediaController {
 
 
     @PostMapping(Mappings.MEDIA_ADD)
-    public String addNewMedium(@RequestParam(name = Attributes.MEDIUM_NAME) String mediumName) {
+    public String addNewMedium(@RequestParam(name = Attributes.MEDIUM_NAME) @NotBlank String mediumName) {
         mediumConnectionService.save(mediumName);
         return "redirect:" + Mappings.MEDIA_PAGE;
     }
@@ -92,14 +97,25 @@ public class MediaController {
         try {
             mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
         } catch (Exception e) {
-            return exportMessageOfException(ra, e);
+            return redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
         }
 
         return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId + Mappings.METERS_SUBPAGE;
     }
 
-    private String exportMessageOfException(RedirectAttributes ra, Exception e) {
-        ra.addAttribute("error", e.getMessage());
+    @GetMapping(Mappings.METER_PAGE + "/{meterId}")
+    public String showMediumMeter(@PathVariable("meterId") long meterId, Model model,
+                                  RedirectAttributes redirectAttributes) {
+        return mediumMeterService.findById(meterId).map(mm -> {
+            model.addAttribute("mediumMeter", mm);
+            return Views.METER;
+        }).orElseGet(() -> {
+            return redirectToMainPageWithErrorMessageCode(redirectAttributes, "error.meterNotExists");
+        });
+    }
+
+    private String redirectToMainPageWithErrorMessageCode(RedirectAttributes ra, String errorMessageCode) {
+        ra.addAttribute("error", errorMessageCode);
         return "redirect:" + Mappings.MEDIA_PAGE;
     }
 
