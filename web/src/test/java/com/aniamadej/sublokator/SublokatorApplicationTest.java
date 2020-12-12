@@ -16,9 +16,4 @@ class SublokatorApplicationTest {
     @Test
     public void contextLoads(){
     }
-
-    @Test
-    public void getsMessageFromMessageSource(){
-//       log.info("{}", messageSource.getMessage("page.addReading", null, Locale.ENGLISH));
-    }
 }

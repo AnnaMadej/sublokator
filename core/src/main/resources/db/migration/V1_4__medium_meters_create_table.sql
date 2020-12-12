@@ -5,6 +5,5 @@ create table medium_meters(
   unit_name varchar(255) DEFAULT NULL,
   connection_id bigint DEFAULT NULL,
   PRIMARY KEY (id),
-  KEY conId (connection_id),
-  CONSTRAINT conId FOREIGN KEY (connection_id) REFERENCES medium_connections (id)
+  FOREIGN KEY (connection_id) REFERENCES medium_connections (id)
   )
