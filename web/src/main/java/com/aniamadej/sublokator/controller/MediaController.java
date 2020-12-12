@@ -106,12 +106,11 @@ public class MediaController {
     @GetMapping(Mappings.METER_PAGE + "/{meterId}")
     public String showMediumMeter(@PathVariable("meterId") long meterId, Model model,
                                   RedirectAttributes redirectAttributes) {
-        return mediumMeterService.findById(meterId).map(mm -> {
-            model.addAttribute("mediumMeter", mm);
+        return mediumMeterService.findById(meterId).map(meter -> {
+            model.addAttribute("mediumMeter", meter);
             return Views.METER;
-        }).orElseGet(() -> {
-            return redirectToMainPageWithErrorMessageCode(redirectAttributes, "error.meterNotExists");
-        });
+        }).orElseGet(() ->
+            redirectToMainPageWithErrorMessageCode(redirectAttributes, "error.meterNotExists"));
     }
 
     private String redirectToMainPageWithErrorMessageCode(RedirectAttributes ra, String errorMessageCode) {

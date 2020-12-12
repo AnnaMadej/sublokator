@@ -16,4 +16,8 @@ public class Reading {
     private long id;
     private LocalDate date;
     private Double reading;
+
+    @ManyToOne
+    @JoinColumn(name = "meter_id")
+    private MediumMeter mediumMeter;
 }

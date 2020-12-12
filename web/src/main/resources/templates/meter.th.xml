@@ -1,3 +1,19 @@
 <thLogic>
     <attr sel="#head" th:replace="~{fragments/head::head}"/>
+    <attr sel="#mediumMeterHeader" th:text="#{page.mediumMeter}"/>
+    <attr sel="#meterNumberLabel" th:text="#{page.meterNumber}"/>
+    <attr sel="#meterNumber" th:text="${mediumMeter.getNumber()}"/>
+    <attr sel="#meterUnitLabel"  th:text="#{page.meterUnit}"/>
+    <attr sel="#readingsHeader" th:text="#{page.readings}"/>
+    <attr sel="#dateHeader" th:text="#{page.date}"/>
+    <attr sel="#readingHeader" th:text="#{page.reading}"/>
+    <attr sel="#usageHeader" th:text="#{page.usage}"/>
+    <attr sel="#readingsList" th:each="reading : ${mediumMeter.getReadings()}">
+        <attr sel="td[0]" th:text="${reading.getDate()}"/>
+        <attr sel="td[1]" th:text="${reading.getReading()}"/>
+        <attr sel="td[2]" th:text="${reading.getUsage()}"/>
+    </attr>
+
+
+
 </thLogic>

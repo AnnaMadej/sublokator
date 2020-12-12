@@ -21,8 +21,7 @@ public class MediumMeter {
     private String unitName;
     private boolean active = true;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "meter_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
     private Collection<Reading> readings = new ArrayList<>();
 
     // == constructors ==
@@ -33,6 +32,7 @@ public class MediumMeter {
 
     // == public methods ==
     public void addReading(Reading reading){
+        reading.setMediumMeter(this);
         readings.add(reading);
     }
 
@@ -40,5 +40,8 @@ public class MediumMeter {
         readings.remove(reading);
     }
 
+    @ManyToOne
+    @JoinColumn(name = "connection_id")
+    private MediumConnection mediumConnection;
 
 }

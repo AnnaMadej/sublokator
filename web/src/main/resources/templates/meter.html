@@ -1,8 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head id="head">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"></script>
 </head>
 <body>
-<h1> Licznik </h1>
+<div class="container-fluid">
+    <h1 id="mediumMeterHeader"> Medium meter </h1>
+
+    <div class="row">
+        <div class="col-2" id="meterNumberLabel">Medium meter number:</div>
+        <div class="col-2" id="meterNumber">71830</div>
+    </div>
+    <div class="row">
+        <div class="col-2" id="meterUnitLabel">Medium meter unit:</div>
+        <div class="col-2">kwh</div>
+    </div>
+    <hr>
+    <h3 id="readingsHeader">Readings:</h3>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th id="dateHeader" scope="col">Date</th>
+            <th id="readingHeader" scope="col">Reading</th>
+            <th id="usageHeader" scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr id="readingsList">
+            <td>2020.01.12</td>
+            <td>12032.45</td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

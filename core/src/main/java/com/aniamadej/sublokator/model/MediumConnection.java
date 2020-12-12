@@ -19,8 +19,7 @@ public class MediumConnection {
     private long id;
     private String mediumName;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "connection_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumConnection")
     private List<MediumMeter> mediumMeters = new ArrayList<>();
 
     // == constructors ==
@@ -31,6 +30,7 @@ public class MediumConnection {
 
     // == public methods ==
     public void addMediumMeter(MediumMeter mediumMeter){
+        mediumMeter.setMediumConnection(this);
         this.mediumMeters.add(mediumMeter);
     }
 
