@@ -60,7 +60,7 @@ public class MediaController {
     public String showMedumConnection(Model model, @PathVariable long mediumId, RedirectAttributes redirectAttributes) {
         if (!mediumConnectionService.existsById(mediumId)) {
             return redirectToMainPageWithErrorMessageCode(redirectAttributes,
-                    "error_mediumConnecionNotExists");
+                    "error.connectionNotExists");
         }
         model.addAttribute(Attributes.MEDIUM_NAME, mediumConnectionService.getMediumName(mediumId));
         return Views.MEDIUM;
