@@ -1,42 +1,47 @@
 package com.aniamadej.sublokator.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @Entity
-@Table(name="medium_connections")
+@Table(name = "medium_connections")
 @NoArgsConstructor
 public class MediumConnection {
 
-    // == fields ==
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
-    private String mediumName;
+  // == fields ==
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private long id;
+  private String mediumName;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumConnection")
-    private List<MediumMeter> mediumMeters = new ArrayList<>();
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumConnection")
+  private List<MediumMeter> mediumMeters = new ArrayList<>();
 
-    // == constructors ==
-    public MediumConnection(String MediumName) {
-        this.mediumName = MediumName;
-    }
+  // == constructors ==
+  public MediumConnection(String mediumName) {
+    this.mediumName = mediumName;
+  }
 
 
-    // == public methods ==
-    public void addMediumMeter(MediumMeter mediumMeter){
-        mediumMeter.setMediumConnection(this);
-        this.mediumMeters.add(mediumMeter);
-    }
+  // == public methods ==
+  public void addMediumMeter(MediumMeter mediumMeter) {
+    mediumMeter.setMediumConnection(this);
+    this.mediumMeters.add(mediumMeter);
+  }
 
-    public void removeMediumMeter(MediumMeter mediumMeter){
-        this.mediumMeters.remove(mediumMeter);
-    }
+  public void removeMediumMeter(MediumMeter mediumMeter) {
+    this.mediumMeters.remove(mediumMeter);
+  }
 
 
 }

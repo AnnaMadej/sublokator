@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SublokatorApplication {
 
 
-	public static void main(String[] args) {
-		SpringApplication.run(SublokatorApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(SublokatorApplication.class, args);
+  }
 
 }

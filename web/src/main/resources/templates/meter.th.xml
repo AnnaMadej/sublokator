@@ -3,7 +3,7 @@
     <attr sel="#mediumMeterHeader" th:text="#{page.mediumMeter}"/>
     <attr sel="#meterNumberLabel" th:text="#{page.meterNumber}"/>
     <attr sel="#meterNumber" th:text="${mediumMeter.getNumber()}"/>
-    <attr sel="#meterUnitLabel"  th:text="#{page.meterUnit}"/>
+    <attr sel="#meterUnitLabel" th:text="#{page.meterUnit}"/>
     <attr sel="#readingsHeader" th:text="#{page.readings}"/>
     <attr sel="#dateHeader" th:text="#{page.date}"/>
     <attr sel="#readingHeader" th:text="#{page.reading}"/>
@@ -12,7 +12,7 @@
         <attr sel="td[1]" th:text="${reading.getReading()}"/>
     </attr>
     <attr sel="#newReadingForm" th:object="${__${T(com.aniamadej.sublokator.util.Attributes).READING_FORM}__}"
-          th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).READING_ADD_SUBPAGE}__}" />
+          th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).READING_ADD_SUBPAGE}__}"/>
 
     <attr sel="#dateInput" th:field="*{date}"/>
     <attr sel="#readingInput" th:field="*{reading}"/>

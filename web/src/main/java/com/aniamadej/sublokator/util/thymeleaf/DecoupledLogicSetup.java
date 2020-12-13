@@ -1,25 +1,24 @@
 package com.aniamadej.sublokator.util.thymeleaf;
 
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
-
-import javax.annotation.PostConstruct;
 
 
 @Slf4j
 @Component
 public class DecoupledLogicSetup {
-    private final SpringResourceTemplateResolver templateResolver;
+  private final SpringResourceTemplateResolver templateResolver;
 
 
-    public DecoupledLogicSetup(SpringResourceTemplateResolver templateResolver) {
-        this.templateResolver = templateResolver;
-    }
+  public DecoupledLogicSetup(SpringResourceTemplateResolver templateResolver) {
+    this.templateResolver = templateResolver;
+  }
 
-    @PostConstruct
-    public void init(){
-        templateResolver.setUseDecoupledLogic(true);
-        log.info("Decoupled logic enabled!");
-    }
+  @PostConstruct
+  public void init() {
+    templateResolver.setUseDecoupledLogic(true);
+    log.info("Decoupled logic enabled!");
+  }
 }

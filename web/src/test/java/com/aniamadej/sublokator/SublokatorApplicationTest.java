@@ -11,15 +11,15 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 @SpringBootTest
 class SublokatorApplicationTest {
 
-    @Autowired
-    ResourceBundleMessageSource messageSource;
+  @Autowired
+  private ResourceBundleMessageSource messageSource;
 
-    @Autowired
-    MediumMeterRepository mediumMeterRepository;
+  @Autowired
+  private MediumMeterRepository mediumMeterRepository;
 
-    @Test
-    public void contextLoads(){
-    }
+  @Test
+  public void contextLoads() {
+  }
 
 
 }

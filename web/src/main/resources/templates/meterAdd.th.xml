@@ -1,8 +1,8 @@
 <thLogic>
     <attr sel="#head" th:replace="~{fragments/head::head}"/>
     <attr sel="#newMeterForm"
-        th:action="@{__${#httpServletRequest.requestURI}__}"
-        th:method="post" th:object="${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_METER_FORM}__}"/>
+          th:action="@{__${#httpServletRequest.requestURI}__}"
+          th:method="post" th:object="${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_METER_FORM}__}"/>
     <attr sel="numberInput" th:field="*{number}" th:type="text"/>
     <attr sel="numberInput" th:field="*{unitName}" th:type="text"/>
     <attr sel="numberInput" th:field="*{firstReading}" th:type="number"/>
