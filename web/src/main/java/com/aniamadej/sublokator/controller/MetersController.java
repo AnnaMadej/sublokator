@@ -44,6 +44,10 @@ public class MetersController {
     public String addNewReading(@PathVariable("meterId") Long meterId,
                                 @ModelAttribute(Attributes.READING_FORM) @Valid ReadingForm readingForm,
                                 BindingResult bindingResult, RedirectAttributes ra) {
+        if (!mediumMeterService.existsById(meterId)) {
+            return ControllersHelper.redirectToMainPageWithErrorMessageCode(ra,
+                    "error.connectionNotExists");
+        }
         if (bindingResult.hasErrors()) {
             ra.addFlashAttribute(
                     "org.springframework.validation.BindingResult." + Attributes.READING_FORM,
@@ -53,7 +57,7 @@ public class MetersController {
             try {
                 mediumMeterService.addReading(meterId, readingForm);
             } catch (Exception e) {
-                return ControllersHelper.redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
+                ra.addFlashAttribute("error", e.getMessage());
             }
         }
         return "redirect:" + Mappings.METER_PAGE + "/{meterId}";

@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotBlank;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -22,18 +21,19 @@ class MediumMeterForm {
     @NotBlank(message = "unit name cannot be null")
     private String unitName;
 
-    @Digits(integer=10, fraction=10, message = "wrong number format")
-    private Double firstReading = 0.;
+    @Digits(integer = 10, fraction = 10, message = "wrong number format")
+    private Double firstReading = 0D;
 
     public MediumMeter toMediumMeter() {
         MediumMeter mediumMeter = new MediumMeter();
         mediumMeter.setUnitName(this.getUnitName());
         mediumMeter.setNumber(this.getNumber());
-
-        if (null != this.getFirstReading() && this.getFirstReading() != 0) {
-            Reading reading = new Reading(LocalDate.now().toString(), this.firstReading);
-            mediumMeter.addReading(reading);
+        if(this.getFirstReading() == null){
+            this.setFirstReading(0D);
         }
+        Reading reading = new Reading(this.firstReading);
+
+        mediumMeter.addReading(reading);
         return mediumMeter;
-    }
+}
 }

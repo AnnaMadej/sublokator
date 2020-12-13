@@ -8,9 +8,11 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
+import com.aniamadej.sublokator.util.ErrorMesages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,9 +47,22 @@ public class MediumMeterService {
 
     public void addReading(Long meterId, ReadingForm readingForm) {
         MediumMeter mediumMeter = mediumMeterRepository.findById(meterId)
-                .orElseThrow(()->new IllegalArgumentException("error.meterNotExists"));
-        Reading reading = new Reading(readingForm.getDate(), readingForm.getReading());
+                .orElseThrow(() -> new IllegalArgumentException(ErrorMesages.NO_METER_ID));
+
+        LocalDate readingDate = LocalDate.parse(readingForm.getDate());
+        Double readingValue = readingForm.getReading();
+        Double maxBefore = readingRepository.getMaxReadingBefore(readingDate, meterId).orElse(0D);
+        Double minAfter =  readingRepository.getMinReadingAfter(readingDate, meterId).orElse(readingValue+1);
+        if (readingValue < maxBefore || readingValue>minAfter)
+        {
+            throw new IllegalArgumentException(ErrorMesages.WRONG_READING_VALUE);
+        }
+        Reading reading = new Reading(readingDate, readingValue);
         mediumMeter.addReading(reading);
         mediumMeterRepository.save(mediumMeter);
+    }
+
+    public boolean existsById(Long meterId) {
+        return mediumMeterRepository.existsById(meterId);
     }
 }

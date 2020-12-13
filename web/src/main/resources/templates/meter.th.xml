@@ -7,7 +7,7 @@
     <attr sel="#readingsHeader" th:text="#{page.readings}"/>
     <attr sel="#dateHeader" th:text="#{page.date}"/>
     <attr sel="#readingHeader" th:text="#{page.reading}"/>
-    <attr sel="#readingsList" th:each="reading : ${mediumMeter.getReadings()}">
+    <attr sel=".readingsRow" th:each="reading : ${mediumMeter.getReadings()}">
         <attr sel="td[0]" th:text="${reading.getDate()}"/>
         <attr sel="td[1]" th:text="${reading.getReading()}"/>
     </attr>
@@ -22,7 +22,6 @@
     <attr sel="#addButton" th:text="#{page.addButton}"/>
     <attr sel="#readingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>
     <attr sel="#dateError" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"/>
-
-
-
+    <attr sel="#error"
+          th:text="${#messages.msgOrNull('__${error}__')}" th:if="${#messages.msgOrNull('__${error}__') != null}"/>
 </thLogic>

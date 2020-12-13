@@ -23,8 +23,13 @@ public class Reading {
     @JoinColumn(name = "meter_id")
     private MediumMeter mediumMeter;
 
-    public Reading(String date, Double reading) {
+    public Reading(LocalDate date, Double reading) {
         this.reading = reading;
-        this.date =  LocalDate.parse(date);
+        this.date =  date;
+    }
+
+    public Reading(Double reading){
+        this.reading = reading;
+        this.date = LocalDate.now();
     }
 }
