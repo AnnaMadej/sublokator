@@ -1,7 +1,7 @@
 package com.aniamadej.sublokator.service;
 
-import com.aniamadej.sublokator.dto.MediumMeterForm;
-import com.aniamadej.sublokator.dto.NameDto;
+import com.aniamadej.sublokator.dto.input.MediumMeterForm;
+import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
@@ -27,11 +27,11 @@ public class MediumConnectionService {
     }
 
     // == public methods ==
-    public List<NameDto> getNamesList() {
+    public List<NumberedName> getNamesList() {
         return mediumConnectionRepository.findMediaNames();
     }
 
-    public List<NameDto> getMeterNumbers(long mediumConnectionId, boolean inactive, Pageable pageable) {
+    public List<NumberedName> getMeterNumbers(long mediumConnectionId, boolean inactive, Pageable pageable) {
         return mediumConnectionRepository.fetchMeterNumbers(mediumConnectionId, !inactive, pageable).getContent();
     }
 

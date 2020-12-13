@@ -1,4 +1,4 @@
-package com.aniamadej.sublokator.dto;
+package com.aniamadej.sublokator.dto.input;
 
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;

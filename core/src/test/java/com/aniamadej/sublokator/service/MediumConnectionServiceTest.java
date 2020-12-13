@@ -1,6 +1,6 @@
 package com.aniamadej.sublokator.service;
 
-import com.aniamadej.sublokator.dto.MediumMeterForm;
+import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.util.ErrorMesages;
