@@ -1,12 +1,14 @@
 package com.aniamadej.sublokator.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 
 @Entity
 @Data
+@NoArgsConstructor
 @Table(name="readings")
 public class Reading {
 
@@ -20,4 +22,9 @@ public class Reading {
     @ManyToOne
     @JoinColumn(name = "meter_id")
     private MediumMeter mediumMeter;
+
+    public Reading(String date, Double reading) {
+        this.reading = reading;
+        this.date =  LocalDate.parse(date);
+    }
 }

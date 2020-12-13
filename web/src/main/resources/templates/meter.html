@@ -17,22 +17,47 @@
         <div class="col-2" id="meterUnitLabel">Medium meter unit:</div>
         <div class="col-2">kwh</div>
     </div>
+    <hr/>
+    <div>
+        <h3 id="readingsHeader">Readings:</h3>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th id="dateHeader" scope="col">Date</th>
+                <th id="readingHeader" scope="col">Reading</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr id="readingsList">
+                <td>2020.01.12</td>
+                <td>12032.45</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
     <hr>
-    <h3 id="readingsHeader">Readings:</h3>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th id="dateHeader" scope="col">Date</th>
-            <th id="readingHeader" scope="col">Reading</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr id="readingsList">
-            <td>2020.01.12</td>
-            <td>12032.45</td>
-        </tr>
-        </tbody>
-    </table>
+    <div>
+        <h3 id="addReadingHeader">Add a reading:</h3>
+        <form id="newReadingForm" method="post" action="" class="form-check">
+            <div class="form-group row">
+                <label id="dateLabel" for="dateInput" class="col-sm-2 col-form-label">Reading date: </label>
+                <div class="col-sm-3">
+                    <input type="date" id="dateInput" class="form-control"/>
+                    <p id="dateError" class="alert alert-danger">First reading error</p>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label id="readingLabel" for="readingInput" class="col-sm-2 col-form-label">Reading: </label>
+                <div class="col-sm-3">
+                    <input id="readingInput" class="form-control" type="number" step="0.01"/>
+                    <p id="readingError" class="alert alert-danger">Reading error</p>
+                </div>
+            </div>
+            <button id="addButton" type="submit" class="btn btn-outline-secondary">SUBMIT</button>
+        </form>
+    </div>
+
+
 </div>
 </body>
 </html>

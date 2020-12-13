@@ -31,9 +31,7 @@ class MediumMeterForm {
         mediumMeter.setNumber(this.getNumber());
 
         if (null != this.getFirstReading() && this.getFirstReading() != 0) {
-            Reading reading = new Reading();
-            reading.setReading(this.firstReading);
-            reading.setDate(LocalDate.now());
+            Reading reading = new Reading(LocalDate.now().toString(), this.firstReading);
             mediumMeter.addReading(reading);
         }
         return mediumMeter;

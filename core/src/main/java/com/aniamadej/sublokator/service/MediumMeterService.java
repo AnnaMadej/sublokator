@@ -1,8 +1,11 @@
 package com.aniamadej.sublokator.service;
 
-import com.aniamadej.sublokator.dto.input.MediumMeterForm;
-import com.aniamadej.sublokator.dto.output.MediumMeterReadModel;
 import com.aniamadej.sublokator.dto.ReadingBasics;
+import com.aniamadej.sublokator.dto.input.MediumMeterForm;
+import com.aniamadej.sublokator.dto.input.ReadingForm;
+import com.aniamadej.sublokator.dto.output.MediumMeterReadModel;
+import com.aniamadej.sublokator.model.MediumMeter;
+import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,14 @@ public class MediumMeterService {
             MediumMeterReadModel mediumMeterReadModel = new MediumMeterReadModel(meter, readings);
             return mediumMeterReadModel;
         });
+    }
 
+
+    public void addReading(Long meterId, ReadingForm readingForm) {
+        MediumMeter mediumMeter = mediumMeterRepository.findById(meterId)
+                .orElseThrow(()->new IllegalArgumentException("error.meterNotExists"));
+        Reading reading = new Reading(readingForm.getDate(), readingForm.getReading());
+        mediumMeter.addReading(reading);
+        mediumMeterRepository.save(mediumMeter);
     }
 }

@@ -11,6 +11,17 @@
         <attr sel="td[0]" th:text="${reading.getDate()}"/>
         <attr sel="td[1]" th:text="${reading.getReading()}"/>
     </attr>
+    <attr sel="#newReadingForm" th:object="${__${T(com.aniamadej.sublokator.util.Attributes).READING_FORM}__}"
+          th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).READING_ADD_SUBPAGE}__}" />
+
+    <attr sel="#dateInput" th:field="*{date}"/>
+    <attr sel="#readingInput" th:field="*{reading}"/>
+    <attr sel="#addReadingHeader" th:text="#{page.addReading}"/>
+    <attr sel="#dateLabel" th:text="#{page.date}"/>
+    <attr sel="#readingLabel" th:text="#{page.reading}"/>
+    <attr sel="#addButton" th:text="#{page.addButton}"/>
+    <attr sel="#readingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>
+    <attr sel="#dateError" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"/>
 
 
 

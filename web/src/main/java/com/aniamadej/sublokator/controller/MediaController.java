@@ -22,23 +22,18 @@ import javax.validation.constraints.NotBlank;
 public class MediaController {
 
     private final MediumConnectionService mediumConnectionService;
-    private final MediumMeterService mediumMeterService;
-    private final ResourceBundleMessageSource messagesource;
 
     @Autowired
     MediaController(MediumConnectionService mediumConnectionService,
                     MediumMeterService mediumMeterService,
                     ResourceBundleMessageSource messagesource) {
         this.mediumConnectionService = mediumConnectionService;
-        this.mediumMeterService = mediumMeterService;
-        this.messagesource = messagesource;
     }
 
     @GetMapping(Mappings.MEDIA_PAGE)
-    public String showMediaConnections(Model model, @RequestParam(required = false) String error) {
+    public String showMediaConnections(Model model, @ModelAttribute("error") String error) {
         model.addAttribute(Attributes.NAMES, mediumConnectionService.getNamesList());
         model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.MEDIUM_PAGE);
-        model.addAttribute("error", error);
         return Views.MEDIA_CONNECTIONS;
     }
 
@@ -47,7 +42,7 @@ public class MediaController {
                                   @RequestParam(required = false) boolean inactive,
                                   Pageable pageable, RedirectAttributes redirectAttributes) {
         if (!mediumConnectionService.existsById(mediumId)) {
-            return redirectToMainPageWithErrorMessageCode(redirectAttributes,
+            return ControllersHelper.redirectToMainPageWithErrorMessageCode(redirectAttributes,
                     "error.connectionNotExists");
         }
         model.addAttribute(Attributes.NAMES, mediumConnectionService.getMeterNumbers(mediumId, inactive, pageable));
@@ -59,7 +54,7 @@ public class MediaController {
     @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
     public String showMedumConnection(Model model, @PathVariable long mediumId, RedirectAttributes redirectAttributes) {
         if (!mediumConnectionService.existsById(mediumId)) {
-            return redirectToMainPageWithErrorMessageCode(redirectAttributes,
+            return ControllersHelper.redirectToMainPageWithErrorMessageCode(redirectAttributes,
                     "error.connectionNotExists");
         }
         model.addAttribute(Attributes.MEDIUM_NAME, mediumConnectionService.getMediumName(mediumId));
@@ -71,9 +66,8 @@ public class MediaController {
         return Views.ADD_MEDIUM;
     }
 
-
     @PostMapping(Mappings.MEDIA_ADD)
-    public String addNewMedium(@RequestParam(name = Attributes.MEDIUM_NAME) @NotBlank String mediumName) {
+    public String addNewMedium(@RequestParam(name = Attributes.MEDIUM_NAME) @NotBlank @Valid String mediumName) {
         mediumConnectionService.save(mediumName);
         return "redirect:" + Mappings.MEDIA_PAGE;
     }
@@ -97,26 +91,10 @@ public class MediaController {
         try {
             mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
         } catch (Exception e) {
-            return redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
+            return ControllersHelper.redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
         }
 
         return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId + Mappings.METERS_SUBPAGE;
     }
-
-    @GetMapping(Mappings.METER_PAGE + "/{meterId}")
-    public String showMediumMeter(@PathVariable("meterId") long meterId, Model model,
-                                  RedirectAttributes redirectAttributes) {
-        return mediumMeterService.findById(meterId).map(meter -> {
-            model.addAttribute("mediumMeter", meter);
-            return Views.METER;
-        }).orElseGet(() ->
-            redirectToMainPageWithErrorMessageCode(redirectAttributes, "error.meterNotExists"));
-    }
-
-    private String redirectToMainPageWithErrorMessageCode(RedirectAttributes ra, String errorMessageCode) {
-        ra.addAttribute("error", errorMessageCode);
-        return "redirect:" + Mappings.MEDIA_PAGE;
-    }
-
 
 }
