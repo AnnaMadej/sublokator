@@ -15,14 +15,12 @@ public class MediumMeterReadModel implements MediumMeterBasics {
   private String number;
   private String unit;
   private List<ReadingBasics> readings;
-  private boolean active;
 
 
   public MediumMeterReadModel(MediumMeterBasics mediumMeterBasics,
                               List<ReadingBasics> readings) {
     this.number = mediumMeterBasics.getNumber();
     this.mediumName = mediumMeterBasics.getMediumName();
-    this.active = mediumMeterBasics.isActive();
     this.unit = mediumMeterBasics.getUnit();
     this.readings = readings;
   }

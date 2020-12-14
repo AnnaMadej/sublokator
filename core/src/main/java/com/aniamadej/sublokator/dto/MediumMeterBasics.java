@@ -13,8 +13,4 @@ public interface MediumMeterBasics {
 
   void setUnit(String unit);
 
-  boolean isActive();
-
-  void setActive(boolean active);
-
 }

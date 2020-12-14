@@ -26,7 +26,6 @@ public class MediumMeter {
   private long id;
   private String number;
   private String unitName;
-  private boolean active = true;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
   private Collection<Reading> readings = new ArrayList<>();

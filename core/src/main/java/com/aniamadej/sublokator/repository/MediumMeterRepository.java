@@ -13,7 +13,7 @@ public interface MediumMeterRepository
     extends JpaRepository<MediumMeter, Long> {
   @Query("select "
       + "mm.mediumConnection.mediumName as mediumName, mm.number as number, "
-      + "mm.unitName as unit, mm.active as active "
+      + "mm.unitName as unit "
       + "from MediumMeter mm where mm.id = :id")
   Optional<MediumMeterBasics> findOneById(@Param("id") Long id);
 

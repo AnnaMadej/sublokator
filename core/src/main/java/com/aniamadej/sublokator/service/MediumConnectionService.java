@@ -32,10 +32,9 @@ public class MediumConnectionService {
   }
 
   public List<NumberedName> getMeterNumbers(long mediumConnectionId,
-                                            boolean inactive,
                                             Pageable pageable) {
     return mediumConnectionRepository
-        .fetchMeterNumbers(mediumConnectionId, !inactive, pageable)
+        .fetchMeterNumbers(mediumConnectionId, pageable)
         .getContent();
   }
 

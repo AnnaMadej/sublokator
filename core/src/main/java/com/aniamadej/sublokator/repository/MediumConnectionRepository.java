@@ -17,9 +17,8 @@ public interface MediumConnectionRepository
 
   @Query("select mm.number as name, mm.id as id "
       + "from MediumConnection  mc join mc.mediumMeters mm "
-      + "where mc.id=:connectionId and mm.active=:active")
-  Page<NumberedName> fetchMeterNumbers(long connectionId, boolean active,
-                                       Pageable pageable);
+      + "where mc.id=:connectionId")
+  Page<NumberedName> fetchMeterNumbers(long connectionId, Pageable pageable);
 
   @Query("select mm.number as name, mm.id as id "
       + "from MediumConnection  mc join mc.mediumMeters mm "
