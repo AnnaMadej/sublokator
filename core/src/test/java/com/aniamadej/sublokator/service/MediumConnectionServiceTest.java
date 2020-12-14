@@ -103,13 +103,6 @@ class MediumConnectionServiceTest {
 
   }
 
-  private MediumConnection getMediumConnection() {
-    MediumConnection mediumConnection = new MediumConnection();
-    mediumConnection.setId(1L);
-    mediumConnection.setMediumName("medium name");
-    return mediumConnection;
-  }
-
   private MediumMeterForm getMediumMeterForm() {
     MediumMeterForm mediumMeterForm = new MediumMeterForm();
     mediumMeterForm.setNumber("11");
@@ -117,6 +110,13 @@ class MediumConnectionServiceTest {
     mediumMeterForm.setUnitName("kwh");
     mediumMeterForm.setActiveSince(LocalDate.now().toString());
     return mediumMeterForm;
+  }
+
+  private MediumConnection getMediumConnection() {
+    MediumConnection mediumConnection = new MediumConnection();
+    mediumConnection.setId(1L);
+    mediumConnection.setMediumName("medium name");
+    return mediumConnection;
   }
 
 }

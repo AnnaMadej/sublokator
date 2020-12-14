@@ -19,12 +19,18 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
   List<ReadingBasics> findByMediumMeterId(@Param("id") Long id);
 
   @Query("select max(r.reading) from Reading r "
-      + "where r.date<:date and r.mediumMeter.id = :meterId")
+      + "where r.mediumMeter.id = :meterId "
+      + "and r.date = (select max(r1.date) from Reading r1 "
+      + "where  r.mediumMeter.id = :meterId and r1.date < :date) "
+      + "order by r.date desc")
   Optional<Double> getMaxReadingBefore(@Param("date") LocalDate date,
                                        @Param("meterId") Long meterId);
 
   @Query("select min(r.reading) from Reading r "
-      + "where r.date>:date and r.mediumMeter.id = :meterId")
+      + "where r.mediumMeter.id = :meterId "
+      + "and r.date = (select min(r1.date) from Reading r1 "
+      + "where  r.mediumMeter.id = :meterId and r1.date > :date) "
+      + "order by r.date desc")
   Optional<Double> getMinReadingAfter(@Param("date") LocalDate date,
                                       @Param("meterId") Long meterId);
 }

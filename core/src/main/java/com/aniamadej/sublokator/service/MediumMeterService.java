@@ -12,10 +12,12 @@ import com.aniamadej.sublokator.util.ErrorMesages;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class MediumMeterService {
 
@@ -54,13 +56,27 @@ public class MediumMeterService {
             () -> new IllegalArgumentException(ErrorMesages.NO_METER_ID));
 
     LocalDate readingDate = LocalDate.parse(readingForm.getDate());
+
+    if (mediumMeter.getActiveSince().isAfter(readingDate)) {
+      throw new IllegalArgumentException(
+          ErrorMesages.READING_BEFORE_ACTIVATION);
+    }
+
+    if (null != mediumMeter.getActiveUntil()
+        && mediumMeter.getActiveUntil().isBefore(readingDate)) {
+      throw new IllegalArgumentException(
+          ErrorMesages.READING_AFTER_DEACTIVATION);
+    }
+
     Double readingValue = readingForm.getReading();
     Double maxBefore =
         readingRepository.getMaxReadingBefore(readingDate, meterId).orElse(0D);
     Double minAfter =
         readingRepository.getMinReadingAfter(readingDate, meterId)
             .orElse(readingValue + 1);
-    if (readingValue < maxBefore || readingValue > minAfter) {
+
+    if (readingValue < maxBefore || (readingValue > minAfter
+        && minAfter != 0)) {
       throw new IllegalArgumentException(ErrorMesages.WRONG_READING_VALUE);
     }
     Reading reading = new Reading(readingDate, readingValue);
@@ -75,10 +91,18 @@ public class MediumMeterService {
   @Transactional
   public void deactivate(Long meterId, String deactivationDate) {
     LocalDate activeUntil = LocalDate.parse(deactivationDate);
-    if (activeUntil.isBefore(findActiveUntilDate(meterId))) {
+
+    if (activeUntil.isBefore(findActiveSinceDate(meterId))) {
       throw new IllegalArgumentException(
           ErrorMesages.DEACTIVATION_BEFORE_ACTIVATION);
     }
+
+    if (activeUntil
+        .isBefore(mediumMeterRepository.getLastReadingDate(meterId))) {
+      throw new IllegalArgumentException(
+          ErrorMesages.DEACTIVATION_BEFORE_LAST_READING);
+    }
+
 
     if (activeUntil.isAfter(LocalDate.now())) {
       throw new IllegalArgumentException(ErrorMesages.FUTURE_DEACTIVATION);
@@ -87,7 +111,8 @@ public class MediumMeterService {
         .deactivate(meterId, activeUntil);
   }
 
-  private LocalDate findActiveUntilDate(Long mediumMeterId) {
+
+  private LocalDate findActiveSinceDate(Long mediumMeterId) {
     return mediumMeterRepository.getActiveSince(mediumMeterId);
   }
 }

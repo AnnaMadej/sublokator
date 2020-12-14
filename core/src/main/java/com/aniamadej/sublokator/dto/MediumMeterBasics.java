@@ -16,9 +16,11 @@ public interface MediumMeterBasics {
   void setUnit(String unit);
 
   LocalDate getActiveSince();
-  LocalDate getActiveUntil();
 
   void setActiveSince(LocalDate localDate);
+
+  LocalDate getActiveUntil();
+
   void setActiveUntil(LocalDate localDate);
 
 }

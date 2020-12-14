@@ -9,16 +9,16 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class PersistanceConfiguration {
-    @Bean
-    public FlywayMigrationStrategy cleanMigrateStrategy() {
-        FlywayMigrationStrategy strategy = new FlywayMigrationStrategy() {
-            @Override
-            public void migrate(Flyway flyway) {
-                flyway.repair();
-                flyway.migrate();
-            }
-        };
-        return strategy;
-    }
+  @Bean
+  public FlywayMigrationStrategy cleanMigrateStrategy() {
+    FlywayMigrationStrategy strategy = new FlywayMigrationStrategy() {
+      @Override
+      public void migrate(Flyway flyway) {
+        flyway.repair();
+        flyway.migrate();
+      }
+    };
+    return strategy;
+  }
 
 }
