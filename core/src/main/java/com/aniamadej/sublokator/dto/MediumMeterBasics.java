@@ -1,5 +1,7 @@
 package com.aniamadej.sublokator.dto;
 
+import java.time.LocalDate;
+
 public interface MediumMeterBasics {
   String getMediumName();
 
@@ -12,5 +14,11 @@ public interface MediumMeterBasics {
   String getUnit();
 
   void setUnit(String unit);
+
+  LocalDate getActiveSince();
+  LocalDate getActiveUntil();
+
+  void setActiveSince(LocalDate localDate);
+  void setActiveUntil(LocalDate localDate);
 
 }

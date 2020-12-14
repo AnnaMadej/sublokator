@@ -2,6 +2,7 @@ package com.aniamadej.sublokator.dto.output;
 
 import com.aniamadej.sublokator.dto.MediumMeterBasics;
 import com.aniamadej.sublokator.dto.ReadingBasics;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,8 @@ public class MediumMeterReadModel implements MediumMeterBasics {
   private String number;
   private String unit;
   private List<ReadingBasics> readings;
+  private LocalDate activeSince;
+  private LocalDate activeUntil;
 
 
   public MediumMeterReadModel(MediumMeterBasics mediumMeterBasics,
@@ -23,5 +26,7 @@ public class MediumMeterReadModel implements MediumMeterBasics {
     this.mediumName = mediumMeterBasics.getMediumName();
     this.unit = mediumMeterBasics.getUnit();
     this.readings = readings;
+    this.activeSince = mediumMeterBasics.getActiveSince();
+    this.activeUntil = mediumMeterBasics.getActiveUntil();
   }
 }

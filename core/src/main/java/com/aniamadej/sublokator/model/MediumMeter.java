@@ -1,5 +1,6 @@
 package com.aniamadej.sublokator.model;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.persistence.CascadeType;
@@ -26,6 +27,8 @@ public class MediumMeter {
   private long id;
   private String number;
   private String unitName;
+  private LocalDate activeSince = LocalDate.now();
+  private LocalDate activeUntil;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
   private Collection<Reading> readings = new ArrayList<>();
