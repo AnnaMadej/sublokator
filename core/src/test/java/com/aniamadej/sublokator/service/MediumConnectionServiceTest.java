@@ -115,6 +115,7 @@ class MediumConnectionServiceTest {
     mediumMeterForm.setNumber("11");
     mediumMeterForm.setFirstReading(11D);
     mediumMeterForm.setUnitName("kwh");
+    mediumMeterForm.setActiveSince(LocalDate.now().toString());
     return mediumMeterForm;
   }
 

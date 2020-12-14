@@ -3,6 +3,8 @@
     <attr sel="#mediumMeterHeader" th:text="#{page.mediumMeter}"/>
     <attr sel="#meterNumberLabel" th:text="#{page.meterNumber}"/>
     <attr sel="#meterNumber" th:text="${mediumMeter.getNumber()}"/>
+    <attr sel="#unit" th:text="${mediumMeter.getUnit()}"/>
+    <attr sel="#activeSince" th:text="${mediumMeter.getActiveSince()}"/>
     <attr sel="#meterUnitLabel" th:text="#{page.meterUnit}"/>
     <attr sel="#readingsHeader" th:text="#{page.readings}"/>
     <attr sel="#dateHeader" th:text="#{page.date}"/>
@@ -18,6 +20,7 @@
     <attr sel="#readingInput" th:field="*{reading}"/>
     <attr sel="#addReadingHeader" th:text="#{page.addReading}"/>
     <attr sel="#dateLabel" th:text="#{page.date}"/>
+    <attr sel="#activeSinceLabel" th:text="#{page.activeSince}"/>
     <attr sel="#readingLabel" th:text="#{page.reading}"/>
     <attr sel="#addButton" th:text="#{page.addButton}"/>
     <attr sel="#readingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>

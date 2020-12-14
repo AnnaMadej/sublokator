@@ -18,12 +18,17 @@
         <input class="form-control" id="unitNameInput" name="unitName" type="text">
         <p class="alert alert-danger" id="unitNameError">Unit name error</p>
     </div>
+    <div class="form-group">
+        <label for="activeSinceInput" id="activeSinceLabel">Active since</label>
+        <input class="form-control" id="activeSinceInput" name="unitName" type="date">
+        <p class="alert alert-danger" id="activeSinceError">Unit name error</p>
+    </div>
     <div class="form-check">
         <input class="form-check-input" id="firstReadingCheckBox" onclick="check()" type="checkbox"/>
         <label for="firstReadingCheckBox" id="firstReadingCheckboxLabel">Add a first reading</label>
         <p class="alert alert-danger" id="firstReadingError">First reading error</p>
     </div>
-    <div cladd="form-group" id="firstReadingGroup">
+    <div class="form-group" id="firstReadingGroup">
         <label for="firstReadingInput" id="firstReadingLabel">First reading</label>
         <input class="form-control" id="firstReadingInput" name="firstReading" step="0.01" type="number">
     </div>
