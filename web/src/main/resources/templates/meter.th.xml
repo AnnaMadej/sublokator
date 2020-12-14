@@ -21,10 +21,19 @@
     <attr sel="#addReadingHeader" th:text="#{page.addReading}"/>
     <attr sel="#dateLabel" th:text="#{page.date}"/>
     <attr sel="#activeSinceLabel" th:text="#{page.activeSince}"/>
+    <attr sel="#activeUntilLabel" th:text="#{page.activeUntil}"/>
+
     <attr sel="#readingLabel" th:text="#{page.reading}"/>
     <attr sel="#addButton" th:text="#{page.addButton}"/>
     <attr sel="#readingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>
     <attr sel="#dateError" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"/>
     <attr sel="#error"
           th:text="${#messages.msgOrNull('__${error}__')}" th:if="${#messages.msgOrNull('__${error}__') != null}"/>
+
+    <attr sel="#deactivateFormGroup" th:if="${mediumMeter.getActiveUntil==null}"/>
+    <attr sel="#activeUntilGroup" th:unless="${mediumMeter.getActiveUntil==null}"/>
+    <attr sel="#deactivateForm" th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).DEACTIVATE}__}"/>
+    <attr sel="#activeUntilInput"  th:name="${T(com.aniamadej.sublokator.util.Attributes).ACTIVE_UNTIL}"/>
+    <attr sel="#activeUntil" th:text="${mediumMeter.getActiveUntil()}"/>
+    <attr sel="#activeSince" th:text="${mediumMeter.getActiveSince()}"/>
 </thLogic>

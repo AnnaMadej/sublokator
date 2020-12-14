@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MediumMeterService {
@@ -69,5 +70,24 @@ public class MediumMeterService {
 
   public boolean existsById(Long meterId) {
     return mediumMeterRepository.existsById(meterId);
+  }
+
+  @Transactional
+  public void deactivate(Long meterId, String deactivationDate) {
+    LocalDate activeUntil = LocalDate.parse(deactivationDate);
+    if (activeUntil.isBefore(findActiveUntilDate(meterId))) {
+      throw new IllegalArgumentException(
+          ErrorMesages.DEACTIVATION_BEFORE_ACTIVATION);
+    }
+
+    if (activeUntil.isAfter(LocalDate.now())) {
+      throw new IllegalArgumentException(ErrorMesages.FUTURE_DEACTIVATION);
+    }
+    mediumMeterRepository
+        .deactivate(meterId, activeUntil);
+  }
+
+  private LocalDate findActiveUntilDate(Long mediumMeterId) {
+    return mediumMeterRepository.getActiveSince(mediumMeterId);
   }
 }

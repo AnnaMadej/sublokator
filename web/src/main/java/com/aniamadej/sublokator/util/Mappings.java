@@ -13,6 +13,7 @@ public final class Mappings {
   private static final String READINGS_SUBPAGE = "/readings";
   public static final String READING_ADD_SUBPAGE =
       Mappings.READINGS_SUBPAGE + Mappings.ADD;
+  public static final String DEACTIVATE = "/deactivate";
 
 
   private Mappings() {

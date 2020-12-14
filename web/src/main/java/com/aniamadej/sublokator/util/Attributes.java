@@ -11,6 +11,8 @@ public final class Attributes {
   public static final String METER_UNIT = "meterUnit";
   public static final String MEDIUM_METER_FORM = "mediumMeterForm";
   public static final String READING_FORM = "newReadingForm";
+  public static final String ACTIVE_UNTIL = "activeUntil";
+  public static final String ERROR = "error";
 
   private Attributes() {
   }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -63,10 +64,23 @@ public class MetersController {
       try {
         mediumMeterService.addReading(meterId, readingForm);
       } catch (Exception e) {
-        ra.addFlashAttribute("error", e.getMessage());
+        ra.addFlashAttribute(Attributes.ERROR, e.getMessage());
       }
     }
-    return "redirect:" + Mappings.METER_PAGE + "/{meterId}";
+    return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
+  }
+
+  @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.DEACTIVATE)
+  public String deactivateMeter(@PathVariable("meterId") Long meterId,
+                                @RequestParam(Attributes.ACTIVE_UNTIL)
+                                    String deactivationDate,
+                                RedirectAttributes redirectAttributes) {
+    try {
+      mediumMeterService.deactivate(meterId, deactivationDate);
+    } catch (IllegalArgumentException e) {
+      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
+    }
+    return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
 }

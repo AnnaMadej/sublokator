@@ -8,6 +8,7 @@
 <body>
 <div class="container-fluid">
     <h1 id="mediumMeterHeader"> Medium meter </h1>
+    <p class="alert-danger" id="error"></p>
 
     <div class="row">
         <div class="col-2" id="meterNumberLabel">Medium meter number:</div>
@@ -21,6 +22,28 @@
         <div class="col-2" id="activeSinceLabel">Active since:</div>
         <div class="col-2" id="activeSince">2020-12-12</div>
     </div>
+    <div class="row" id="activeUntilGroup">
+        <div class="col-2" id="activeUntilLabel">Active until:</div>
+        <div class="col-2" id="activeUntil">2020-12-12</div>
+    </div>
+
+    <hr/>
+
+    <div class="row" id="deactivateFormGroup">
+        <form id="deactivateForm" action="" class="form-check" method="post">
+            <div class="form-group">
+                <div class="form-inline">
+                    <label class="form-label" for="activeUntilInput" id="activeUntilInputLabel">Active until: </label>
+                    <input id="activeUntilInput" type="date"/>
+                    <button class="btn btn-danger" id="deactivateButton" type="submit">Deactivate</button>
+                </div>
+            </div>
+            <div class="form-group row">
+
+            </div>
+        </form>
+    </div>
+
     <hr/>
     <div>
         <h3 id="readingsHeader">Readings:</h3>
@@ -55,7 +78,6 @@
                 <div class="col-sm-3">
                     <input class="form-control" id="readingInput" step="0.01" type="number"/>
                     <p class="alert alert-danger" id="readingError">Reading error</p>
-                    <p class="alert-danger" id="error"></p>
                 </div>
             </div>
             <div class="form-group row">
@@ -66,6 +88,8 @@
     </div>
 
     <hr/>
+
+
 </div>
 </body>
 </html>
