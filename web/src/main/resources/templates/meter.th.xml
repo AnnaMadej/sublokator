@@ -22,6 +22,10 @@
     <attr sel="#dateLabel" th:text="#{page.date}"/>
     <attr sel="#activeSinceLabel" th:text="#{page.activeSince}"/>
     <attr sel="#activeUntilLabel" th:text="#{page.activeUntil}"/>
+    <attr sel="#activeUntilInputLabel" th:text="#{page.activeUntil}"/>
+    <attr sel="#deactivateButton" th:text="#{page.deactivate}"/>
+
+
 
     <attr sel="#readingLabel" th:text="#{page.reading}"/>
     <attr sel="#addButton" th:text="#{page.addButton}"/>
@@ -37,4 +41,12 @@
     <attr sel="#activeUntilInput" th:name="${T(com.aniamadej.sublokator.util.Attributes).ACTIVE_UNTIL}"/>
     <attr sel="#activeUntil" th:text="${mediumMeter.getActiveUntil()}"/>
     <attr sel="#activeSince" th:text="${mediumMeter.getActiveSince()}"/>
+
+    <attr sel="#resetFormGroup" th:if="${mediumMeter.isResettable()==true}"/>
+    <attr sel="#resetForm"
+          th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).RESET}__}"/>
+    <attr sel="#resetDateInput" th:name="${T(com.aniamadej.sublokator.util.Attributes).RESET_DATE}"/>
+    <attr sel="#resetLabel" th:text="#{page.resetDate}"/>
+    <attr sel="#resetButton" th:text="#{page.reset}"/>
+
 </thLogic>

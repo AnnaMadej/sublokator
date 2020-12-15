@@ -23,4 +23,7 @@ public interface MediumMeterBasics {
 
   void setActiveUntil(LocalDate localDate);
 
+  boolean isResettable();
+
+  void setResettable(boolean resettable);
 }

@@ -14,4 +14,5 @@ public interface ReadingBasics {
   Long getId();
 
   void setId(Long id);
+
 }

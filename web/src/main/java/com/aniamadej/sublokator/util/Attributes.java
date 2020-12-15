@@ -12,6 +12,7 @@ public final class Attributes {
   public static final String MEDIUM_METER_FORM = "mediumMeterForm";
   public static final String READING_FORM = "newReadingForm";
   public static final String ACTIVE_UNTIL = "activeUntil";
+  public static final String RESET_DATE = "resetDate";
   public static final String ERROR = "error";
   public static final String MEDIUM_METER = "mediumMeter";
 

@@ -31,15 +31,19 @@ public class MediumMeterForm {
   @Pattern(regexp = "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$")
   private String activeSince;
 
+  private boolean resettable;
+
   public MediumMeter toMediumMeter() {
     MediumMeter mediumMeter = new MediumMeter();
     mediumMeter.setUnitName(this.getUnitName());
     mediumMeter.setNumber(this.getNumber());
-    mediumMeter.setActiveSince(LocalDate.parse(this.getActiveSince()));
+    LocalDate activeSinceDate = LocalDate.parse(this.getActiveSince());
+    mediumMeter.setActiveSince(activeSinceDate);
+    mediumMeter.setResettable(this.resettable);
     if (this.getFirstReading() == null) {
       this.setFirstReading(0D);
     }
-    Reading reading = new Reading(this.firstReading);
+    Reading reading = new Reading(activeSinceDate, this.firstReading);
     mediumMeter.addReading(reading);
     return mediumMeter;
   }

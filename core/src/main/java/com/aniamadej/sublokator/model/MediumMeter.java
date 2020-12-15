@@ -29,6 +29,7 @@ public class MediumMeter {
   private String unitName;
   private LocalDate activeSince = LocalDate.now();
   private LocalDate activeUntil;
+  private boolean resettable = false;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
   private Collection<Reading> readings = new ArrayList<>();

@@ -18,6 +18,7 @@ public class MediumMeterReadModel implements MediumMeterBasics {
   private List<ReadingBasics> readings;
   private LocalDate activeSince;
   private LocalDate activeUntil;
+  private boolean resettable;
 
 
   public MediumMeterReadModel(MediumMeterBasics mediumMeterBasics,
@@ -25,8 +26,10 @@ public class MediumMeterReadModel implements MediumMeterBasics {
     this.number = mediumMeterBasics.getNumber();
     this.mediumName = mediumMeterBasics.getMediumName();
     this.unit = mediumMeterBasics.getUnit();
-    this.readings = readings;
     this.activeSince = mediumMeterBasics.getActiveSince();
     this.activeUntil = mediumMeterBasics.getActiveUntil();
+    this.resettable = mediumMeterBasics.isResettable();
+
+    this.readings = readings;
   }
 }

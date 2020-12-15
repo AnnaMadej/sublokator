@@ -14,6 +14,9 @@ public final class ErrorMesages {
       = "error.readingAfterDeactivation";
   public static final String DEACTIVATION_BEFORE_LAST_READING =
       "error.deactivationBeforeLastReading";
+  public static final String NOT_RESETTABLE = "error.notResettable";
+  public static final String RESET_BEFORE_READING = "error.resetBeforeReading";
+  public static final String READING_AT_RESET = "error.readingAtReset";
 
   private ErrorMesages() {
   }

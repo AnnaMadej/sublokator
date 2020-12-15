@@ -15,8 +15,9 @@ public interface MediumMeterRepository
     extends JpaRepository<MediumMeter, Long> {
   @Query("select "
       + "mm.mediumConnection.mediumName as mediumName, mm.number as number, "
-      + "mm.unitName as unit, mm.activeUntil as activeUntil, "
-      + "mm.activeSince as activeSince from MediumMeter mm where mm.id = :id")
+      + "mm.unitName as unit, mm.resettable as resettable, "
+      + "mm.activeUntil as activeUntil, mm.activeSince as activeSince "
+      + "from MediumMeter mm where mm.id = :id")
   Optional<MediumMeterBasics> findOneById(@Param("id") Long id);
 
   @Modifying
@@ -30,5 +31,8 @@ public interface MediumMeterRepository
 
   @Query("select max(r.date) from Reading  r where r.mediumMeter.id =:meterId")
   LocalDate getLastReadingDate(@Param("meterId") Long meterId);
+
+  @Query("select m.resettable from MediumMeter m where m.id=:meterId")
+  Boolean isResettable(@Param("meterId") Long meterId);
 
 }

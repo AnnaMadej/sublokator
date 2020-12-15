@@ -82,4 +82,17 @@ public class MetersController {
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
+  @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.RESET)
+  public String resetMeter(@PathVariable("meterId") Long meterId,
+                           @RequestParam(Attributes.RESET_DATE)
+                                    String deactivationDate,
+                           RedirectAttributes redirectAttributes) {
+    try {
+      mediumMeterService.reset(meterId, deactivationDate);
+    } catch (IllegalArgumentException e) {
+      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
+    }
+    return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
+  }
+
 }

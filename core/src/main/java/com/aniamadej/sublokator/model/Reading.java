@@ -33,8 +33,4 @@ public class Reading {
     this.date = date;
   }
 
-  public Reading(Double reading) {
-    this.reading = reading;
-    this.date = LocalDate.now();
-  }
 }

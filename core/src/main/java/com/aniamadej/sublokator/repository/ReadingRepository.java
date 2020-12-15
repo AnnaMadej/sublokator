@@ -33,4 +33,10 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
       + "order by r.date desc")
   Optional<Double> getMinReadingAfter(@Param("date") LocalDate date,
                                       @Param("meterId") Long meterId);
+
+
+  @Query("select count(r) from Reading r where r.mediumMeter.id=:meterId "
+      + "and r.reading = 0 and r.date=:readingDate")
+  Integer countZeroesAtDate(@Param("readingDate") LocalDate readingDate,
+                            @Param("meterId") Long meterId);
 }
