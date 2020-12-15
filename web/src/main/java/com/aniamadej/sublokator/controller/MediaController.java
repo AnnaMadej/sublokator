@@ -54,7 +54,7 @@ public class MediaController {
               "error.connectionNotExists");
     }
     model.addAttribute(Attributes.NAMES,
-        mediumConnectionService.getMeterNumbers(mediumId, pageable));
+        mediumConnectionService.getMeterNumbers(mediumId, pageable, inactive));
     model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.METER_PAGE);
     model.addAttribute(Attributes.MEDIUM_NAME,
         mediumConnectionService.getMediumName(mediumId));
