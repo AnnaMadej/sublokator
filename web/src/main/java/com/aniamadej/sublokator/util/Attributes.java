@@ -13,6 +13,7 @@ public final class Attributes {
   public static final String READING_FORM = "newReadingForm";
   public static final String ACTIVE_UNTIL = "activeUntil";
   public static final String ERROR = "error";
+  public static final String MEDIUM_METER = "mediumMeter";
 
   private Attributes() {
   }

@@ -37,7 +37,7 @@ public class MetersController {
       model.addAttribute(Attributes.READING_FORM, new ReadingForm());
     }
     return mediumMeterService.findById(meterId).map(meter -> {
-      model.addAttribute("mediumMeter", meter);
+      model.addAttribute(Attributes.MEDIUM_METER, meter);
       return Views.METER;
     }).orElseGet(() ->
         ControllersHelper
@@ -52,10 +52,7 @@ public class MetersController {
                               @Valid ReadingForm readingForm,
                               BindingResult bindingResult,
                               RedirectAttributes ra) {
-    if (!mediumMeterService.existsById(meterId)) {
-      return ControllersHelper.redirectToMainPageWithErrorMessageCode(ra,
-          "error.connectionNotExists");
-    }
+
     if (bindingResult.hasErrors()) {
       ra.addFlashAttribute(
           "org.springframework.validation.BindingResult."
@@ -67,7 +64,6 @@ public class MetersController {
         mediumMeterService.addReading(meterId, readingForm);
       } catch (Exception e) {
         ra.addFlashAttribute(Attributes.ERROR, e.getMessage());
-        log.error("ZAERROROWAŁEM: {}", e.getMessage());
       }
     }
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;

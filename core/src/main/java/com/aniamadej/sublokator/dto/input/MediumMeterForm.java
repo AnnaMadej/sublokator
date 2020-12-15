@@ -40,7 +40,6 @@ public class MediumMeterForm {
       this.setFirstReading(0D);
     }
     Reading reading = new Reading(this.firstReading);
-
     mediumMeter.addReading(reading);
     return mediumMeter;
   }
