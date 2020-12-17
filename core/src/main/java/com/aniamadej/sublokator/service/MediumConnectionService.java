@@ -34,6 +34,7 @@ public class MediumConnectionService {
   public List<NumberedName> getMeterNumbers(long mediumConnectionId,
                                             Pageable pageable,
                                             Boolean inactive) {
+
     if (inactive) {
       return mediumConnectionRepository
           .fetchInactiveMeterNumbers(mediumConnectionId, pageable)
@@ -54,6 +55,14 @@ public class MediumConnectionService {
   }
 
   public void save(String name) {
+    if (null == name || name.equals("") || name.equals(" ")) {
+      throw new IllegalArgumentException(ErrorMesages.BLANK_NAME);
+    }
+
+    if (name.length() > 50) {
+      throw new IllegalArgumentException(ErrorMesages.TOO_LONG_NAME);
+    }
+
     MediumConnection connection = new MediumConnection();
     connection.setMediumName(name);
     mediumConnectionRepository.save(connection);

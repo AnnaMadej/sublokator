@@ -17,6 +17,8 @@ public final class ErrorMesages {
   public static final String NOT_RESETTABLE = "error.notResettable";
   public static final String RESET_BEFORE_READING = "error.resetBeforeReading";
   public static final String READING_AT_RESET = "error.readingAtReset";
+  public static final String BLANK_NAME = "error.blankName";
+  public static final String TOO_LONG_NAME = "error.tooLongName";
 
   private ErrorMesages() {
   }

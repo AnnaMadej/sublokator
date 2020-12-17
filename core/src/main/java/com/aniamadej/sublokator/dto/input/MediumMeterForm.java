@@ -29,7 +29,7 @@ public class MediumMeterForm {
   @DateTimeFormat(pattern = "yyyy-MM-dd")
   @NotNull
   @Pattern(regexp = "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$")
-  private String activeSince;
+  private String activeSince = LocalDate.now().toString();
 
   private boolean resettable;
 

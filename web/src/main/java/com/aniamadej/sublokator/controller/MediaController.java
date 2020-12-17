@@ -7,7 +7,6 @@ import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.Pageable;
@@ -81,9 +80,14 @@ public class MediaController {
 
   @PostMapping(Mappings.MEDIA_ADD)
   public String addNewMedium(
-      @RequestParam(name = Attributes.MEDIUM_NAME)
-      @NotBlank @Valid String mediumName) {
-    mediumConnectionService.save(mediumName);
+      @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName,
+      RedirectAttributes ra) {
+    try {
+      mediumConnectionService.save(mediumName);
+    } catch (Exception e) {
+      ControllersHelper
+          .redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
+    }
     return "redirect:" + Mappings.MEDIA_PAGE;
   }
 
