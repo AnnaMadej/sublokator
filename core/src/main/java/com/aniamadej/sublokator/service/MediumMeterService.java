@@ -1,7 +1,6 @@
 package com.aniamadej.sublokator.service;
 
 import com.aniamadej.sublokator.dto.ReadingBasics;
-import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.dto.input.ReadingForm;
 import com.aniamadej.sublokator.dto.output.MediumMeterReadModel;
 import com.aniamadej.sublokator.model.MediumMeter;
@@ -11,7 +10,6 @@ import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.util.ErrorMesages;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,25 +32,22 @@ public class MediumMeterService {
   }
 
   // == public methods ==
-  public void save(MediumMeterForm mediumMeterForm) {
-    mediumMeterRepository.save(mediumMeterForm.toMediumMeter());
-  }
-
-  public Optional<MediumMeterReadModel> findById(long meterId) {
-    return mediumMeterRepository.findOneById(meterId).map(meter -> {
+  public MediumMeterReadModel findById(long meterId) {
+    return mediumMeterRepository.findReadModelById(meterId).map(meter -> {
       List<ReadingBasics> readings =
           readingRepository.findByMediumMeterId(meterId);
       MediumMeterReadModel mediumMeterReadModel =
           new MediumMeterReadModel(meter, readings);
       return mediumMeterReadModel;
-    });
+    }).orElseThrow(
+        () -> new IllegalArgumentException(ErrorMesages.NO_METER_ID));
   }
 
 
   public void addReading(Long meterId, ReadingForm readingForm) {
     MediumMeter mediumMeter = getMediumMeter(meterId);
 
-    LocalDate readingDate = LocalDate.parse(readingForm.getDate());
+    LocalDate readingDate = parseDate(readingForm.getDate());
 
     if (readingRepository.countZeroesAtDate(readingDate, meterId) != 0) {
       throw new IllegalArgumentException(
@@ -70,18 +65,71 @@ public class MediumMeterService {
     }
 
     Double readingValue = readingForm.getReading();
-    Double maxBefore =
-        readingRepository.getMaxReadingBefore(readingDate, meterId).orElse(0D);
-    Double minAfter =
-        readingRepository.getMinReadingAfter(readingDate, meterId)
-            .orElse(readingValue + 1);
-
-    if (readingValue < maxBefore || (readingValue > minAfter
-        && minAfter != 0)) {
-      throw new IllegalArgumentException(ErrorMesages.WRONG_READING_VALUE);
-    }
+    checkIfInTheMiddleOfPreviousAndNext(meterId, readingDate,
+        readingValue);
     addReading(mediumMeter, readingDate, readingValue);
   }
+
+  @Transactional
+  public void deactivate(Long meterId, String deactivationDate) {
+    LocalDate activeUntil = parseDate(deactivationDate);
+
+    if (activeUntil.isAfter(LocalDate.now())) {
+      throw new IllegalArgumentException(ErrorMesages.FUTURE_DEACTIVATION);
+    }
+
+    if (!mediumMeterRepository.existsById(meterId)) {
+      throw new IllegalArgumentException(ErrorMesages.NO_METER_ID);
+    }
+
+    if (activeUntil.isBefore(findActiveSinceDate(meterId))) {
+      throw new IllegalArgumentException(
+          ErrorMesages.DEACTIVATION_BEFORE_ACTIVATION);
+    }
+
+    if (activeUntil
+        .isBefore(mediumMeterRepository.getLastReadingDate(meterId))) {
+      throw new IllegalArgumentException(
+          ErrorMesages.DEACTIVATION_BEFORE_LAST_READING);
+    }
+
+    mediumMeterRepository
+        .deactivate(meterId, activeUntil);
+  }
+
+
+  public void reset(Long meterId, String resetDate) {
+    LocalDate dateOfReset = parseDate(resetDate);
+    MediumMeter mediumMeter = getMediumMeter(meterId);
+
+    if (!mediumMeter.isResettable()) {
+      throw new IllegalArgumentException(ErrorMesages.NOT_RESETTABLE);
+    }
+    if (
+        mediumMeterRepository.getLastReadingDate(meterId)
+            .isAfter(dateOfReset)
+            || mediumMeterRepository.getLastReadingDate(meterId)
+            .isEqual(dateOfReset)) {
+      throw new IllegalArgumentException(
+          ErrorMesages.RESET_BEFORE_OR_AT_READING);
+    }
+
+    addReading(mediumMeter, dateOfReset, 0D);
+
+  }
+
+
+  // == private methods ==
+  private LocalDate parseDate(String deactivationDate) {
+    LocalDate activeUntil;
+    try {
+      activeUntil = LocalDate.parse(deactivationDate);
+    } catch (Exception e) {
+      throw new IllegalArgumentException(ErrorMesages.BLANK_DATE);
+    }
+    return activeUntil;
+  }
+
 
   private MediumMeter getMediumMeter(Long meterId) {
     return mediumMeterRepository.findById(meterId)
@@ -96,53 +144,23 @@ public class MediumMeterService {
     mediumMeterRepository.save(mediumMeter);
   }
 
-
-  public boolean existsById(Long meterId) {
-    return mediumMeterRepository.existsById(meterId);
-  }
-
-  @Transactional
-  public void deactivate(Long meterId, String deactivationDate) {
-    LocalDate activeUntil = LocalDate.parse(deactivationDate);
-
-    if (activeUntil.isBefore(findActiveSinceDate(meterId))) {
-      throw new IllegalArgumentException(
-          ErrorMesages.DEACTIVATION_BEFORE_ACTIVATION);
-    }
-
-    if (activeUntil
-        .isBefore(mediumMeterRepository.getLastReadingDate(meterId))) {
-      throw new IllegalArgumentException(
-          ErrorMesages.DEACTIVATION_BEFORE_LAST_READING);
-    }
-
-    if (activeUntil.isAfter(LocalDate.now())) {
-      throw new IllegalArgumentException(ErrorMesages.FUTURE_DEACTIVATION);
-    }
-    mediumMeterRepository
-        .deactivate(meterId, activeUntil);
-  }
-
-
   private LocalDate findActiveSinceDate(Long mediumMeterId) {
     return mediumMeterRepository.getActiveSince(mediumMeterId);
   }
 
-  public void reset(Long meterId, String resetDate) {
-    LocalDate dateOfReset = LocalDate.parse(resetDate);
-    MediumMeter mediumMeter = getMediumMeter(meterId);
+  private void checkIfInTheMiddleOfPreviousAndNext(Long meterId,
+                                                   LocalDate readingDate,
+                                                   Double readingValue) {
+    Double maxBefore =
+        readingRepository.getMaxReadingBefore(readingDate, meterId).orElse(0D);
+    Double minAfter =
+        readingRepository.getMinReadingAfter(readingDate, meterId)
+            .orElse(readingValue + 1);
 
-    if (!mediumMeter.isResettable()) {
-      throw new IllegalArgumentException(ErrorMesages.NOT_RESETTABLE);
+    if (readingValue < maxBefore || (readingValue > minAfter
+        && minAfter != 0)) {
+      throw new IllegalArgumentException(ErrorMesages.WRONG_READING_VALUE);
     }
-    if (
-        mediumMeterRepository.getLastReadingDate(meterId)
-            .isAfter(dateOfReset)
-            || mediumMeterRepository.getLastReadingDate(meterId)
-            .isEqual(dateOfReset)) {
-      throw new IllegalArgumentException(ErrorMesages.RESET_BEFORE_READING);
-    }
-
-    addReading(mediumMeter, dateOfReset, 0D);
   }
+
 }

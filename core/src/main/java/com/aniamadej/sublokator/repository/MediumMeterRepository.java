@@ -18,7 +18,7 @@ public interface MediumMeterRepository
       + "mm.unitName as unit, mm.resettable as resettable, "
       + "mm.activeUntil as activeUntil, mm.activeSince as activeSince "
       + "from MediumMeter mm where mm.id = :id")
-  Optional<MediumMeterBasics> findOneById(@Param("id") Long id);
+  Optional<MediumMeterBasics> findReadModelById(@Param("id") Long id);
 
   @Modifying
   @Query("update MediumMeter m set m.activeUntil = :activeUntil "

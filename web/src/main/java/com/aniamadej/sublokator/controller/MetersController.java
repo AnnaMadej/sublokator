@@ -36,13 +36,16 @@ public class MetersController {
     if (!model.containsAttribute(Attributes.READING_FORM)) {
       model.addAttribute(Attributes.READING_FORM, new ReadingForm());
     }
-    return mediumMeterService.findById(meterId).map(meter -> {
-      model.addAttribute(Attributes.MEDIUM_METER, meter);
+
+    try {
+      model.addAttribute(model.addAttribute(Attributes.MEDIUM_METER,
+          mediumMeterService.findById(meterId)));
       return Views.METER;
-    }).orElseGet(() ->
-        ControllersHelper
-            .redirectToMainPageWithErrorMessageCode(redirectAttributes,
-                "error.meterNotExists"));
+    } catch (Exception e) {
+      return ControllersHelper
+          .redirectToMainPageWithErrorMessageCode(redirectAttributes,
+              e.getMessage());
+    }
   }
 
   @PostMapping(
@@ -85,7 +88,7 @@ public class MetersController {
   @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.RESET)
   public String resetMeter(@PathVariable("meterId") Long meterId,
                            @RequestParam(Attributes.RESET_DATE)
-                                    String deactivationDate,
+                               String deactivationDate,
                            RedirectAttributes redirectAttributes) {
     try {
       mediumMeterService.reset(meterId, deactivationDate);

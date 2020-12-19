@@ -14,9 +14,9 @@ import org.springframework.stereotype.Repository;
 public interface ReadingRepository extends JpaRepository<Reading, Long> {
 
   @Query("select r.date as date, r.reading as reading, r.id as id "
-      + "from Reading r where r.mediumMeter.id = :id "
+      + "from Reading r where r.mediumMeter.id = :meterId "
       + "order by r.date desc, r.reading desc")
-  List<ReadingBasics> findByMediumMeterId(@Param("id") Long id);
+  List<ReadingBasics> findByMediumMeterId(@Param("meterId") Long meterId);
 
   @Query("select max(r.reading) from Reading r "
       + "where r.mediumMeter.id = :meterId "

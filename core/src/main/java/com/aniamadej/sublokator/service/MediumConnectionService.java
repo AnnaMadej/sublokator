@@ -34,7 +34,6 @@ public class MediumConnectionService {
   public List<NumberedName> getMeterNumbers(long mediumConnectionId,
                                             Pageable pageable,
                                             Boolean inactive) {
-
     if (inactive) {
       return mediumConnectionRepository
           .fetchInactiveMeterNumbers(mediumConnectionId, pageable)

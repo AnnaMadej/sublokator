@@ -15,10 +15,12 @@ public final class ErrorMesages {
   public static final String DEACTIVATION_BEFORE_LAST_READING =
       "error.deactivationBeforeLastReading";
   public static final String NOT_RESETTABLE = "error.notResettable";
-  public static final String RESET_BEFORE_READING = "error.resetBeforeReading";
+  public static final String RESET_BEFORE_OR_AT_READING =
+      "error.resetBeforeReading";
   public static final String READING_AT_RESET = "error.readingAtReset";
   public static final String BLANK_NAME = "error.blankName";
   public static final String TOO_LONG_NAME = "error.tooLongName";
+  public static final String BLANK_DATE = "error.blankDate";
 
   private ErrorMesages() {
   }

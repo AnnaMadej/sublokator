@@ -4,6 +4,7 @@ import com.aniamadej.sublokator.dto.MediumMeterBasics;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@EqualsAndHashCode
 public class MediumMeterReadModel implements MediumMeterBasics {
   private String mediumName;
   private String number;

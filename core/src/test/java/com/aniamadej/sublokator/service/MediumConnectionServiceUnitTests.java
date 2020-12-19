@@ -297,6 +297,7 @@ class MediumConnectionServiceUnitTests {
   }
 
 
+
   private List<NumberedName> createNamesList() {
     List<NumberedName> listOfNames = new ArrayList<>();
     listOfNames.add(new NumberedName() {
