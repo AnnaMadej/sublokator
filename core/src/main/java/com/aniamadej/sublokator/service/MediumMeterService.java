@@ -97,6 +97,13 @@ public class MediumMeterService {
         .deactivate(meterId, activeUntil);
   }
 
+  @Transactional
+  public void reactivate(Long meterId) {
+    if (!mediumMeterRepository.isActive(meterId)) {
+      mediumMeterRepository.reactivate(meterId);
+    }
+  }
+
 
   public void reset(Long meterId, String resetDate) {
     LocalDate dateOfReset = parseDate(resetDate);

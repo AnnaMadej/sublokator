@@ -45,8 +45,10 @@
     <attr sel="#resetFormGroup" th:if="${mediumMeter.isResettable()==true}"/>
     <attr sel="#resetForm"
           th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).RESET}__}"/>
+    <attr sel="#reactivateForm"   th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).REACTIVATE}__}"/>
     <attr sel="#resetDateInput" th:name="${T(com.aniamadej.sublokator.util.Attributes).RESET_DATE}"/>
     <attr sel="#resetLabel" th:text="#{page.resetDate}"/>
+    <attr sel="#reactivateButton" th:text="#{page.cancelDeactivation}"/>
     <attr sel="#resetButton" th:text="#{page.reset}"/>
 
 </thLogic>

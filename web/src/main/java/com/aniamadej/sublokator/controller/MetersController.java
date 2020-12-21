@@ -85,6 +85,12 @@ public class MetersController {
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
+  @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.REACTIVATE)
+  public String reactivateMeter(@PathVariable("meterId") Long meterId) {
+    mediumMeterService.reactivate(meterId);
+    return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
+  }
+
   @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.RESET)
   public String resetMeter(@PathVariable("meterId") Long meterId,
                            @RequestParam(Attributes.RESET_DATE)

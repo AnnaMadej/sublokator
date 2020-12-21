@@ -12,6 +12,7 @@ public final class Mappings {
   public static final String MEDIA_ADD = Mappings.MEDIA_PAGE + Mappings.ADD;
   public static final String DEACTIVATE = "/deactivate";
   public static final String RESET = "/reset";
+  public static final String REACTIVATE = "/reactivate";;
   private static final String READINGS_SUBPAGE = "/readings";
   public static final String READING_ADD_SUBPAGE =
       Mappings.READINGS_SUBPAGE + Mappings.ADD;

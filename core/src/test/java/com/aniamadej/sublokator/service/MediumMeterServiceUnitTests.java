@@ -761,4 +761,22 @@ class MediumMeterServiceUnitTests {
         .save(mockMediumMeter);
   }
 
+  @Test
+  @DisplayName("reactivation of active medium meter should not call any method"
+      + "of repository")
+  public void reactivationOfActiveMeterDoesNothing() {
+    when(mockMediumMeterepository.isActive(anyLong())).thenReturn(true);
+    mediumMeterService.reactivate(1L);
+    verify(mockMediumMeterepository, times(0)).reactivate(anyLong());
+  }
+
+  @Test
+  @DisplayName("reactivation of inactive medium meter should call method"
+      + "of repository")
+  public void reactivationOfInactiveMeterCallsRepoMethod() {
+    when(mockMediumMeterepository.isActive(anyLong())).thenReturn(false);
+    mediumMeterService.reactivate(1L);
+    verify(mockMediumMeterepository, times(1))
+        .reactivate(1L);
+  }
 }

@@ -11,98 +11,106 @@
     <p class="alert-danger" id="error"></p>
 
     <div class="row">
-        <div class="col-2" id="meterNumberLabel">Medium meter number:</div>
-        <div class="col-2" id="meterNumber">71830</div>
+        <div class="col-1" id="meterNumberLabel">Medium meter number:</div>
+        <div class="col-1" id="meterNumber">71830</div>
     </div>
     <div class="row">
-        <div class="col-2" id="meterUnitLabel">Medium meter unit:</div>
-        <div class="col-2" id="unit">kwh</div>
+        <div class="col-1" id="meterUnitLabel">Medium meter unit:</div>
+        <div class="col-1" id="unit">kwh</div>
     </div>
     <div class="row">
-        <div class="col-2" id="activeSinceLabel">Active since:</div>
-        <div class="col-2" id="activeSince">2020-12-12</div>
+        <div class="col-1" id="activeSinceLabel">Active since:</div>
+        <div class="col-1" id="activeSince">2020-12-12</div>
     </div>
     <div class="row" id="activeUntilGroup">
-        <div class="col-2" id="activeUntilLabel">Active until:</div>
-        <div class="col-2" id="activeUntil">2020-12-12</div>
-    </div>
-
-    <hr/>
-
-    <div class="row" id="deactivateFormGroup">
-        <form action="" class="form-check" id="deactivateForm" method="post">
-            <div class="form-group">
-                <div class="form-inline">
-                    <label class="form-label" for="activeUntilInput" id="activeUntilInputLabel">Active until: </label>
-                    <input id="activeUntilInput" type="date"/>
-                    <button class="btn btn-danger" id="deactivateButton" type="submit">Deactivate</button>
-                </div>
-            </div>
-            <div class="form-group row">
-
-            </div>
+        <div class="col-1" id="activeUntilLabel">Active until:</div>
+        <div class="col-1" id="activeUntil">2020-12-12</div>
+        <div class="col-2">
+        <form action="" id="reactivateForm" method="post">
+            <button class="btn btn-danger" id="reactivateButton" type="submit">Cancel deactivation</button>
         </form>
-    </div>
-
-    <div class="row" id="resetFormGroup">
-        <form action="" class="form-check" id="resetForm" method="post">
-            <div class="form-group">
-                <div class="form-inline">
-                    <label class="form-label" for="activeUntilInput" id="resetLabel">Reset date: </label>
-                    <input id="resetDateInput" type="date"/>
-                    <button class="btn btn-danger" id="resetButton" type="submit">Reset</button>
-                </div>
-            </div>
-            <div class="form-group row">
-
-            </div>
-        </form>
-    </div>
-
-    <hr/>
-    <div>
-        <h3 id="readingsHeader">Readings:</h3>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th id="dateHeader" scope="col">Date</th>
-                <th id="readingHeader" scope="col">Reading</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr class="readingsRow">
-                <td>2020.01.12</td>
-                <td>12032.45</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <hr>
-    <div>
-        <h3 id="addReadingHeader">Add a reading:</h3>
-        <form action="" class="form-check" id="newReadingForm" method="post">
-            <div class="form-group row">
-                <label class="col-sm-2 col-form-label" for="dateInput" id="dateLabel">Reading date: </label>
-                <div class="col-sm-3">
-                    <input class="form-control" id="dateInput" type="date"/>
-                    <p class="alert alert-danger" id="dateError">First reading error</p>
-                </div>
-            </div>
-            <div class="form-group row">
-                <label class="col-sm-2 col-form-label" for="readingInput" id="readingLabel">Reading: </label>
-                <div class="col-sm-3">
-                    <input class="form-control" id="readingInput" step="0.01" type="number"/>
-                    <p class="alert alert-danger" id="readingError">Reading error</p>
-                </div>
-            </div>
-            <div class="form-group row">
-                <button class="btn btn-outline-secondary" id="addButton" type="submit">SUBMIT</button>
-            </div>
-        </form>
+        </div>
+        <div class="col"></div>
 
     </div>
+</div>
 
-    <hr/>
+<hr/>
+
+<div class="row" id="deactivateFormGroup">
+    <form action="" class="form-check" id="deactivateForm" method="post">
+        <div class="form-group">
+            <div class="form-inline">
+                <label class="form-label" for="activeUntilInput" id="activeUntilInputLabel">Active until: </label>
+                <input id="activeUntilInput" type="date"/>
+                <button class="btn btn-danger" id="deactivateButton" type="submit">Deactivate</button>
+            </div>
+        </div>
+        <div class="form-group row">
+
+        </div>
+    </form>
+</div>
+
+<div class="row" id="resetFormGroup">
+    <form action="" class="form-check" id="resetForm" method="post">
+        <div class="form-group">
+            <div class="form-inline">
+                <label class="form-label" for="resetDateInput" id="resetLabel">Reset date: </label>
+                <input id="resetDateInput" type="date"/>
+                <button class="btn btn-danger" id="resetButton" type="submit">Reset</button>
+            </div>
+        </div>
+        <div class="form-group row">
+
+        </div>
+    </form>
+</div>
+
+<hr/>
+<div>
+    <h3 id="readingsHeader">Readings:</h3>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th id="dateHeader" scope="col">Date</th>
+            <th id="readingHeader" scope="col">Reading</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="readingsRow">
+            <td>2020.01.12</td>
+            <td>12032.45</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<hr>
+<div>
+    <h3 id="addReadingHeader">Add a reading:</h3>
+    <form action="" class="form-check" id="newReadingForm" method="post">
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="dateInput" id="dateLabel">Reading date: </label>
+            <div class="col-sm-3">
+                <input class="form-control" id="dateInput" type="date"/>
+                <p class="alert alert-danger" id="dateError">First reading error</p>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="readingInput" id="readingLabel">Reading: </label>
+            <div class="col-sm-3">
+                <input class="form-control" id="readingInput" step="0.01" type="number"/>
+                <p class="alert alert-danger" id="readingError">Reading error</p>
+            </div>
+        </div>
+        <div class="form-group row">
+            <button class="btn btn-outline-secondary" id="addButton" type="submit">SUBMIT</button>
+        </div>
+    </form>
+
+</div>
+
+<hr/>
 
 
 </div>

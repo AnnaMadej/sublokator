@@ -35,4 +35,12 @@ public interface MediumMeterRepository
   @Query("select m.resettable from MediumMeter m where m.id=:meterId")
   Boolean isResettable(@Param("meterId") Long meterId);
 
+  @Query("select (m.activeUntil is null) from MediumMeter m "
+      + "where m.id=:meterId")
+  Boolean isActive(@Param("meterId") Long meterId);
+
+  @Modifying
+  @Query("update MediumMeter m set m.activeUntil = null "
+      + "where m.id=:meterId ")
+  void reactivate(Long meterId);
 }
