@@ -7,12 +7,10 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.util.ErrorMesages;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 public class MediumConnectionService {
 
@@ -69,7 +67,6 @@ public class MediumConnectionService {
 
   public void addMediumMeter(Long mediumConnectionId,
                              MediumMeterForm mediumMeterForm) {
-    MediumConnection mediumConnection =
         mediumConnectionRepository.findById(mediumConnectionId)
             .map(connection -> {
               MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();

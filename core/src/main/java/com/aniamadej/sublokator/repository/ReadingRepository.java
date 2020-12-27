@@ -1,6 +1,7 @@
 package com.aniamadej.sublokator.repository;
 
 import com.aniamadej.sublokator.dto.ReadingBasics;
+import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,7 +19,7 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
       + "order by r.date desc, r.reading desc")
   List<ReadingBasics> findByMediumMeterId(@Param("meterId") Long meterId);
 
-  @Query("select max(r.reading) from Reading r "
+  @Query("select r.reading from Reading r "
       + "where r.mediumMeter.id = :meterId "
       + "and r.date = (select max(r1.date) from Reading r1 "
       + "where  r.mediumMeter.id = :meterId and r1.date < :date) "
@@ -26,7 +27,7 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
   Optional<Double> getMaxReadingBefore(@Param("date") LocalDate date,
                                        @Param("meterId") Long meterId);
 
-  @Query("select min(r.reading) from Reading r "
+  @Query("select r.reading from Reading r "
       + "where r.mediumMeter.id = :meterId "
       + "and r.date = (select min(r1.date) from Reading r1 "
       + "where  r.mediumMeter.id = :meterId and r1.date > :date) "
@@ -35,8 +36,11 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
                                       @Param("meterId") Long meterId);
 
 
-  @Query("select count(r) from Reading r where r.mediumMeter.id=:meterId "
+  @Query("select case when (count(r) > 0) then true else false end "
+      + "from Reading r where r.mediumMeter.id=:meterId "
       + "and r.reading = 0 and r.date=:readingDate")
-  Integer countZeroesAtDate(@Param("readingDate") LocalDate readingDate,
-                            @Param("meterId") Long meterId);
+  Boolean isResetDate(@Param("readingDate") LocalDate readingDate,
+                      @Param("meterId") Long meterId);
+
+  Boolean existsByDateAndMediumMeter(LocalDate date, MediumMeter mediumMeter);
 }

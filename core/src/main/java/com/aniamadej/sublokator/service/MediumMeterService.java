@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 public class MediumMeterService {
 
@@ -36,9 +35,7 @@ public class MediumMeterService {
     return mediumMeterRepository.findReadModelById(meterId).map(meter -> {
       List<ReadingBasics> readings =
           readingRepository.findByMediumMeterId(meterId);
-      MediumMeterReadModel mediumMeterReadModel =
-          new MediumMeterReadModel(meter, readings);
-      return mediumMeterReadModel;
+      return new MediumMeterReadModel(meter, readings);
     }).orElseThrow(
         () -> new IllegalArgumentException(ErrorMesages.NO_METER_ID));
   }
@@ -46,10 +43,14 @@ public class MediumMeterService {
 
   public void addReading(Long meterId, ReadingForm readingForm) {
     MediumMeter mediumMeter = getMediumMeter(meterId);
-
     LocalDate readingDate = parseDate(readingForm.getDate());
 
-    if (readingRepository.countZeroesAtDate(readingDate, meterId) != 0) {
+    if (readingRepository
+        .existsByDateAndMediumMeter(readingDate, mediumMeter)) {
+      throw new IllegalArgumentException(ErrorMesages.DUPLICATE_READING);
+    }
+
+    if (readingRepository.isResetDate(readingDate, meterId)) {
       throw new IllegalArgumentException(
           ErrorMesages.READING_AT_RESET);
     }
@@ -118,7 +119,7 @@ public class MediumMeterService {
             || mediumMeterRepository.getLastReadingDate(meterId)
             .isEqual(dateOfReset)) {
       throw new IllegalArgumentException(
-          ErrorMesages.RESET_BEFORE_OR_AT_READING);
+          ErrorMesages.RESET_NOT_AFTER_LAST_READING);
     }
 
     addReading(mediumMeter, dateOfReset, 0D);
@@ -146,6 +147,7 @@ public class MediumMeterService {
 
   private void addReading(MediumMeter mediumMeter, LocalDate readingDate,
                           Double readingValue) {
+
     Reading reading = new Reading(readingDate, readingValue);
     mediumMeter.addReading(reading);
     mediumMeterRepository.save(mediumMeter);
