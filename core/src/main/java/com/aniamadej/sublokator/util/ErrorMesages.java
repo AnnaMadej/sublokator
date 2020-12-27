@@ -22,6 +22,9 @@ public final class ErrorMesages {
   public static final String TOO_LONG_NAME = "error.tooLongName";
   public static final String BLANK_DATE = "error.blankDate";
   public static final String DUPLICATE_READING = "error.duplicateReading";
+  public static final String NO_READING_ID = "error.noReadingId";
+  public static final String FIRST_DELETE = "error.firstDelete";
+  public static final String ZERO_DELETE = "error.zeroDelete";
 
   private ErrorMesages() {
   }

@@ -43,4 +43,18 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
                       @Param("meterId") Long meterId);
 
   Boolean existsByDateAndMediumMeter(LocalDate date, MediumMeter mediumMeter);
+
+  @Query("select case when count(r) = 0 then true else false end "
+      + "from Reading r "
+      + "where r.date<(select r1.date from Reading r1 where r1.id=:readingId) "
+      + "and r.mediumMeter.id=(select r1.mediumMeter.id "
+      + "from Reading r1 where r1.id=:readingId)")
+  Boolean isFirst(@Param("readingId") Long readingId);
+
+  @Query("select case when count(r) = 0 then true else false end "
+      + "from Reading r "
+      + "where r.date>(select r1.date from Reading r1 where r1.id=:readingId) "
+      + "and r.mediumMeter.id=(select r1.mediumMeter.id "
+      + "from Reading r1 where r1.id=:readingId)")
+  Boolean isLast(@Param("readingId") Long readingId);
 }
