@@ -14,7 +14,7 @@
         <attr sel="td[1]" th:text="${reading.getReading()}"/>
         <attr sel="td[2]">
             <attr sel="form" th:method="post"
-                  th:action="@{__${T(com.aniamadej.sublokator.util.Mappings).METER_PAGE}__/__${reading.getId()}____${T(com.aniamadej.sublokator.util.Mappings).DELETE}__}">
+                  th:action="@{__${T(com.aniamadej.sublokator.util.Mappings).READING_PAGE}__/__${reading.getId()}____${T(com.aniamadej.sublokator.util.Mappings).DELETE}__}">
                 <attr sel="button"  th:text="#{page.delete}"/>/>
             </attr>
         </attr>

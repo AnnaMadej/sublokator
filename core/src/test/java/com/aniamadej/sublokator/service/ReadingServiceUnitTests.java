@@ -14,6 +14,7 @@ import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.util.ErrorMesages;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ReadingServiceUnitTests {
@@ -28,6 +29,8 @@ class ReadingServiceUnitTests {
   }
 
   @Test
+  @DisplayName("deletin reading that does not exist"
+      + "should throw IllegalArgumentException")
   public void deleteReadingNotExistsThrowsIllegalArgumentException() {
     when(mockReadingRepository.findById(anyLong()))
         .thenReturn(Optional.empty());
@@ -39,6 +42,8 @@ class ReadingServiceUnitTests {
   }
 
   @Test
+  @DisplayName("deleting first reading od meter should throw "
+      + "IllealArgumentException")
   public void deleteFirstReadingThrowsIllegalArgumentException() {
     when(mockReadingRepository.findById(anyLong()))
         .thenReturn(Optional.of(new Reading()));
@@ -52,6 +57,8 @@ class ReadingServiceUnitTests {
   }
 
   @Test
+  @DisplayName("deleting zero reading which is not a last reading"
+      + "should throw IllegalArgumentException")
   public void deleteZeroNotLastReadingThrowsIllegalArgumentException() {
     Reading mockReading = mock(Reading.class);
     when(mockReading.getReading()).thenReturn(0.);
@@ -69,7 +76,10 @@ class ReadingServiceUnitTests {
   }
 
   @Test
-  public void deletePerformsDeleteOnRepository() {
+  @DisplayName("deleting reading that is not first "
+      + "not last and not zero "
+      + "should call delete on repository")
+  public void deleteNotLastNotFirstNotZeroPerformsDeleteOnRepository() {
     Reading mockReading = mock(Reading.class);
     when(mockReading.getReading()).thenReturn(2.);
     when(mockReading.getId()).thenReturn(1L);
@@ -85,5 +95,54 @@ class ReadingServiceUnitTests {
 
     verify(mockReadingRepository, times(1))
         .deleteById(mockReading.getId());
+  }
+
+  @Test
+  @DisplayName("deleting reading that is not first "
+      + "and is zero but last"
+      + "should call delete on repository")
+  public void deleteNotFirstZeroLastPerformsDeleteOnRepository() {
+    Reading mockReading = mock(Reading.class);
+    when(mockReading.getReading()).thenReturn(0.);
+    when(mockReading.getId()).thenReturn(1L);
+
+    when(mockReadingRepository.findById(anyLong()))
+        .thenReturn(Optional.of(mockReading));
+    when(mockReadingRepository.isFirst(anyLong()))
+        .thenReturn(false);
+    when(mockReadingRepository.isLast(anyLong()))
+        .thenReturn(true);
+
+    readingService.delete(1L);
+
+    verify(mockReadingRepository, times(1))
+        .deleteById(mockReading.getId());
+  }
+
+  @Test
+  public void findMeterIdMeterNotExistsThrowsIllegalArgumentException() {
+    Long readingId = 1L;
+    when(mockReadingRepository.findMeterId(readingId))
+        .thenReturn(Optional.empty());
+    Throwable exception
+        = catchThrowable(() -> readingService.findMediumId(1L));
+    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            ErrorMesages.NO_METER_ID);
+    verify(mockReadingRepository, times(1))
+        .findMeterId(readingId);
+  }
+
+  @Test
+  public void findMeterIdMeterExistsReturnsId() {
+    Long readingId = 1L;
+    Long meterId = 2L;
+    when(mockReadingRepository.findMeterId(readingId))
+        .thenReturn(Optional.of(meterId));
+
+    Long fetchedMeterId = readingService.findMediumId(readingId);
+    verify(mockReadingRepository, times(1))
+        .findMeterId(readingId);
+    assertThat(meterId).isEqualTo(fetchedMeterId).isEqualTo(meterId);
   }
 }

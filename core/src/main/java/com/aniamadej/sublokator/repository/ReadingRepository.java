@@ -57,4 +57,7 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
       + "and r.mediumMeter.id=(select r1.mediumMeter.id "
       + "from Reading r1 where r1.id=:readingId)")
   Boolean isLast(@Param("readingId") Long readingId);
+
+  @Query("select r.mediumMeter.id from Reading r where r.id=:readingId")
+  Optional<Long> findMeterId(@Param("readingId") Long readingId);
 }
