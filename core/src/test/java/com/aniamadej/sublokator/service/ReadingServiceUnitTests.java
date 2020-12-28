@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.util.ErrorCodes;
@@ -36,7 +38,7 @@ class ReadingServiceUnitTests {
         .thenReturn(Optional.empty());
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(MainException.class)
         .hasMessage(
             ErrorCodes.NO_READING_ID);
   }
@@ -51,7 +53,7 @@ class ReadingServiceUnitTests {
         .thenReturn(true);
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(
             ErrorCodes.FIRST_DELETE);
   }
@@ -70,7 +72,7 @@ class ReadingServiceUnitTests {
         .thenReturn(false);
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(
             ErrorCodes.ZERO_DELETE);
   }
@@ -126,7 +128,7 @@ class ReadingServiceUnitTests {
         .thenReturn(Optional.empty());
     Throwable exception
         = catchThrowable(() -> readingService.findMediumId(1L));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(MainException.class)
         .hasMessage(
             ErrorCodes.NO_METER_ID);
     verify(mockReadingRepository, times(1))

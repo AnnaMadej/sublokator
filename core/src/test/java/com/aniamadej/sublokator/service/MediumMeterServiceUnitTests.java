@@ -11,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.MediumMeterBasics;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.dto.input.ReadingForm;
@@ -109,7 +111,7 @@ class MediumMeterServiceUnitTests {
     verify(mockReadingRepository, times(0))
         .findByMediumMeterId(mediumMeterId);
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(MainException.class)
         .hasMessage(
             ErrorCodes.NO_METER_ID);
   }
@@ -133,7 +135,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, readingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.DUPLICATE_READING);
 
     verify(mockReadingRepository, times(1))
@@ -159,7 +161,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, readingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.READING_AT_RESET);
 
     verify(mockReadingRepository, times(1))
@@ -177,7 +179,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, new ReadingForm()));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(MainException.class)
         .hasMessage(ErrorCodes.NO_METER_ID);
 
     verify(mockMediumMeterepository, times(1))
@@ -206,7 +208,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.READING_BEFORE_ACTIVATION);
 
     verify(mockReadingRepository, times(1))
@@ -236,7 +238,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.READING_AFTER_DEACTIVATION);
 
     verify(mockReadingRepository, times(1))
@@ -276,7 +278,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.WRONG_READING_VALUE);
 
     verify(mockReadingRepository, times(1))
@@ -321,7 +323,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.WRONG_READING_VALUE);
 
     verify(mockReadingRepository, times(1))
@@ -416,7 +418,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.NEGATIVE_READING);
 
     verify(mockMediumMeterepository, times(0))
@@ -587,13 +589,13 @@ class MediumMeterServiceUnitTests {
     Throwable exception3 = catchThrowable(
         () -> mediumMeterService.deactivate(meterId, deactivationDate3));
 
-    assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception1).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_DATE);
 
-    assertThat(exception2).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception2).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_DATE);
 
-    assertThat(exception3).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception3).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_DATE);
   }
 
@@ -608,7 +610,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
 
 
-    assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception1).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.FUTURE_DEACTIVATION);
 
   }
@@ -626,7 +628,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
 
 
-    assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception1).isInstanceOf(MainException.class)
         .hasMessage(ErrorCodes.NO_METER_ID);
 
   }
@@ -646,7 +648,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
 
 
-    assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception1).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.DEACTIVATION_BEFORE_ACTIVATION);
 
   }
@@ -668,7 +670,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
 
 
-    assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception1).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.DEACTIVATION_BEFORE_LAST_READING);
   }
 
@@ -719,13 +721,13 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.reset(meterId, resetDate3));
 
 
-    assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception1).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_DATE);
 
-    assertThat(exception2).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception2).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_DATE);
 
-    assertThat(exception3).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception3).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_DATE);
   }
 
@@ -741,7 +743,7 @@ class MediumMeterServiceUnitTests {
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(MainException.class)
         .hasMessage(ErrorCodes.NO_METER_ID);
 
     ArgumentCaptor<Long> longCaptor = ArgumentCaptor.forClass(Long.class);
@@ -764,7 +766,7 @@ class MediumMeterServiceUnitTests {
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.NOT_RESETTABLE);
   }
 
@@ -785,7 +787,7 @@ class MediumMeterServiceUnitTests {
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.RESET_NOT_AFTER_LAST_READING);
   }
 
@@ -806,7 +808,7 @@ class MediumMeterServiceUnitTests {
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
-    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+    assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.RESET_NOT_AFTER_LAST_READING);
   }
 

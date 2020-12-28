@@ -1,5 +1,7 @@
 package com.aniamadej.sublokator.service;
 
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
@@ -53,11 +55,11 @@ public class MediumConnectionService {
 
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
-      throw new IllegalArgumentException(ErrorCodes.BLANK_NAME);
+      throw new InputException(ErrorCodes.BLANK_NAME);
     }
 
     if (name.length() > 50) {
-      throw new IllegalArgumentException(ErrorCodes.TOO_LONG_NAME);
+      throw new InputException(ErrorCodes.TOO_LONG_NAME);
     }
 
     MediumConnection connection = new MediumConnection();
@@ -69,7 +71,7 @@ public class MediumConnectionService {
                              MediumMeterForm mediumMeterForm) {
 
     if (mediumMeterForm.getFirstReading() < 0) {
-      throw new IllegalArgumentException(ErrorCodes.NEGATIVE_READING);
+      throw new InputException(ErrorCodes.NEGATIVE_READING);
     }
 
     mediumConnectionRepository.findById(mediumConnectionId)
@@ -79,7 +81,7 @@ public class MediumConnectionService {
           return mediumConnectionRepository.save(connection);
         })
         .orElseThrow(() ->
-            new IllegalArgumentException(
+            new MainException(
                 ErrorCodes.NO_MEDIUM_CONNECTION_ID));
   }
 

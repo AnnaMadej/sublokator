@@ -11,4 +11,6 @@
     <attr sel="#mediumNameLabel" th:text="#{page.mediumName}"/>
     <attr sel="#mediumNameInput"
           th:name="${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}"/>
+    <attr sel="#error" th:if="${error}"
+          th:text="${error}"/>
 </thLogic>

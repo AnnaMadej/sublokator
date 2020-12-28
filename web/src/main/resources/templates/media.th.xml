@@ -5,6 +5,6 @@
     <attr sel="#newMediumLink"
           th:text="#{page.addMedium}"
           th:href="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).ADD}__}"/>
-    <attr sel="#error"
-          th:text="${#messages.msgOrNull('__${error}__')}" th:if="${#messages.msgOrNull('__${error}__') != null}"/>
+    <attr sel="#error" th:if="${error}"
+          th:text="${error}"/>
 </thLogic>

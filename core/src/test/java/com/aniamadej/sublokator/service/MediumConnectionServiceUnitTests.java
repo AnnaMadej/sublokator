@@ -12,6 +12,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
@@ -56,7 +58,7 @@ class MediumConnectionServiceUnitTests {
             .addMediumMeter(1L, mockMediumMeterForm));
 
     assertThat(exception)
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.NEGATIVE_READING);
   }
 
@@ -74,7 +76,7 @@ class MediumConnectionServiceUnitTests {
             .addMediumMeter(1L, new MediumMeterForm()));
 
     assertThat(exception)
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(MainException.class)
         .hasMessage(ErrorCodes.NO_MEDIUM_CONNECTION_ID);
   }
 
@@ -144,7 +146,7 @@ class MediumConnectionServiceUnitTests {
         = catchThrowable(() -> mediumConnectionService.save(mediumName));
 
     assertThat(exception)
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.TOO_LONG_NAME);
   }
 
@@ -167,15 +169,15 @@ class MediumConnectionServiceUnitTests {
         = catchThrowable(() -> mediumConnectionService.save(mediumName3));
 
     assertThat(exception1)
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_NAME);
 
     assertThat(exception2)
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_NAME);
 
     assertThat(exception3)
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(InputException.class)
         .hasMessage(ErrorCodes.BLANK_NAME);
   }
 

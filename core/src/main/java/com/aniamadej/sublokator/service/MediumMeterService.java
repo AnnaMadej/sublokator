@@ -1,5 +1,7 @@
 package com.aniamadej.sublokator.service;
 
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.dto.input.ReadingForm;
 import com.aniamadej.sublokator.dto.output.MediumMeterReadModel;
@@ -37,7 +39,7 @@ public class MediumMeterService {
           readingRepository.findByMediumMeterId(meterId);
       return new MediumMeterReadModel(meter, readings);
     }).orElseThrow(
-        () -> new IllegalArgumentException(ErrorCodes.NO_METER_ID));
+        () -> new MainException(ErrorCodes.NO_METER_ID));
   }
 
 
@@ -47,21 +49,21 @@ public class MediumMeterService {
 
     if (readingRepository
         .existsByDateAndMediumMeter(readingDate, mediumMeter)) {
-      throw new IllegalArgumentException(ErrorCodes.DUPLICATE_READING);
+      throw new InputException(ErrorCodes.DUPLICATE_READING);
     }
 
     if (readingRepository.isResetDate(readingDate, meterId)) {
-      throw new IllegalArgumentException(
+      throw new InputException(
           ErrorCodes.READING_AT_RESET);
     }
     if (mediumMeter.getActiveSince().isAfter(readingDate)) {
-      throw new IllegalArgumentException(
+      throw new InputException(
           ErrorCodes.READING_BEFORE_ACTIVATION);
     }
 
     if (null != mediumMeter.getActiveUntil()
         && mediumMeter.getActiveUntil().isBefore(readingDate)) {
-      throw new IllegalArgumentException(
+      throw new InputException(
           ErrorCodes.READING_AFTER_DEACTIVATION);
     }
 
@@ -76,21 +78,21 @@ public class MediumMeterService {
     LocalDate activeUntil = parseDate(deactivationDate);
 
     if (activeUntil.isAfter(LocalDate.now())) {
-      throw new IllegalArgumentException(ErrorCodes.FUTURE_DEACTIVATION);
+      throw new InputException(ErrorCodes.FUTURE_DEACTIVATION);
     }
 
     if (!mediumMeterRepository.existsById(meterId)) {
-      throw new IllegalArgumentException(ErrorCodes.NO_METER_ID);
+      throw new MainException(ErrorCodes.NO_METER_ID);
     }
 
     if (activeUntil.isBefore(findActiveSinceDate(meterId))) {
-      throw new IllegalArgumentException(
+      throw new InputException(
           ErrorCodes.DEACTIVATION_BEFORE_ACTIVATION);
     }
 
     if (activeUntil
         .isBefore(mediumMeterRepository.getLastReadingDate(meterId))) {
-      throw new IllegalArgumentException(
+      throw new InputException(
           ErrorCodes.DEACTIVATION_BEFORE_LAST_READING);
     }
 
@@ -111,14 +113,14 @@ public class MediumMeterService {
     MediumMeter mediumMeter = getMediumMeter(meterId);
 
     if (!mediumMeter.isResettable()) {
-      throw new IllegalArgumentException(ErrorCodes.NOT_RESETTABLE);
+      throw new InputException(ErrorCodes.NOT_RESETTABLE);
     }
     if (
         mediumMeterRepository.getLastReadingDate(meterId)
             .isAfter(dateOfReset)
             || mediumMeterRepository.getLastReadingDate(meterId)
             .isEqual(dateOfReset)) {
-      throw new IllegalArgumentException(
+      throw new InputException(
           ErrorCodes.RESET_NOT_AFTER_LAST_READING);
     }
 
@@ -133,7 +135,7 @@ public class MediumMeterService {
     try {
       activeUntil = LocalDate.parse(deactivationDate);
     } catch (Exception e) {
-      throw new IllegalArgumentException(ErrorCodes.BLANK_DATE);
+      throw new InputException(ErrorCodes.BLANK_DATE);
     }
     return activeUntil;
   }
@@ -142,14 +144,14 @@ public class MediumMeterService {
   private MediumMeter getMediumMeter(Long meterId) {
     return mediumMeterRepository.findById(meterId)
         .orElseThrow(
-            () -> new IllegalArgumentException(ErrorCodes.NO_METER_ID));
+            () -> new MainException(ErrorCodes.NO_METER_ID));
   }
 
   private void addReading(MediumMeter mediumMeter, LocalDate readingDate,
                           Double readingValue) {
 
     if (readingValue < 0) {
-      throw new IllegalArgumentException(ErrorCodes.NEGATIVE_READING);
+      throw new InputException(ErrorCodes.NEGATIVE_READING);
     }
 
     Reading reading = new Reading(readingDate, readingValue);
@@ -172,7 +174,7 @@ public class MediumMeterService {
 
     if (readingValue < previous
         || (readingValue > next && next != 0)) {
-      throw new IllegalArgumentException(ErrorCodes.WRONG_READING_VALUE);
+      throw new InputException(ErrorCodes.WRONG_READING_VALUE);
     }
   }
 

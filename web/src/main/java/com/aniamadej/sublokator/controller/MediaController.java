@@ -1,13 +1,17 @@
 package com.aniamadej.sublokator.controller;
 
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.service.MediumConnectionService;
-import com.aniamadej.sublokator.service.MediumMeterService;
 import com.aniamadej.sublokator.util.Attributes;
+import com.aniamadej.sublokator.util.ErrorCodes;
 import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,16 +27,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MediaController {
 
   private final MediumConnectionService mediumConnectionService;
+  private final MessageSource errorsMessageSource;
 
   @Autowired
-  MediaController(MediumConnectionService mediumConnectionService,
-                  MediumMeterService mediumMeterService) {
+  MediaController(
+      MediumConnectionService mediumConnectionService,
+      MessageSource errorsMessageSource) {
     this.mediumConnectionService = mediumConnectionService;
+    this.errorsMessageSource = errorsMessageSource;
   }
 
+
   @GetMapping(Mappings.MEDIA_PAGE)
-  public String showMediaConnections(Model model,
-                                     @ModelAttribute("error") String error) {
+  public String showMediaConnections(Model model) {
     model
         .addAttribute(Attributes.NAMES, mediumConnectionService.getNamesList());
     model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.MEDIUM_PAGE);
@@ -41,14 +48,11 @@ public class MediaController {
 
   @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE)
   public String showMediumMeters(Model model, @PathVariable long mediumId,
-                                @RequestParam(required = false)
-                                    boolean inactive,
-                                Pageable pageable,
-                                RedirectAttributes redirectAttributes) {
+                                 @RequestParam(required = false)
+                                     boolean inactive,
+                                 Pageable pageable) {
     if (!mediumConnectionService.existsById(mediumId)) {
-      return ControllersHelper
-          .redirectToMainPageWithErrorMessageCode(redirectAttributes,
-              "error.connectionNotExists");
+      throw new MainException(ErrorCodes.NO_MEDIUM_CONNECTION_ID);
     }
     model.addAttribute(Attributes.NAMES,
         mediumConnectionService.getMeterNumbers(mediumId, pageable, inactive));
@@ -59,12 +63,9 @@ public class MediaController {
   }
 
   @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
-  public String showMediumConnection(Model model, @PathVariable long mediumId,
-                                    RedirectAttributes redirectAttributes) {
+  public String showMediumConnection(Model model, @PathVariable long mediumId) {
     if (!mediumConnectionService.existsById(mediumId)) {
-      return ControllersHelper
-          .redirectToMainPageWithErrorMessageCode(redirectAttributes,
-              "error.connectionNotExists");
+      throw new MainException(ErrorCodes.NO_MEDIUM_CONNECTION_ID);
     }
     model.addAttribute(Attributes.MEDIUM_NAME,
         mediumConnectionService.getMediumName(mediumId));
@@ -79,13 +80,17 @@ public class MediaController {
   @PostMapping(Mappings.MEDIA_ADD)
   public String addNewMedium(
       @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName,
-      RedirectAttributes ra) {
+      RedirectAttributes redirectAttributes) {
     try {
       mediumConnectionService.save(mediumName);
-    } catch (Exception e) {
-      ControllersHelper
-          .redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
+    } catch (InputException e) {
+
+      String error = errorsMessageSource.getMessage(e.getMessage(),
+          null, LocaleContextHolder.getLocale());
+      redirectAttributes.addFlashAttribute(Attributes.ERROR, error);
+      return "redirect:" + Mappings.MEDIA_ADD;
     }
+
     return "redirect:" + Mappings.MEDIA_PAGE;
   }
 
@@ -108,12 +113,8 @@ public class MediaController {
     if (bindingResult.hasErrors()) {
       return Views.METER_ADD;
     }
-    try {
-      mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
-    } catch (Exception e) {
-      return ControllersHelper
-          .redirectToMainPageWithErrorMessageCode(ra, e.getMessage());
-    }
+    mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
+
 
     return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId
         + Mappings.METERS_SUBPAGE;
