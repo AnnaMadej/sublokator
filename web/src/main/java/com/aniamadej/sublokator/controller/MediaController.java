@@ -8,7 +8,6 @@ import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,8 +26,7 @@ public class MediaController {
 
   @Autowired
   MediaController(MediumConnectionService mediumConnectionService,
-                  MediumMeterService mediumMeterService,
-                  ResourceBundleMessageSource messagesource) {
+                  MediumMeterService mediumMeterService) {
     this.mediumConnectionService = mediumConnectionService;
   }
 
@@ -42,7 +40,7 @@ public class MediaController {
   }
 
   @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE)
-  public String showMedumMeters(Model model, @PathVariable long mediumId,
+  public String showMediumMeters(Model model, @PathVariable long mediumId,
                                 @RequestParam(required = false)
                                     boolean inactive,
                                 Pageable pageable,
@@ -61,7 +59,7 @@ public class MediaController {
   }
 
   @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
-  public String showMedumConnection(Model model, @PathVariable long mediumId,
+  public String showMediumConnection(Model model, @PathVariable long mediumId,
                                     RedirectAttributes redirectAttributes) {
     if (!mediumConnectionService.existsById(mediumId)) {
       return ControllersHelper

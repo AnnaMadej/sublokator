@@ -16,7 +16,7 @@ import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
-import com.aniamadej.sublokator.util.ErrorMessages;
+import com.aniamadej.sublokator.util.ErrorCodes;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +57,7 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NEGATIVE_READING);
+        .hasMessage(ErrorCodes.NEGATIVE_READING);
   }
 
 
@@ -75,7 +75,7 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NO_MEDIUM_CONNECTION_ID);
+        .hasMessage(ErrorCodes.NO_MEDIUM_CONNECTION_ID);
   }
 
 
@@ -145,7 +145,7 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.TOO_LONG_NAME);
+        .hasMessage(ErrorCodes.TOO_LONG_NAME);
   }
 
   @Test
@@ -168,15 +168,15 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception1)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_NAME);
+        .hasMessage(ErrorCodes.BLANK_NAME);
 
     assertThat(exception2)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_NAME);
+        .hasMessage(ErrorCodes.BLANK_NAME);
 
     assertThat(exception3)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_NAME);
+        .hasMessage(ErrorCodes.BLANK_NAME);
   }
 
   @Test

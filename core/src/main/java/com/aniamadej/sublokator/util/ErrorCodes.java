@@ -1,6 +1,6 @@
 package com.aniamadej.sublokator.util;
 
-public final class ErrorMessages {
+public final class ErrorCodes {
   public static final String NO_MEDIUM_CONNECTION_ID =
       "error.connectionNotExists";
   public static final String WRONG_READING_VALUE = "error.wrongReadingValue";
@@ -27,6 +27,6 @@ public final class ErrorMessages {
   public static final String ZERO_DELETE = "error.zeroDelete";
   public static final String NEGATIVE_READING = "error.negativeReading";
 
-  private ErrorMessages() {
+  private ErrorCodes() {
   }
 }

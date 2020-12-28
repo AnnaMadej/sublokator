@@ -19,7 +19,7 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.util.ErrorMessages;
+import com.aniamadej.sublokator.util.ErrorCodes;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,7 +111,7 @@ class MediumMeterServiceUnitTests {
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            ErrorMessages.NO_METER_ID);
+            ErrorCodes.NO_METER_ID);
   }
 
   @Test
@@ -134,7 +134,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, readingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.DUPLICATE_READING);
+        .hasMessage(ErrorCodes.DUPLICATE_READING);
 
     verify(mockReadingRepository, times(1))
         .existsByDateAndMediumMeter(any(LocalDate.class),
@@ -160,7 +160,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, readingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.READING_AT_RESET);
+        .hasMessage(ErrorCodes.READING_AT_RESET);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -178,7 +178,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, new ReadingForm()));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NO_METER_ID);
+        .hasMessage(ErrorCodes.NO_METER_ID);
 
     verify(mockMediumMeterepository, times(1))
         .findById(anyLong());
@@ -207,7 +207,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.READING_BEFORE_ACTIVATION);
+        .hasMessage(ErrorCodes.READING_BEFORE_ACTIVATION);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -237,7 +237,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.READING_AFTER_DEACTIVATION);
+        .hasMessage(ErrorCodes.READING_AFTER_DEACTIVATION);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -277,7 +277,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.WRONG_READING_VALUE);
+        .hasMessage(ErrorCodes.WRONG_READING_VALUE);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -322,7 +322,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.WRONG_READING_VALUE);
+        .hasMessage(ErrorCodes.WRONG_READING_VALUE);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -417,7 +417,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NEGATIVE_READING);
+        .hasMessage(ErrorCodes.NEGATIVE_READING);
 
     verify(mockMediumMeterepository, times(0))
         .save(any(MediumMeter.class));
@@ -588,13 +588,13 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate3));
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_DATE);
+        .hasMessage(ErrorCodes.BLANK_DATE);
 
     assertThat(exception2).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_DATE);
+        .hasMessage(ErrorCodes.BLANK_DATE);
 
     assertThat(exception3).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_DATE);
+        .hasMessage(ErrorCodes.BLANK_DATE);
   }
 
   @Test
@@ -609,7 +609,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.FUTURE_DEACTIVATION);
+        .hasMessage(ErrorCodes.FUTURE_DEACTIVATION);
 
   }
 
@@ -627,7 +627,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NO_METER_ID);
+        .hasMessage(ErrorCodes.NO_METER_ID);
 
   }
 
@@ -647,7 +647,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.DEACTIVATION_BEFORE_ACTIVATION);
+        .hasMessage(ErrorCodes.DEACTIVATION_BEFORE_ACTIVATION);
 
   }
 
@@ -669,7 +669,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.DEACTIVATION_BEFORE_LAST_READING);
+        .hasMessage(ErrorCodes.DEACTIVATION_BEFORE_LAST_READING);
   }
 
   @Test
@@ -720,13 +720,13 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_DATE);
+        .hasMessage(ErrorCodes.BLANK_DATE);
 
     assertThat(exception2).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_DATE);
+        .hasMessage(ErrorCodes.BLANK_DATE);
 
     assertThat(exception3).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_DATE);
+        .hasMessage(ErrorCodes.BLANK_DATE);
   }
 
   @Test
@@ -742,7 +742,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NO_METER_ID);
+        .hasMessage(ErrorCodes.NO_METER_ID);
 
     ArgumentCaptor<Long> longCaptor = ArgumentCaptor.forClass(Long.class);
     verify(mockMediumMeterepository, times(1))
@@ -765,7 +765,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NOT_RESETTABLE);
+        .hasMessage(ErrorCodes.NOT_RESETTABLE);
   }
 
   @Test
@@ -786,7 +786,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.RESET_NOT_AFTER_LAST_READING);
+        .hasMessage(ErrorCodes.RESET_NOT_AFTER_LAST_READING);
   }
 
   @Test
@@ -807,7 +807,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.RESET_NOT_AFTER_LAST_READING);
+        .hasMessage(ErrorCodes.RESET_NOT_AFTER_LAST_READING);
   }
 
   @Test

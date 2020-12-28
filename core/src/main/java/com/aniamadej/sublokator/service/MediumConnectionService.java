@@ -5,7 +5,7 @@ import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
-import com.aniamadej.sublokator.util.ErrorMessages;
+import com.aniamadej.sublokator.util.ErrorCodes;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -53,11 +53,11 @@ public class MediumConnectionService {
 
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
-      throw new IllegalArgumentException(ErrorMessages.BLANK_NAME);
+      throw new IllegalArgumentException(ErrorCodes.BLANK_NAME);
     }
 
     if (name.length() > 50) {
-      throw new IllegalArgumentException(ErrorMessages.TOO_LONG_NAME);
+      throw new IllegalArgumentException(ErrorCodes.TOO_LONG_NAME);
     }
 
     MediumConnection connection = new MediumConnection();
@@ -69,7 +69,7 @@ public class MediumConnectionService {
                              MediumMeterForm mediumMeterForm) {
 
     if (mediumMeterForm.getFirstReading() < 0) {
-      throw new IllegalArgumentException(ErrorMessages.NEGATIVE_READING);
+      throw new IllegalArgumentException(ErrorCodes.NEGATIVE_READING);
     }
 
     mediumConnectionRepository.findById(mediumConnectionId)
@@ -80,7 +80,7 @@ public class MediumConnectionService {
         })
         .orElseThrow(() ->
             new IllegalArgumentException(
-                ErrorMessages.NO_MEDIUM_CONNECTION_ID));
+                ErrorCodes.NO_MEDIUM_CONNECTION_ID));
   }
 
 }

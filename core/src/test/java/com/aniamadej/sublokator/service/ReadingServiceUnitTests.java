@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.util.ErrorMessages;
+import com.aniamadej.sublokator.util.ErrorCodes;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +38,7 @@ class ReadingServiceUnitTests {
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            ErrorMessages.NO_READING_ID);
+            ErrorCodes.NO_READING_ID);
   }
 
   @Test
@@ -53,7 +53,7 @@ class ReadingServiceUnitTests {
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            ErrorMessages.FIRST_DELETE);
+            ErrorCodes.FIRST_DELETE);
   }
 
   @Test
@@ -72,7 +72,7 @@ class ReadingServiceUnitTests {
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            ErrorMessages.ZERO_DELETE);
+            ErrorCodes.ZERO_DELETE);
   }
 
   @Test
@@ -128,7 +128,7 @@ class ReadingServiceUnitTests {
         = catchThrowable(() -> readingService.findMediumId(1L));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            ErrorMessages.NO_METER_ID);
+            ErrorCodes.NO_METER_ID);
     verify(mockReadingRepository, times(1))
         .findMeterId(readingId);
   }
