@@ -16,7 +16,7 @@ import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
-import com.aniamadej.sublokator.util.ErrorMesages;
+import com.aniamadej.sublokator.util.ErrorMessages;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +44,25 @@ class MediumConnectionServiceUnitTests {
   }
 
   @Test
-  @DisplayName("adding connection to database should throw Illegal Argument "
+  @DisplayName("adding medium meter should throw Illegal Argument "
+      + "exception because initial reading is < 0")
+  public void addMediumMeterNegativeReadingThrowsIllegalArgumentException() {
+
+    MediumMeterForm mockMediumMeterForm = mock(MediumMeterForm.class);
+    when(mockMediumMeterForm.getFirstReading()).thenReturn(-2.);
+
+    Throwable exception =
+        catchThrowable(() -> mediumConnectionService
+            .addMediumMeter(1L, mockMediumMeterForm));
+
+    assertThat(exception)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(ErrorMessages.NEGATIVE_READING);
+  }
+
+
+  @Test
+  @DisplayName("adding medium meter to database should throw Illegal Argument "
       + "exception because medium connection of new medium meter does not exist")
   public void addMediumMeterNotExistingMediumThrowsIllegalArgumentException() {
 
@@ -57,7 +75,7 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.NO_MEDIUM_CONNECTION_ID);
+        .hasMessage(ErrorMessages.NO_MEDIUM_CONNECTION_ID);
   }
 
 
@@ -127,7 +145,7 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.TOO_LONG_NAME);
+        .hasMessage(ErrorMessages.TOO_LONG_NAME);
   }
 
   @Test
@@ -150,15 +168,15 @@ class MediumConnectionServiceUnitTests {
 
     assertThat(exception1)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_NAME);
+        .hasMessage(ErrorMessages.BLANK_NAME);
 
     assertThat(exception2)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_NAME);
+        .hasMessage(ErrorMessages.BLANK_NAME);
 
     assertThat(exception3)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_NAME);
+        .hasMessage(ErrorMessages.BLANK_NAME);
   }
 
   @Test

@@ -19,7 +19,7 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.util.ErrorMesages;
+import com.aniamadej.sublokator.util.ErrorMessages;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,7 +111,34 @@ class MediumMeterServiceUnitTests {
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            ErrorMesages.NO_METER_ID);
+            ErrorMessages.NO_METER_ID);
+  }
+
+  @Test
+  @DisplayName("adding new reading with date equal to already existing "
+      + "reading of same meter throws IllegalArgumentException")
+  public void addReadingDuplicateReadingDateThrowsIllegalArgumentException() {
+    ReadingForm readingForm = mock(ReadingForm.class);
+    when(readingForm.getDate()).thenReturn(LocalDate.now().toString());
+    when(readingForm.getReading()).thenReturn(12.);
+
+    when(mockMediumMeterepository.findById(anyLong()))
+        .thenReturn(Optional.of(new MediumMeter()));
+
+    when(mockReadingRepository
+        .existsByDateAndMediumMeter(any(LocalDate.class),
+            any(MediumMeter.class)))
+        .thenReturn(true);
+
+    Throwable exception = catchThrowable(
+        () -> mediumMeterService.addReading(1L, readingForm));
+
+    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(ErrorMessages.DUPLICATE_READING);
+
+    verify(mockReadingRepository, times(1))
+        .existsByDateAndMediumMeter(any(LocalDate.class),
+            any(MediumMeter.class));
   }
 
   @Test
@@ -124,8 +151,8 @@ class MediumMeterServiceUnitTests {
     when(readingForm.getReading()).thenReturn(12.);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(1);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(true);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(new MediumMeter()));
@@ -133,10 +160,10 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, readingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.READING_AT_RESET);
+        .hasMessage(ErrorMessages.READING_AT_RESET);
 
     verify(mockReadingRepository, times(1))
-        .countZeroesAtDate(any(LocalDate.class), anyLong());
+        .isResetDate(any(LocalDate.class), anyLong());
 
   }
 
@@ -151,7 +178,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, new ReadingForm()));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.NO_METER_ID);
+        .hasMessage(ErrorMessages.NO_METER_ID);
 
     verify(mockMediumMeterepository, times(1))
         .findById(anyLong());
@@ -171,8 +198,8 @@ class MediumMeterServiceUnitTests {
         .thenReturn(LocalDate.now().plusDays(1));
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
@@ -180,10 +207,10 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.READING_BEFORE_ACTIVATION);
+        .hasMessage(ErrorMessages.READING_BEFORE_ACTIVATION);
 
     verify(mockReadingRepository, times(1))
-        .countZeroesAtDate(any(LocalDate.class), anyLong());
+        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
@@ -201,8 +228,8 @@ class MediumMeterServiceUnitTests {
         .thenReturn(LocalDate.now().minusDays(1));
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
@@ -210,10 +237,10 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.READING_AFTER_DEACTIVATION);
+        .hasMessage(ErrorMessages.READING_AFTER_DEACTIVATION);
 
     verify(mockReadingRepository, times(1))
-        .countZeroesAtDate(any(LocalDate.class), anyLong());
+        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
@@ -235,14 +262,14 @@ class MediumMeterServiceUnitTests {
         .thenReturn(null);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
-        .getMaxReadingBefore(any(LocalDate.class), anyLong()))
+        .getPrevious(any(LocalDate.class), anyLong()))
         .thenReturn(Optional.of(biggestReadingFromPreviousDate));
 
 
@@ -250,20 +277,20 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.WRONG_READING_VALUE);
+        .hasMessage(ErrorMessages.WRONG_READING_VALUE);
 
     verify(mockReadingRepository, times(1))
-        .countZeroesAtDate(any(LocalDate.class), anyLong());
+        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
   @DisplayName("adding new reading should throw IllegalArgumentException "
-      + "because reading value is bigger than smallest reading "
+      + "because reading value is bigger than previous reading "
       + "from next date (can't insert reading bigger than next "
       + "unless next is zero)")
   public void addReadingBiggerThanNextThrowsIllegalArgumentException() {
-    Double biggestReadingFromPreviousDate = 12.;
-    Double smallestReadingFromNextDate = 1.;
+    Double previous = 12.;
+    Double next = 1.;
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     Long mediumMeterId = 1L;
@@ -276,29 +303,29 @@ class MediumMeterServiceUnitTests {
         .thenReturn(null);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
-        .getMaxReadingBefore(any(LocalDate.class), anyLong()))
-        .thenReturn(Optional.of(biggestReadingFromPreviousDate));
+        .getPrevious(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(previous));
 
     when(mockReadingRepository
-        .getMinReadingAfter(any(LocalDate.class), anyLong()))
-        .thenReturn(Optional.of(smallestReadingFromNextDate));
+        .getNext(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(next));
 
 
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.WRONG_READING_VALUE);
+        .hasMessage(ErrorMessages.WRONG_READING_VALUE);
 
     verify(mockReadingRepository, times(1))
-        .countZeroesAtDate(any(LocalDate.class), anyLong());
+        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
@@ -307,8 +334,8 @@ class MediumMeterServiceUnitTests {
           + "bigger than previous and smaller than non zero next. "
           + "Should call save method on MediumMeterRepository")
   public void addReadingSuccessfulReadingSmallerThanNextBiggerThanPrevious() {
-    Double biggestReadingFromPreviousDate = 12.;
-    Double smallestReadingFromNextDate = 13.;
+    Double previous = 12.;
+    Double next = 13.;
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
@@ -329,19 +356,19 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeter.getReadings()).thenReturn(readings);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
-        .getMaxReadingBefore(any(LocalDate.class), anyLong()))
-        .thenReturn(Optional.of(biggestReadingFromPreviousDate));
+        .getPrevious(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(previous));
 
     when(mockReadingRepository
-        .getMinReadingAfter(any(LocalDate.class), anyLong()))
-        .thenReturn(Optional.of(smallestReadingFromNextDate));
+        .getNext(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(next));
 
     mediumMeterService.addReading(mediumMeterId, mockReadingForm);
 
@@ -353,13 +380,60 @@ class MediumMeterServiceUnitTests {
 
   @Test
   @DisplayName(
+      "Adding new reading with negative value"
+          + "should throw IllegalArgumentException")
+  public void addReadingNegativeValueThrowsIllegalArgumentException() {
+
+    Double previous = -4.;
+    Double next = -1.;
+
+    ReadingForm mockReadingForm = mock(ReadingForm.class);
+    when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
+    when(mockReadingForm.getReading()).thenReturn(-2.);
+
+    MediumMeter mockMediumMeter = mock(MediumMeter.class);
+    when(mockMediumMeter.getActiveSince())
+        .thenReturn(LocalDate.now().minusDays(5));
+    when(mockMediumMeter.getActiveUntil())
+        .thenReturn(null);
+
+    when(mockMediumMeterepository.findById(anyLong()))
+        .thenReturn(Optional.of(mockMediumMeter));
+    when(mockReadingRepository.existsByDateAndMediumMeter(any(LocalDate.class),
+        any(MediumMeter.class))).thenReturn(false);
+
+    when(mockReadingRepository.isResetDate(any(LocalDate.class),
+        anyLong())).thenReturn(false);
+
+    when(mockReadingRepository
+        .getPrevious(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(previous));
+
+    when(mockReadingRepository
+        .getNext(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(next));
+
+    Throwable exception = catchThrowable(
+        () -> mediumMeterService.addReading(1L, mockReadingForm));
+
+    assertThat(exception).isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(ErrorMessages.NEGATIVE_READING);
+
+    verify(mockMediumMeterepository, times(0))
+        .save(any(MediumMeter.class));
+
+
+  }
+
+  @Test
+  @DisplayName(
       "Adding new reading should be successful because readingValue is "
           + "bigger than previous and next value is zero (meter reset)"
           + "Should call save method on MediumMeterRepository")
   public void addReadingSuccessfulReadingSmallerThanNextAndNextIsZero() {
 
-    Double biggestReadingFromPreviousDate = 12.;
-    Double smallestReadingFromNextDate = 0.;
+    Double previous = 12.;
+    Double next = 0.;
 
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
@@ -381,19 +455,19 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeter.getReadings()).thenReturn(readings);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
-        .getMaxReadingBefore(any(LocalDate.class), anyLong()))
-        .thenReturn(Optional.of(biggestReadingFromPreviousDate));
+        .getPrevious(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(previous));
 
     when(mockReadingRepository
-        .getMinReadingAfter(any(LocalDate.class), anyLong()))
-        .thenReturn(Optional.of(smallestReadingFromNextDate));
+        .getNext(any(LocalDate.class), anyLong()))
+        .thenReturn(Optional.of(next));
 
     mediumMeterService.addReading(mediumMeterId, mockReadingForm);
 
@@ -427,18 +501,18 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeter.getReadings()).thenReturn(readings);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
-        .getMaxReadingBefore(any(LocalDate.class), anyLong()))
+        .getPrevious(any(LocalDate.class), anyLong()))
         .thenReturn(Optional.empty());
 
     when(mockReadingRepository
-        .getMinReadingAfter(any(LocalDate.class), anyLong()))
+        .getNext(any(LocalDate.class), anyLong()))
         .thenReturn(Optional.empty());
 
     mediumMeterService.addReading(mediumMeterId, mockReadingForm);
@@ -473,18 +547,18 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeter.getReadings()).thenReturn(readings);
 
     when(mockReadingRepository
-        .countZeroesAtDate(any(LocalDate.class), anyLong()))
-        .thenReturn(0);
+        .isResetDate(any(LocalDate.class), anyLong()))
+        .thenReturn(false);
 
     when(mockMediumMeterepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
-        .getMaxReadingBefore(any(LocalDate.class), anyLong()))
+        .getPrevious(any(LocalDate.class), anyLong()))
         .thenReturn(Optional.empty());
 
     when(mockReadingRepository
-        .getMinReadingAfter(any(LocalDate.class), anyLong()))
+        .getNext(any(LocalDate.class), anyLong()))
         .thenReturn(Optional.empty());
 
     mediumMeterService.addReading(mediumMeterId, mockReadingForm);
@@ -514,13 +588,13 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate3));
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_DATE);
+        .hasMessage(ErrorMessages.BLANK_DATE);
 
     assertThat(exception2).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_DATE);
+        .hasMessage(ErrorMessages.BLANK_DATE);
 
     assertThat(exception3).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_DATE);
+        .hasMessage(ErrorMessages.BLANK_DATE);
   }
 
   @Test
@@ -535,7 +609,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.FUTURE_DEACTIVATION);
+        .hasMessage(ErrorMessages.FUTURE_DEACTIVATION);
 
   }
 
@@ -553,7 +627,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.NO_METER_ID);
+        .hasMessage(ErrorMessages.NO_METER_ID);
 
   }
 
@@ -573,7 +647,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.DEACTIVATION_BEFORE_ACTIVATION);
+        .hasMessage(ErrorMessages.DEACTIVATION_BEFORE_ACTIVATION);
 
   }
 
@@ -595,7 +669,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.DEACTIVATION_BEFORE_LAST_READING);
+        .hasMessage(ErrorMessages.DEACTIVATION_BEFORE_LAST_READING);
   }
 
   @Test
@@ -646,13 +720,13 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_DATE);
+        .hasMessage(ErrorMessages.BLANK_DATE);
 
     assertThat(exception2).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_DATE);
+        .hasMessage(ErrorMessages.BLANK_DATE);
 
     assertThat(exception3).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.BLANK_DATE);
+        .hasMessage(ErrorMessages.BLANK_DATE);
   }
 
   @Test
@@ -668,7 +742,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.NO_METER_ID);
+        .hasMessage(ErrorMessages.NO_METER_ID);
 
     ArgumentCaptor<Long> longCaptor = ArgumentCaptor.forClass(Long.class);
     verify(mockMediumMeterepository, times(1))
@@ -691,7 +765,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.NOT_RESETTABLE);
+        .hasMessage(ErrorMessages.NOT_RESETTABLE);
   }
 
   @Test
@@ -712,7 +786,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.RESET_BEFORE_OR_AT_READING);
+        .hasMessage(ErrorMessages.RESET_NOT_AFTER_LAST_READING);
   }
 
   @Test
@@ -733,7 +807,7 @@ class MediumMeterServiceUnitTests {
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMesages.RESET_BEFORE_OR_AT_READING);
+        .hasMessage(ErrorMessages.RESET_NOT_AFTER_LAST_READING);
   }
 
   @Test
@@ -761,4 +835,22 @@ class MediumMeterServiceUnitTests {
         .save(mockMediumMeter);
   }
 
+  @Test
+  @DisplayName("reactivation of active medium meter should not call any method"
+      + "of repository")
+  public void reactivationOfActiveMeterDoesNothing() {
+    when(mockMediumMeterepository.isActive(anyLong())).thenReturn(true);
+    mediumMeterService.reactivate(1L);
+    verify(mockMediumMeterepository, times(0)).reactivate(anyLong());
+  }
+
+  @Test
+  @DisplayName("reactivation of inactive medium meter should call method"
+      + "of repository")
+  public void reactivationOfInactiveMeterCallsRepoMethod() {
+    when(mockMediumMeterepository.isActive(anyLong())).thenReturn(false);
+    mediumMeterService.reactivate(1L);
+    verify(mockMediumMeterepository, times(1))
+        .reactivate(1L);
+  }
 }
