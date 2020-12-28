@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
-public class PersistanceConfiguration {
+public class PersistenceConfiguration {
   @Bean
   public FlywayMigrationStrategy cleanMigrateStrategy() {
     FlywayMigrationStrategy strategy = new FlywayMigrationStrategy() {

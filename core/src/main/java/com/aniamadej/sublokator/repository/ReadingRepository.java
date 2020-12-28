@@ -22,18 +22,16 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
   @Query("select r.reading from Reading r "
       + "where r.mediumMeter.id = :meterId "
       + "and r.date = (select max(r1.date) from Reading r1 "
-      + "where  r.mediumMeter.id = :meterId and r1.date < :date) "
-      + "order by r.date desc")
-  Optional<Double> getMaxReadingBefore(@Param("date") LocalDate date,
-                                       @Param("meterId") Long meterId);
+      + "where  r1.mediumMeter.id = :meterId and r1.date < :date)")
+  Optional<Double> getPrevious(@Param("date") LocalDate date,
+                               @Param("meterId") Long meterId);
 
   @Query("select r.reading from Reading r "
       + "where r.mediumMeter.id = :meterId "
       + "and r.date = (select min(r1.date) from Reading r1 "
-      + "where  r.mediumMeter.id = :meterId and r1.date > :date) "
-      + "order by r.date desc")
-  Optional<Double> getMinReadingAfter(@Param("date") LocalDate date,
-                                      @Param("meterId") Long meterId);
+      + "where  r1.mediumMeter.id = :meterId and r1.date > :date)")
+  Optional<Double> getNext(@Param("date") LocalDate date,
+                           @Param("meterId") Long meterId);
 
 
   @Query("select case when (count(r) > 0) then true else false end "

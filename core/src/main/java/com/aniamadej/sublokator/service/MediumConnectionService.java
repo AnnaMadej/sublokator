@@ -5,7 +5,7 @@ import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
-import com.aniamadej.sublokator.util.ErrorMesages;
+import com.aniamadej.sublokator.util.ErrorMessages;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -53,11 +53,11 @@ public class MediumConnectionService {
 
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
-      throw new IllegalArgumentException(ErrorMesages.BLANK_NAME);
+      throw new IllegalArgumentException(ErrorMessages.BLANK_NAME);
     }
 
     if (name.length() > 50) {
-      throw new IllegalArgumentException(ErrorMesages.TOO_LONG_NAME);
+      throw new IllegalArgumentException(ErrorMessages.TOO_LONG_NAME);
     }
 
     MediumConnection connection = new MediumConnection();
@@ -67,15 +67,20 @@ public class MediumConnectionService {
 
   public void addMediumMeter(Long mediumConnectionId,
                              MediumMeterForm mediumMeterForm) {
-        mediumConnectionRepository.findById(mediumConnectionId)
-            .map(connection -> {
-              MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
-              connection.addMediumMeter(mediumMeter);
-              return mediumConnectionRepository.save(connection);
-            })
-            .orElseThrow(() ->
-                new IllegalArgumentException(
-                    ErrorMesages.NO_MEDIUM_CONNECTION_ID));
+
+    if (mediumMeterForm.getFirstReading() < 0) {
+      throw new IllegalArgumentException(ErrorMessages.NEGATIVE_READING);
+    }
+
+    mediumConnectionRepository.findById(mediumConnectionId)
+        .map(connection -> {
+          MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
+          connection.addMediumMeter(mediumMeter);
+          return mediumConnectionRepository.save(connection);
+        })
+        .orElseThrow(() ->
+            new IllegalArgumentException(
+                ErrorMessages.NO_MEDIUM_CONNECTION_ID));
   }
 
 }

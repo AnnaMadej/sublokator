@@ -3,6 +3,7 @@ package com.aniamadej.sublokator.dto.input;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import java.time.LocalDate;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ public class MediumMeterForm {
   @NotBlank(message = "unit name cannot be null")
   private String unitName;
 
+  @DecimalMin(value = "0.0")
   @Digits(integer = 10, fraction = 10, message = "wrong number format")
   private Double firstReading = 0D;
 
