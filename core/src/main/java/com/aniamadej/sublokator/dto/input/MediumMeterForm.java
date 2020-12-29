@@ -10,27 +10,25 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @Getter
 @Setter
 public class MediumMeterForm {
 
-  // TODO: export messages to international file
-
-  @NotBlank(message = "number cannot be null")
+  @NotBlank(message = "{error.empty}")
   private String number;
 
-  @NotBlank(message = "unit name cannot be null")
+  @NotBlank(message = "{error.empty}")
   private String unitName;
 
-  @DecimalMin(value = "0.0")
-  @Digits(integer = 10, fraction = 10, message = "wrong number format")
+  @NotNull(message = "{error.empty}")
+  @DecimalMin(value = "0.0", message = "{error.onlyPositive}")
+  @Digits(integer = 10, fraction = 10, message = "{error.number}")
   private Double firstReading = 0D;
 
-  @DateTimeFormat(pattern = "yyyy-MM-dd")
-  @NotNull
-  @Pattern(regexp = "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$")
+  @NotNull(message = "{error.empty}")
+  @Pattern(regexp = "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$",
+      message = "{error.date}")
   private String activeSince = LocalDate.now().toString();
 
   private boolean resettable;

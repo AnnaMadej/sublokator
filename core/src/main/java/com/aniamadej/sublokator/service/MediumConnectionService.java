@@ -1,11 +1,13 @@
 package com.aniamadej.sublokator.service;
 
+import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
-import com.aniamadej.sublokator.util.ErrorMessages;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -16,12 +18,17 @@ public class MediumConnectionService {
 
   // == fields ==
   private final MediumConnectionRepository mediumConnectionRepository;
+  private final CustomMessageSource customMessageSource;
 
   // == constructors ==
+
+
   @Autowired
   MediumConnectionService(
-      MediumConnectionRepository mediumConnectionRepository) {
+      MediumConnectionRepository mediumConnectionRepository,
+      CustomMessageSource customMessageSource) {
     this.mediumConnectionRepository = mediumConnectionRepository;
+    this.customMessageSource = customMessageSource;
   }
 
   // == public methods ==
@@ -53,11 +60,13 @@ public class MediumConnectionService {
 
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
-      throw new IllegalArgumentException(ErrorMessages.BLANK_NAME);
+      throw new InputException(
+          customMessageSource.getMessage("error.blankName"));
     }
 
     if (name.length() > 50) {
-      throw new IllegalArgumentException(ErrorMessages.TOO_LONG_NAME);
+      throw new InputException(
+          customMessageSource.getMessage("error.tooLongName"));
     }
 
     MediumConnection connection = new MediumConnection();
@@ -69,7 +78,8 @@ public class MediumConnectionService {
                              MediumMeterForm mediumMeterForm) {
 
     if (mediumMeterForm.getFirstReading() < 0) {
-      throw new IllegalArgumentException(ErrorMessages.NEGATIVE_READING);
+      throw new InputException(
+          customMessageSource.getMessage("error.negativeReading"));
     }
 
     mediumConnectionRepository.findById(mediumConnectionId)
@@ -79,8 +89,10 @@ public class MediumConnectionService {
           return mediumConnectionRepository.save(connection);
         })
         .orElseThrow(() ->
-            new IllegalArgumentException(
-                ErrorMessages.NO_MEDIUM_CONNECTION_ID));
+            new MainException(
+                customMessageSource
+                    .getMessage("error.connectionNotExists")));
   }
+
 
 }

@@ -36,8 +36,8 @@
     <attr sel="#addButton" th:text="#{page.addButton}"/>
     <attr sel="#readingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>
     <attr sel="#dateError" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"/>
-    <attr sel="#error"
-          th:text="${#messages.msgOrNull('__${error}__')}" th:if="${#messages.msgOrNull('__${error}__') != null}"/>
+    <attr sel="#error" th:if="${error}"
+          th:text="${error}"/>
 
     <attr sel="#deactivateFormGroup" th:if="${mediumMeter.getActiveUntil==null}"/>
     <attr sel="#activeUntilGroup" th:unless="${mediumMeter.getActiveUntil==null}"/>

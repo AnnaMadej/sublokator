@@ -7,6 +7,7 @@ import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,29 +22,27 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MetersController {
 
   private final MediumMeterService mediumMeterService;
+  private final MessageSource errorsMessageSource;
 
   @Autowired
-  MetersController(MediumMeterService mediumMeterService) {
+  MetersController(
+      MediumMeterService mediumMeterService,
+      MessageSource errorsMessageSource) {
     this.mediumMeterService = mediumMeterService;
+    this.errorsMessageSource = errorsMessageSource;
   }
+
 
   @GetMapping(Mappings.METER_PAGE + "/{meterId}")
   public String showMediumMeter(@PathVariable("meterId") long meterId,
-                                Model model,
-                                RedirectAttributes redirectAttributes) {
+                                Model model) {
     if (!model.containsAttribute(Attributes.READING_FORM)) {
       model.addAttribute(Attributes.READING_FORM, new ReadingForm());
     }
 
-    try {
-      model.addAttribute(model.addAttribute(Attributes.MEDIUM_METER,
-          mediumMeterService.findById(meterId)));
-      return Views.METER;
-    } catch (Exception e) {
-      return ControllersHelper
-          .redirectToMainPageWithErrorMessageCode(redirectAttributes,
-              e.getMessage());
-    }
+    model.addAttribute(model.addAttribute(Attributes.MEDIUM_METER,
+        mediumMeterService.findById(meterId)));
+    return Views.METER;
   }
 
   @PostMapping(
@@ -52,20 +51,17 @@ public class MetersController {
                               @ModelAttribute(Attributes.READING_FORM)
                               @Valid ReadingForm readingForm,
                               BindingResult bindingResult,
-                              RedirectAttributes ra) {
+                              RedirectAttributes redirectAttributes) {
 
     if (bindingResult.hasErrors()) {
-      ra.addFlashAttribute(
+      redirectAttributes.addFlashAttribute(
           "org.springframework.validation.BindingResult."
               + Attributes.READING_FORM,
           bindingResult);
-      ra.addFlashAttribute(Attributes.READING_FORM, readingForm);
+      redirectAttributes
+          .addFlashAttribute(Attributes.READING_FORM, readingForm);
     } else {
-      try {
-        mediumMeterService.addReading(meterId, readingForm);
-      } catch (Exception e) {
-        ra.addFlashAttribute(Attributes.ERROR, e.getMessage());
-      }
+      mediumMeterService.addReading(meterId, readingForm);
     }
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
@@ -73,13 +69,9 @@ public class MetersController {
   @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.DEACTIVATE)
   public String deactivateMeter(@PathVariable("meterId") Long meterId,
                                 @RequestParam(Attributes.ACTIVE_UNTIL)
-                                    String deactivationDate,
-                                RedirectAttributes redirectAttributes) {
-    try {
+                                    String deactivationDate) {
       mediumMeterService.deactivate(meterId, deactivationDate);
-    } catch (IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
-    }
+
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
@@ -92,13 +84,8 @@ public class MetersController {
   @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.RESET)
   public String resetMeter(@PathVariable("meterId") Long meterId,
                            @RequestParam(Attributes.RESET_DATE)
-                               String deactivationDate,
-                           RedirectAttributes redirectAttributes) {
-    try {
-      mediumMeterService.reset(meterId, deactivationDate);
-    } catch (IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
-    }
+                               String deactivationDate) {
+    mediumMeterService.reset(meterId, deactivationDate);
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 

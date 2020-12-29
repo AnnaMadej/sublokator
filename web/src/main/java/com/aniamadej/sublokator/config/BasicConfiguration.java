@@ -1,10 +1,10 @@
 package com.aniamadej.sublokator.config;
 
-import javax.validation.Validator;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -25,8 +25,13 @@ public class BasicConfiguration implements WebMvcConfigurer {
   }
 
   @Bean
-  public Validator validator() {
-    return new LocalValidatorFactoryBean();
+  public MessageSource messageSource() {
+    ReloadableResourceBundleMessageSource messageSource
+        = new ReloadableResourceBundleMessageSource();
+
+    messageSource.setBasenames("classpath:messages-page");
+    messageSource.setDefaultEncoding("UTF-8");
+    return messageSource;
   }
 
 

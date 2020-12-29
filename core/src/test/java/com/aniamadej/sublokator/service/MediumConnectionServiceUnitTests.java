@@ -12,11 +12,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.Exceptions.InputException;
+import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
-import com.aniamadej.sublokator.util.ErrorMessages;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,16 +40,28 @@ class MediumConnectionServiceUnitTests {
   public void setUp() {
     mockMediumConnectionRepository =
         mock(MediumConnectionRepository.class);
+    CustomMessageSource mockCustomMessageSource =
+        mock(CustomMessageSource.class);
 
     mediumConnectionService
-        = new MediumConnectionService(mockMediumConnectionRepository);
+        = new MediumConnectionService(mockMediumConnectionRepository,
+        mockCustomMessageSource);
+
+    ArgumentCaptor<String> errorCodeCaptor =
+        ArgumentCaptor.forClass(String.class);
+
+    when(mockCustomMessageSource
+        .getMessage(errorCodeCaptor.capture()))
+        .thenAnswer(i -> errorCodeCaptor.getValue());
   }
 
   @Test
-  @DisplayName("adding medium meter should throw Illegal Argument "
-      + "exception because initial reading is < 0")
+  @DisplayName("adding medium meter should throw InputException "
+      + "with proper message "
+      + "because initial reading is < 0")
   public void addMediumMeterNegativeReadingThrowsIllegalArgumentException() {
 
+    String errorCode = "error.negativeReading";
     MediumMeterForm mockMediumMeterForm = mock(MediumMeterForm.class);
     when(mockMediumMeterForm.getFirstReading()).thenReturn(-2.);
 
@@ -56,16 +70,18 @@ class MediumConnectionServiceUnitTests {
             .addMediumMeter(1L, mockMediumMeterForm));
 
     assertThat(exception)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NEGATIVE_READING);
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
   }
 
 
   @Test
-  @DisplayName("adding medium meter to database should throw Illegal Argument "
-      + "exception because medium connection of new medium meter does not exist")
+  @DisplayName("adding medium meter to database should throw MainException "
+      + "with proper message because medium connection of new medium meter "
+      + "does not exist")
   public void addMediumMeterNotExistingMediumThrowsIllegalArgumentException() {
 
+    String errorCode = "error.connectionNotExists";
     when(mockMediumConnectionRepository.findById(anyLong()))
         .thenReturn(Optional.empty());
 
@@ -74,8 +90,8 @@ class MediumConnectionServiceUnitTests {
             .addMediumMeter(1L, new MediumMeterForm()));
 
     assertThat(exception)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.NO_MEDIUM_CONNECTION_ID);
+        .isInstanceOf(MainException.class)
+        .hasMessage(errorCode);
   }
 
 
@@ -138,20 +154,24 @@ class MediumConnectionServiceUnitTests {
       + "illegal argument exception because name is too long")
   public void saveTooLongMediumNameThrowsIllegalArgumentException() {
 
+    String errorCode = "error.tooLongName";
+
     String mediumName = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
     Throwable exception
         = catchThrowable(() -> mediumConnectionService.save(mediumName));
 
     assertThat(exception)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.TOO_LONG_NAME);
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
   }
 
   @Test
   @DisplayName("adding medium connection to database should throw "
-      + "illegal argument exception because name null, empty or space")
+      + "InputException with proper message  "
+      + "because name is null, empty or space")
   public void saveBlankMediumNameThrowsIllegalArgumentException() {
+    String errorCode = "error.blankName";
 
     String mediumName1 = " ";
     String mediumName2 = "";
@@ -167,16 +187,16 @@ class MediumConnectionServiceUnitTests {
         = catchThrowable(() -> mediumConnectionService.save(mediumName3));
 
     assertThat(exception1)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_NAME);
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
 
     assertThat(exception2)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_NAME);
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
 
     assertThat(exception3)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage(ErrorMessages.BLANK_NAME);
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
   }
 
   @Test
@@ -313,7 +333,6 @@ class MediumConnectionServiceUnitTests {
     assertThat(result2).isEqualTo(false);
 
   }
-
 
 
   private List<NumberedName> createNamesList() {
