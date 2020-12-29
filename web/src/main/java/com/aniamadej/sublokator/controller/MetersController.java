@@ -61,11 +61,7 @@ public class MetersController {
       redirectAttributes
           .addFlashAttribute(Attributes.READING_FORM, readingForm);
     } else {
-      try {
-        mediumMeterService.addReading(meterId, readingForm);
-      } catch (Exception e) {
-        redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
-      }
+      mediumMeterService.addReading(meterId, readingForm);
     }
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
@@ -73,13 +69,9 @@ public class MetersController {
   @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.DEACTIVATE)
   public String deactivateMeter(@PathVariable("meterId") Long meterId,
                                 @RequestParam(Attributes.ACTIVE_UNTIL)
-                                    String deactivationDate,
-                                RedirectAttributes redirectAttributes) {
-    try {
+                                    String deactivationDate) {
       mediumMeterService.deactivate(meterId, deactivationDate);
-    } catch (IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
-    }
+
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
@@ -92,13 +84,8 @@ public class MetersController {
   @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.RESET)
   public String resetMeter(@PathVariable("meterId") Long meterId,
                            @RequestParam(Attributes.RESET_DATE)
-                               String deactivationDate,
-                           RedirectAttributes redirectAttributes) {
-    try {
-      mediumMeterService.reset(meterId, deactivationDate);
-    } catch (IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
-    }
+                               String deactivationDate) {
+    mediumMeterService.reset(meterId, deactivationDate);
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 

@@ -1,7 +1,6 @@
 package com.aniamadej.sublokator.controller;
 
 import com.aniamadej.sublokator.CustomMessageSource;
-import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.service.MediumConnectionService;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class MediaController {
@@ -80,16 +78,8 @@ public class MediaController {
 
   @PostMapping(Mappings.MEDIA_ADD)
   public String addNewMedium(
-      @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName,
-      RedirectAttributes redirectAttributes) {
-    try {
+      @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName) {
       mediumConnectionService.save(mediumName);
-    } catch (InputException e) {
-
-      String error = e.getMessage();
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, error);
-      return "redirect:" + Mappings.MEDIA_ADD;
-    }
 
     return "redirect:" + Mappings.MEDIA_PAGE;
   }
@@ -107,8 +97,7 @@ public class MediaController {
   public String addNewMediumMeter(@PathVariable Long mediumId,
                                   @ModelAttribute("mediumMeterForm")
                                   @Valid MediumMeterForm mediumMeterForm,
-                                  BindingResult bindingResult,
-                                  RedirectAttributes ra) {
+                                  BindingResult bindingResult) {
 
     if (bindingResult.hasErrors()) {
       return Views.METER_ADD;
