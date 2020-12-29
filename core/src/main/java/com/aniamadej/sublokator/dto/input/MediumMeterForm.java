@@ -21,6 +21,7 @@ public class MediumMeterForm {
   @NotBlank(message = "{error.empty}")
   private String unitName;
 
+  @NotNull(message = "{error.empty}")
   @DecimalMin(value = "0.0", message = "{error.onlyPositive}")
   @Digits(integer = 10, fraction = 10, message = "{error.number}")
   private Double firstReading = 0D;
