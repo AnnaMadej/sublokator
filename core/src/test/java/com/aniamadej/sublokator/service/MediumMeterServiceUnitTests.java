@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+import com.aniamadej.sublokator.CustomMessageSource;
 import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.MediumMeterBasics;
@@ -21,7 +22,6 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.util.ErrorCodes;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,14 +35,26 @@ class MediumMeterServiceUnitTests {
 
   private static MediumMeterService mediumMeterService;
   private static ReadingRepository mockReadingRepository;
-  private static MediumMeterRepository mockMediumMeterepository;
+  private static MediumMeterRepository mockMediumMeteRepository;
 
   @BeforeEach
   public void setUp() {
     mockReadingRepository = mock(ReadingRepository.class);
-    mockMediumMeterepository = mock(MediumMeterRepository.class);
+    mockMediumMeteRepository = mock(MediumMeterRepository.class);
+    CustomMessageSource mockCustomMessageSource =
+        mock(CustomMessageSource.class);
+
     mediumMeterService =
-        new MediumMeterService(mockMediumMeterepository, mockReadingRepository);
+        new MediumMeterService(mockMediumMeteRepository, mockReadingRepository,
+            mockCustomMessageSource);
+
+
+    ArgumentCaptor<String> errorCodeCaptor =
+        ArgumentCaptor.forClass(String.class);
+
+    when(mockCustomMessageSource
+        .getMessage(errorCodeCaptor.capture()))
+        .thenAnswer(i -> errorCodeCaptor.getValue());
   }
 
   @Test
@@ -73,7 +85,7 @@ class MediumMeterServiceUnitTests {
     readings.add(readingBasics1);
     readings.add(readingBasics2);
 
-    when(mockMediumMeterepository.findReadModelById(anyLong()))
+    when(mockMediumMeteRepository.findReadModelById(anyLong()))
         .thenReturn(Optional.of(mediumMeterBasics));
     when(mockReadingRepository.findByMediumMeterId(anyLong()))
         .thenReturn(readings);
@@ -84,7 +96,7 @@ class MediumMeterServiceUnitTests {
     MediumMeterReadModel fetchedMediumMeterReadModel =
         mediumMeterService.findById(1L);
 
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .findReadModelById(mediumMeterId);
     verify(mockReadingRepository, times(1))
         .findByMediumMeterId(mediumMeterId);
@@ -95,36 +107,39 @@ class MediumMeterServiceUnitTests {
 
   @Test
   @DisplayName("searching for medium meter by it's id should call proper method"
-      + "on mediumMeterRepository and throw illegal argument exception with "
+      + "on mediumMeterRepository and throw MainException with "
       + "appropriate message because medium meter of given id does not exist")
-  public void findByIdNotExistsAndThrowsIllegalArgumentException() {
+  public void findByIdNotExistsAndThrowsMainException() {
+    String errorMessage = "error.meterNotExists";
     Long mediumMeterId = 1L;
 
-    when(mockMediumMeterepository.findReadModelById(mediumMeterId))
+    when(mockMediumMeteRepository.findReadModelById(mediumMeterId))
         .thenReturn(Optional.empty());
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.findById(mediumMeterId));
 
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .findReadModelById(mediumMeterId);
     verify(mockReadingRepository, times(0))
         .findByMediumMeterId(mediumMeterId);
 
     assertThat(exception).isInstanceOf(MainException.class)
         .hasMessage(
-            ErrorCodes.NO_METER_ID);
+            errorMessage);
   }
 
   @Test
   @DisplayName("adding new reading with date equal to already existing "
-      + "reading of same meter throws IllegalArgumentException")
-  public void addReadingDuplicateReadingDateThrowsIllegalArgumentException() {
+      + "reading of same meter throws InputException with proper message")
+  public void addReadingDuplicateReadingDateThrowsInputException() {
+    String errorMessage = "error.duplicateReading";
+
     ReadingForm readingForm = mock(ReadingForm.class);
     when(readingForm.getDate()).thenReturn(LocalDate.now().toString());
     when(readingForm.getReading()).thenReturn(12.);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(new MediumMeter()));
 
     when(mockReadingRepository
@@ -136,7 +151,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, readingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.DUPLICATE_READING);
+        .hasMessage(errorMessage);
 
     verify(mockReadingRepository, times(1))
         .existsByDateAndMediumMeter(any(LocalDate.class),
@@ -145,8 +160,10 @@ class MediumMeterServiceUnitTests {
 
   @Test
   @DisplayName("adding new reading with date equal to date of meter reset "
-      + "(another reading with 0 value) should throw IllegalArgumentException")
-  public void addReadingAtMeterResetDateThrowsIllegalArgumentException() {
+      + "(another reading with 0 value) should throw InputException "
+      + "with proper message")
+  public void addReadingAtMeterResetDateThrowsInputException() {
+    String errorMessage = "error.readingAtReset";
 
     ReadingForm readingForm = mock(ReadingForm.class);
     when(readingForm.getDate()).thenReturn(LocalDate.now().toString());
@@ -156,13 +173,13 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(true);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(new MediumMeter()));
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, readingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.READING_AT_RESET);
+        .hasMessage(errorMessage);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -171,26 +188,27 @@ class MediumMeterServiceUnitTests {
 
   @Test
   @DisplayName("adding new reading to medium meter of not existing id "
-      + "should throw IllegalArgumentException")
-  public void addReadingNotExistingMeterIdThrowsIllegalArgumentException() {
-
-    when(mockMediumMeterepository.findById(anyLong()))
+      + "should throw MainException with proper message")
+  public void addReadingNotExistingMeterIdThrowsMainException() {
+    String errorMessage = "error.meterNotExists";
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.empty());
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, new ReadingForm()));
 
     assertThat(exception).isInstanceOf(MainException.class)
-        .hasMessage(ErrorCodes.NO_METER_ID);
+        .hasMessage(errorMessage);
 
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .findById(anyLong());
 
   }
 
   @Test
   @DisplayName("adding new reading with date before meter activation date  "
-      + "should throw IllegalArgumentException")
-  public void addReadingBeforeActivationDateThrowsIllegalArgumentException() {
+      + "should throw InputException with proper message")
+  public void addReadingBeforeActivationDateThrowsInputException() {
+    String errorMessage = "error.readingBeforeActivation";
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
@@ -203,13 +221,13 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.READING_BEFORE_ACTIVATION);
+        .hasMessage(errorMessage);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -217,9 +235,9 @@ class MediumMeterServiceUnitTests {
 
   @Test
   @DisplayName("adding new reading with date after meter deactivation date  "
-      + "should throw IllegalArgumentException")
-  public void addReadingnAfterDeactivationDateThrowsIllegalArgumentException() {
-
+      + "should throw InputException with proper message")
+  public void addReadingnAfterDeactivationDateThrowsInputException() {
+    String errorMessage = "error.readingAfterDeactivation";
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
     when(mockReadingForm.getReading()).thenReturn(12.);
@@ -233,24 +251,24 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
     Throwable exception = catchThrowable(
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.READING_AFTER_DEACTIVATION);
+        .hasMessage(errorMessage);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
-  @DisplayName("adding new reading should throw IllegalArgumentException "
-      + "because reading value is smaller than biggest reading "
+  @DisplayName("adding new reading should throw InputException with proper "
+      + "message because reading value is smaller than biggest reading "
       + "from previous date (can't insert reading smaller than preceding)")
-  public void addReadingSmallerThanPrecedingThrowsIllegalArgumentException() {
-
+  public void addReadingSmallerThanPrecedingThrowsInputException() {
+    String errorMessage = "error.wrongReadingValue";
     Double biggestReadingFromPreviousDate = 13.;
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     Long mediumMeterId = 1L;
@@ -267,7 +285,7 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
@@ -279,18 +297,19 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.WRONG_READING_VALUE);
+        .hasMessage(errorMessage);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
-  @DisplayName("adding new reading should throw IllegalArgumentException "
-      + "because reading value is bigger than previous reading "
-      + "from next date (can't insert reading bigger than next "
-      + "unless next is zero)")
-  public void addReadingBiggerThanNextThrowsIllegalArgumentException() {
+  @DisplayName("adding new reading should throw InputException "
+      + "with proper message because reading value is bigger than "
+      + "previous reading from next date "
+      + "(can't insert reading bigger than next unless next is zero)")
+  public void addReadingBiggerThanNextThrowsInputException() {
+    String errorMessage = "error.wrongReadingValue";
     Double previous = 12.;
     Double next = 1.;
 
@@ -308,7 +327,7 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
@@ -324,7 +343,7 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(mediumMeterId, mockReadingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.WRONG_READING_VALUE);
+        .hasMessage(errorMessage);
 
     verify(mockReadingRepository, times(1))
         .isResetDate(any(LocalDate.class), anyLong());
@@ -361,7 +380,7 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
@@ -376,16 +395,16 @@ class MediumMeterServiceUnitTests {
 
     verify(mockMediumMeter, times(1))
         .addReading(reading);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .save(mockMediumMeter);
   }
 
   @Test
   @DisplayName(
       "Adding new reading with negative value"
-          + "should throw IllegalArgumentException")
-  public void addReadingNegativeValueThrowsIllegalArgumentException() {
-
+          + "should throw InputException with proper message")
+  public void addReadingNegativeValueThrowsInputException() {
+    String errorMessage = "error.negativeReading";
     Double previous = -4.;
     Double next = -1.;
 
@@ -399,7 +418,7 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeter.getActiveUntil())
         .thenReturn(null);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
     when(mockReadingRepository.existsByDateAndMediumMeter(any(LocalDate.class),
         any(MediumMeter.class))).thenReturn(false);
@@ -419,9 +438,9 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.addReading(1L, mockReadingForm));
 
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.NEGATIVE_READING);
+        .hasMessage(errorMessage);
 
-    verify(mockMediumMeterepository, times(0))
+    verify(mockMediumMeteRepository, times(0))
         .save(any(MediumMeter.class));
 
 
@@ -460,7 +479,7 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
@@ -475,7 +494,7 @@ class MediumMeterServiceUnitTests {
 
     verify(mockMediumMeter, times(1))
         .addReading(reading);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .save(mockMediumMeter);
   }
 
@@ -506,7 +525,7 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
@@ -521,7 +540,7 @@ class MediumMeterServiceUnitTests {
 
     verify(mockMediumMeter, times(1))
         .addReading(reading);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .save(mockMediumMeter);
   }
 
@@ -552,7 +571,7 @@ class MediumMeterServiceUnitTests {
         .isResetDate(any(LocalDate.class), anyLong()))
         .thenReturn(false);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
 
     when(mockReadingRepository
@@ -567,14 +586,15 @@ class MediumMeterServiceUnitTests {
 
     verify(mockMediumMeter, times(1))
         .addReading(reading);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .save(mockMediumMeter);
   }
 
   @Test
-  @DisplayName("deactivating mediumMeter should throw IllegalArgumentException"
-      + "if date String is not parsable")
-  public void deactivateNotParsableDateThrowsIllegalArgumentException() {
+  @DisplayName("deactivating mediumMeter should throw InputException"
+      + "with proper message if date String is not parsable")
+  public void deactivateNotParsableDateThrowsInputException() {
+    String errorMessage = "error.blankDate";
     String deactivationDate1 = "aaaaa";
     String deactivationDate2 = "";
     String deactivationDate3 = " ";
@@ -590,19 +610,20 @@ class MediumMeterServiceUnitTests {
         () -> mediumMeterService.deactivate(meterId, deactivationDate3));
 
     assertThat(exception1).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.BLANK_DATE);
+        .hasMessage(errorMessage);
 
     assertThat(exception2).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.BLANK_DATE);
+        .hasMessage(errorMessage);
 
     assertThat(exception3).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.BLANK_DATE);
+        .hasMessage(errorMessage);
   }
 
   @Test
-  @DisplayName("deactivating mediumMeter should throw IllegalArgumentException"
-      + "because deactivation date is in future")
-  public void deactivateFutureDateThrowsIllegalArgumentException() {
+  @DisplayName("deactivating mediumMeter should throw InputException"
+      + "with proper message because deactivation date is in future")
+  public void deactivateFutureDateThrowsInputException() {
+    String errorMessage = "error.futureDeactivation";
     String deactivationDate1 = LocalDate.now().plusDays(1).toString();
     Long meterId = 1L;
 
@@ -611,37 +632,40 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.FUTURE_DEACTIVATION);
+        .hasMessage(errorMessage);
 
   }
 
   @Test
-  @DisplayName("deactivating mediumMeter should throw IllegalArgumentException"
-      + "if medium meter not exists")
-  public void deactivateNotExistingMeterThrowsIllegalArgumentException() {
+  @DisplayName("deactivating mediumMeter should throw MainException with "
+      + "proper message if medium meter not exists")
+
+  public void deactivateNotExistingMeterThrowsMainException() {
+    String errorMessage = "error.meterNotExists";
     String deactivationDate1 = LocalDate.now().minusDays(1).toString();
     Long meterId = 1L;
 
-    when(mockMediumMeterepository.existsById(meterId)).thenReturn(false);
+    when(mockMediumMeteRepository.existsById(meterId)).thenReturn(false);
 
     Throwable exception1 = catchThrowable(
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
 
 
     assertThat(exception1).isInstanceOf(MainException.class)
-        .hasMessage(ErrorCodes.NO_METER_ID);
+        .hasMessage(errorMessage);
 
   }
 
   @Test
-  @DisplayName("deactivating mediumMeter should throw IllegalArgumentException"
-      + "if meter deactivation date is before activation date")
-  public void deactivateDeactivationBeforeActivationThrowsIllArgException() {
+  @DisplayName("deactivating mediumMeter should throw InputException with "
+      + "proper message if meter deactivation date is before activation date")
+  public void deactivateDeactivationBeforeActivationThrowsInputException() {
+    String errorMessage = "error.deactivationBeforeActivation";
     String deactivationDate1 = LocalDate.now().minusDays(1).toString();
     Long meterId = 1L;
 
-    when(mockMediumMeterepository.existsById(meterId)).thenReturn(true);
-    when(mockMediumMeterepository.getActiveSince(meterId))
+    when(mockMediumMeteRepository.existsById(meterId)).thenReturn(true);
+    when(mockMediumMeteRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).plusDays(1));
 
     Throwable exception1 = catchThrowable(
@@ -649,21 +673,22 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.DEACTIVATION_BEFORE_ACTIVATION);
+        .hasMessage(errorMessage);
 
   }
 
   @Test
-  @DisplayName("deactivating mediumMeter should throw IllegalArgumentException"
-      + "if meter deactivation date is before last reading date")
-  public void deactivateDeactivationBeforeLastReadingThrowsIllArgException() {
+  @DisplayName("deactivating mediumMeter should throw InputException with "
+      + "proper message if meter deactivation date is before last reading date")
+  public void deactivateDeactivationBeforeLastReadingThrowsInputException() {
+    String errorMessage = "error.deactivationBeforeLastReading";
     String deactivationDate1 = LocalDate.now().minusDays(1).toString();
     Long meterId = 1L;
 
-    when(mockMediumMeterepository.existsById(meterId)).thenReturn(true);
-    when(mockMediumMeterepository.getActiveSince(meterId))
+    when(mockMediumMeteRepository.existsById(meterId)).thenReturn(true);
+    when(mockMediumMeteRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
-    when(mockMediumMeterepository.getLastReadingDate(meterId))
+    when(mockMediumMeteRepository.getLastReadingDate(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).plusDays(1));
 
     Throwable exception1 = catchThrowable(
@@ -671,7 +696,7 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.DEACTIVATION_BEFORE_LAST_READING);
+        .hasMessage(errorMessage);
   }
 
   @Test
@@ -681,10 +706,10 @@ class MediumMeterServiceUnitTests {
     String deactivationDate1 = LocalDate.now().minusDays(1).toString();
     Long meterId = 1L;
 
-    when(mockMediumMeterepository.existsById(meterId)).thenReturn(true);
-    when(mockMediumMeterepository.getActiveSince(meterId))
+    when(mockMediumMeteRepository.existsById(meterId)).thenReturn(true);
+    when(mockMediumMeteRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
-    when(mockMediumMeterepository.getLastReadingDate(meterId))
+    when(mockMediumMeteRepository.getLastReadingDate(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
 
     mediumMeterService.deactivate(meterId, deactivationDate1);
@@ -693,7 +718,7 @@ class MediumMeterServiceUnitTests {
         ArgumentCaptor.forClass(LocalDate.class);
     ArgumentCaptor<Long> longCaptor = ArgumentCaptor.forClass(Long.class);
 
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .deactivate(longCaptor.capture(), dateCaptor.capture());
 
     assertThat(longCaptor.getValue())
@@ -703,9 +728,10 @@ class MediumMeterServiceUnitTests {
   }
 
   @Test
-  @DisplayName("reset should throw illegalArgumentException because date is "
-      + "not parsable")
-  public void resetNotParsableDateThrowsIllegalArgumentException() {
+  @DisplayName("reset should throw InputException with proper message  "
+      + "because date is not parsable")
+  public void resetNotParsableDateThrowsInputException() {
+    String errorMessage = "error.blankDate";
     String resetDate1 = "aaaaa";
     String resetDate2 = "";
     String resetDate3 = " ";
@@ -722,94 +748,99 @@ class MediumMeterServiceUnitTests {
 
 
     assertThat(exception1).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.BLANK_DATE);
+        .hasMessage(errorMessage);
 
     assertThat(exception2).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.BLANK_DATE);
+        .hasMessage(errorMessage);
 
     assertThat(exception3).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.BLANK_DATE);
+        .hasMessage(errorMessage);
   }
 
   @Test
-  @DisplayName("reset with wrong meter id throws IllegalArgumentException"
-      + "because meter nt exists")
-  public void resetWrongMeterIdThrowsIllegalArgumentException() {
+  @DisplayName("reset with wrong meter id throws MainException with proper "
+      + "message because meter id doesnt exists")
+  public void resetWrongMeterIdThrowsMainException() {
+    String errorMessage = "error.meterNotExists";
     String resetDate = LocalDate.now().toString();
     Long meterId = 1L;
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.empty());
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(MainException.class)
-        .hasMessage(ErrorCodes.NO_METER_ID);
+        .hasMessage(errorMessage);
 
     ArgumentCaptor<Long> longCaptor = ArgumentCaptor.forClass(Long.class);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .findById(longCaptor.capture());
     assertThat(longCaptor.getValue()).isEqualTo(meterId);
   }
 
   @Test
-  @DisplayName("reset of not resettable medium meter throws IllegalArgumentException")
-  public void resetNotResettableMeterIdThrowsIllegalArgumentException() {
+  @DisplayName("reset of not resettable medium meter throws InputException "
+      + "with proper message")
+  public void resetNotResettableMeterIdThrowsInputException() {
+    String errorMessage = "error.notResettable";
     String resetDate = LocalDate.now().toString();
     Long meterId = 1L;
     MediumMeter mediumMeter = mock(MediumMeter.class);
     when(mediumMeter.isResettable()).thenReturn(false);
     when(mediumMeter.getId()).thenReturn(meterId);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mediumMeter));
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.NOT_RESETTABLE);
+        .hasMessage(errorMessage);
   }
 
   @Test
   @DisplayName("reset before last reading date "
-      + "should throw IllegalArgumentException")
-  public void resetBeforeLastReadingThrowsIllegalArgumentException() {
+      + "should throw InputException with proper message")
+  public void resetBeforeLastReadingThrowsInputException() {
+    String errorMessage = "error.resetNotAfterLastReading";
     String resetDate = LocalDate.now().toString();
     Long meterId = 1L;
     MediumMeter mediumMeter = mock(MediumMeter.class);
     when(mediumMeter.isResettable()).thenReturn(true);
     when(mediumMeter.getId()).thenReturn(meterId);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mediumMeter));
-    when(mockMediumMeterepository.getLastReadingDate(meterId))
+    when(mockMediumMeteRepository.getLastReadingDate(meterId))
         .thenReturn(LocalDate.parse(resetDate).plusDays(1));
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.RESET_NOT_AFTER_LAST_READING);
+        .hasMessage(errorMessage);
   }
 
   @Test
   @DisplayName("reset at last reading date "
-      + "should throw IllegalArgumentException")
-  public void resetAtLastReadingThrowsIllegalArgumentException() {
+      + "should throw InputException with proper message")
+  public void resetAtLastReadingThrowsInputException() {
+    String errorMessage = "error.resetNotAfterLastReading";
     String resetDate = LocalDate.now().toString();
     Long meterId = 1L;
     MediumMeter mediumMeter = mock(MediumMeter.class);
     when(mediumMeter.isResettable()).thenReturn(true);
     when(mediumMeter.getId()).thenReturn(meterId);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mediumMeter));
-    when(mockMediumMeterepository.getLastReadingDate(meterId))
+    when(mockMediumMeteRepository.getLastReadingDate(meterId))
         .thenReturn(LocalDate.parse(resetDate));
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(ErrorCodes.RESET_NOT_AFTER_LAST_READING);
+        .hasMessage(errorMessage);
   }
 
   @Test
@@ -822,9 +853,9 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeter.isResettable()).thenReturn(true);
     when(mockMediumMeter.getId()).thenReturn(meterId);
 
-    when(mockMediumMeterepository.findById(anyLong()))
+    when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
-    when(mockMediumMeterepository.getLastReadingDate(meterId))
+    when(mockMediumMeteRepository.getLastReadingDate(meterId))
         .thenReturn(LocalDate.parse(resetDate).minusDays(1));
 
     Reading reading = new Reading(LocalDate.parse(resetDate), 0D);
@@ -833,7 +864,7 @@ class MediumMeterServiceUnitTests {
     mediumMeterService.reset(meterId, resetDate);
     verify(mockMediumMeter, times(1))
         .addReading(reading);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .save(mockMediumMeter);
   }
 
@@ -841,18 +872,18 @@ class MediumMeterServiceUnitTests {
   @DisplayName("reactivation of active medium meter should not call any method"
       + "of repository")
   public void reactivationOfActiveMeterDoesNothing() {
-    when(mockMediumMeterepository.isActive(anyLong())).thenReturn(true);
+    when(mockMediumMeteRepository.isActive(anyLong())).thenReturn(true);
     mediumMeterService.reactivate(1L);
-    verify(mockMediumMeterepository, times(0)).reactivate(anyLong());
+    verify(mockMediumMeteRepository, times(0)).reactivate(anyLong());
   }
 
   @Test
   @DisplayName("reactivation of inactive medium meter should call method"
       + "of repository")
   public void reactivationOfInactiveMeterCallsRepoMethod() {
-    when(mockMediumMeterepository.isActive(anyLong())).thenReturn(false);
+    when(mockMediumMeteRepository.isActive(anyLong())).thenReturn(false);
     mediumMeterService.reactivate(1L);
-    verify(mockMediumMeterepository, times(1))
+    verify(mockMediumMeteRepository, times(1))
         .reactivate(1L);
   }
 }

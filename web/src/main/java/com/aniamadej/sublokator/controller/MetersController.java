@@ -8,7 +8,6 @@ import com.aniamadej.sublokator.util.Views;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -65,9 +64,7 @@ public class MetersController {
       try {
         mediumMeterService.addReading(meterId, readingForm);
       } catch (Exception e) {
-        redirectAttributes.addFlashAttribute(Attributes.ERROR,
-            errorsMessageSource.getMessage(e.getMessage(),
-                null, LocaleContextHolder.getLocale()));
+        redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
       }
     }
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
@@ -81,9 +78,7 @@ public class MetersController {
     try {
       mediumMeterService.deactivate(meterId, deactivationDate);
     } catch (IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, errorsMessageSource
-          .getMessage(e.getMessage(), null, LocaleContextHolder
-              .getLocale()));
+      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
     }
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
@@ -102,9 +97,7 @@ public class MetersController {
     try {
       mediumMeterService.reset(meterId, deactivationDate);
     } catch (IllegalArgumentException e) {
-      redirectAttributes.addFlashAttribute(Attributes.ERROR, errorsMessageSource
-          .getMessage(e.getMessage(), null, LocaleContextHolder
-              .getLocale()));
+      redirectAttributes.addFlashAttribute(Attributes.ERROR, e.getMessage());
     }
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }

@@ -1,17 +1,15 @@
 package com.aniamadej.sublokator.controller;
 
+import com.aniamadej.sublokator.CustomMessageSource;
 import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.util.Attributes;
-import com.aniamadej.sublokator.util.ErrorCodes;
 import com.aniamadej.sublokator.util.Mappings;
 import com.aniamadej.sublokator.util.Views;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,12 +25,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MediaController {
 
   private final MediumConnectionService mediumConnectionService;
-  private final MessageSource errorsMessageSource;
+  private final CustomMessageSource errorsMessageSource;
 
   @Autowired
   MediaController(
       MediumConnectionService mediumConnectionService,
-      MessageSource errorsMessageSource) {
+      CustomMessageSource errorsMessageSource) {
     this.mediumConnectionService = mediumConnectionService;
     this.errorsMessageSource = errorsMessageSource;
   }
@@ -52,7 +50,9 @@ public class MediaController {
                                      boolean inactive,
                                  Pageable pageable) {
     if (!mediumConnectionService.existsById(mediumId)) {
-      throw new MainException(ErrorCodes.NO_MEDIUM_CONNECTION_ID);
+      throw new MainException(
+          errorsMessageSource
+              .getMessage("error.connectionNotExists"));
     }
     model.addAttribute(Attributes.NAMES,
         mediumConnectionService.getMeterNumbers(mediumId, pageable, inactive));
@@ -65,7 +65,8 @@ public class MediaController {
   @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
   public String showMediumConnection(Model model, @PathVariable long mediumId) {
     if (!mediumConnectionService.existsById(mediumId)) {
-      throw new MainException(ErrorCodes.NO_MEDIUM_CONNECTION_ID);
+      throw new MainException(errorsMessageSource
+          .getMessage("error.connectionNotExists"));
     }
     model.addAttribute(Attributes.MEDIUM_NAME,
         mediumConnectionService.getMediumName(mediumId));
@@ -85,8 +86,7 @@ public class MediaController {
       mediumConnectionService.save(mediumName);
     } catch (InputException e) {
 
-      String error = errorsMessageSource.getMessage(e.getMessage(),
-          null, LocaleContextHolder.getLocale());
+      String error = e.getMessage();
       redirectAttributes.addFlashAttribute(Attributes.ERROR, error);
       return "redirect:" + Mappings.MEDIA_ADD;
     }
@@ -114,7 +114,6 @@ public class MediaController {
       return Views.METER_ADD;
     }
     mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
-
 
     return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId
         + Mappings.METERS_SUBPAGE;

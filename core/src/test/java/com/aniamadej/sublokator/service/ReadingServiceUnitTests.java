@@ -9,15 +9,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+import com.aniamadej.sublokator.CustomMessageSource;
 import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.util.ErrorCodes;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class ReadingServiceUnitTests {
 
@@ -27,26 +28,38 @@ class ReadingServiceUnitTests {
   @BeforeEach
   public void init() {
     mockReadingRepository = mock(ReadingRepository.class);
-    readingService = new ReadingService(mockReadingRepository);
+    CustomMessageSource mockCustomMessageSource = mock(CustomMessageSource.class);
+    readingService =
+        new ReadingService(mockReadingRepository, mockCustomMessageSource);
+
+    ArgumentCaptor<String> errorCodeCaptor =
+        ArgumentCaptor.forClass(String.class);
+
+    when(mockCustomMessageSource
+        .getMessage(errorCodeCaptor.capture()))
+        .thenAnswer(i -> errorCodeCaptor.getValue());
+
   }
 
   @Test
-  @DisplayName("deletin reading that does not exist"
-      + "should throw IllegalArgumentException")
-  public void deleteReadingNotExistsThrowsIllegalArgumentException() {
+  @DisplayName("deleting reading that does not exist"
+      + "should throw MainException with proper message")
+  public void deleteReadingNotExistsThrowsMainException() {
     when(mockReadingRepository.findById(anyLong()))
         .thenReturn(Optional.empty());
+
+    String errorCode = "error.noReadingId";
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(MainException.class)
-        .hasMessage(
-            ErrorCodes.NO_READING_ID);
+        .hasMessage(errorCode);
   }
 
   @Test
   @DisplayName("deleting first reading od meter should throw "
-      + "IllealArgumentException")
-  public void deleteFirstReadingThrowsIllegalArgumentException() {
+      + "InputException wth proper message")
+  public void deleteFirstReadingThrowsInputException() {
+    String errorCode = "error.firstDelete";
     when(mockReadingRepository.findById(anyLong()))
         .thenReturn(Optional.of(new Reading()));
     when(mockReadingRepository.isFirst(anyLong()))
@@ -54,14 +67,14 @@ class ReadingServiceUnitTests {
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(
-            ErrorCodes.FIRST_DELETE);
+        .hasMessage(errorCode);
   }
 
   @Test
   @DisplayName("deleting zero reading which is not a last reading"
-      + "should throw IllegalArgumentException")
-  public void deleteZeroNotLastReadingThrowsIllegalArgumentException() {
+      + "should throw InputException with proper message")
+  public void deleteZeroNotLastReadingThrowsInputException() {
+    String errorCode = "error.zeroDelete";
     Reading mockReading = mock(Reading.class);
     when(mockReading.getReading()).thenReturn(0.);
     when(mockReadingRepository.findById(anyLong()))
@@ -73,8 +86,7 @@ class ReadingServiceUnitTests {
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(
-            ErrorCodes.ZERO_DELETE);
+        .hasMessage(errorCode);
   }
 
   @Test
@@ -101,7 +113,7 @@ class ReadingServiceUnitTests {
 
   @Test
   @DisplayName("deleting reading that is not first "
-      + "and is zero but last"
+      + "and is zero but last "
       + "should call delete on repository")
   public void deleteNotFirstZeroLastPerformsDeleteOnRepository() {
     Reading mockReading = mock(Reading.class);
@@ -122,20 +134,24 @@ class ReadingServiceUnitTests {
   }
 
   @Test
-  public void findMeterIdMeterNotExistsThrowsIllegalArgumentException() {
+  @DisplayName("finding meterId of reading that does not exist "
+      + "should throw MainException with proper message")
+  public void findMeterIdMeterNotExistsThrowsMainException() {
+    String errorCode = "error.meterNotExists";
     Long readingId = 1L;
     when(mockReadingRepository.findMeterId(readingId))
         .thenReturn(Optional.empty());
     Throwable exception
         = catchThrowable(() -> readingService.findMediumId(1L));
     assertThat(exception).isInstanceOf(MainException.class)
-        .hasMessage(
-            ErrorCodes.NO_METER_ID);
+        .hasMessage(errorCode);
     verify(mockReadingRepository, times(1))
         .findMeterId(readingId);
   }
 
   @Test
+  @DisplayName("finding meterId of reading that exists "
+      + "should return meterId")
   public void findMeterIdMeterExistsReturnsId() {
     Long readingId = 1L;
     Long meterId = 2L;

@@ -1,17 +1,16 @@
 package com.aniamadej.sublokator.configuration;
 
-import org.springframework.context.MessageSource;
+import com.aniamadej.sublokator.CustomMessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
 class ErrorMessagesConfiguration {
   @Bean
-  public MessageSource errorsMessageSource() {
-    ReloadableResourceBundleMessageSource messageSource
-        = new ReloadableResourceBundleMessageSource();
+  public CustomMessageSource errorsMessageSource() {
+    CustomMessageSource messageSource
+        = new CustomMessageSource();
 
     messageSource.setBasenames("classpath:messages-errors");
     messageSource.setDefaultEncoding("UTF-8");
