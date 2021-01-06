@@ -43,4 +43,6 @@ public interface MediumMeterRepository
   @Query("update MediumMeter m set m.activeUntil = null "
       + "where m.id=:meterId ")
   void reactivate(Long meterId);
+
+
 }

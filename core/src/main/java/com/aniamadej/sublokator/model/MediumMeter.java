@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,10 @@ public class MediumMeter {
 
   // == fields ==
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE,
+      generator = "meter_sequence")
+  @SequenceGenerator(name = "meter_sequence",
+      sequenceName = "meter_sequence", allocationSize = 1)
   private long id;
   private String number;
   private String unitName;

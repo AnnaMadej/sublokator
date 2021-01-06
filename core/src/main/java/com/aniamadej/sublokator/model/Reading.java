@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,10 @@ public class Reading {
 
   // == fields ==
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE,
+      generator = "reading_sequence")
+  @SequenceGenerator(name = "reading_sequence",
+      sequenceName = "reading_sequence", allocationSize = 1)
   private long id;
   private LocalDate date;
   private Double reading;

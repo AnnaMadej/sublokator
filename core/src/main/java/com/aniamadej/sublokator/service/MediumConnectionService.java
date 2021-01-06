@@ -12,6 +12,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MediumConnectionService {
@@ -50,6 +51,10 @@ public class MediumConnectionService {
   }
 
   public String getMediumName(long mediumConnectionId) {
+    if (!existsById(mediumConnectionId)) {
+      throw new MainException(customMessageSource
+          .getMessage("error.connectionNotExists"));
+    }
     return mediumConnectionRepository.findMediumName(mediumConnectionId)
         .orElse("");
   }
@@ -58,6 +63,7 @@ public class MediumConnectionService {
     return mediumConnectionRepository.existsById(mediumConnectionId);
   }
 
+  @Transactional
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
       throw new InputException(
@@ -74,24 +80,28 @@ public class MediumConnectionService {
     mediumConnectionRepository.save(connection);
   }
 
+
+  private void addMediumMeter(Long mediumConnectionId,
+                                MediumMeter mediumMeter) {
+    mediumConnectionRepository.findById(mediumConnectionId)
+        .ifPresentOrElse(connection -> {
+          connection.addMediumMeter(mediumMeter);
+        }, () -> {
+          throw new MainException(
+              customMessageSource
+                  .getMessage("error.connectionNotExists"));
+        });
+  }
+
+  @Transactional
   public void addMediumMeter(Long mediumConnectionId,
                              MediumMeterForm mediumMeterForm) {
-
     if (mediumMeterForm.getFirstReading() < 0) {
       throw new InputException(
           customMessageSource.getMessage("error.negativeReading"));
     }
-
-    mediumConnectionRepository.findById(mediumConnectionId)
-        .map(connection -> {
-          MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
-          connection.addMediumMeter(mediumMeter);
-          return mediumConnectionRepository.save(connection);
-        })
-        .orElseThrow(() ->
-            new MainException(
-                customMessageSource
-                    .getMessage("error.connectionNotExists")));
+    MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
+    addMediumMeter(mediumConnectionId, mediumMeter);
   }
 
 
