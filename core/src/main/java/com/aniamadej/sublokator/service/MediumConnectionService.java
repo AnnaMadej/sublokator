@@ -8,29 +8,33 @@ import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
+import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MediumConnectionService {
 
   // == fields ==
   private final MediumConnectionRepository mediumConnectionRepository;
+  private final MediumMeterRepository mediumMeterRepository;
   private final CustomMessageSource customMessageSource;
 
   // == constructors ==
-
-
   @Autowired
   MediumConnectionService(
       MediumConnectionRepository mediumConnectionRepository,
+      MediumMeterRepository mediumMeterRepository,
       CustomMessageSource customMessageSource) {
     this.mediumConnectionRepository = mediumConnectionRepository;
+    this.mediumMeterRepository = mediumMeterRepository;
     this.customMessageSource = customMessageSource;
   }
+
+
+
 
   // == public methods ==
   public List<NumberedName> getNamesList() {
@@ -63,7 +67,6 @@ public class MediumConnectionService {
     return mediumConnectionRepository.existsById(mediumConnectionId);
   }
 
-  @Transactional
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
       throw new InputException(
@@ -81,27 +84,24 @@ public class MediumConnectionService {
   }
 
 
-  private void addMediumMeter(Long mediumConnectionId,
-                                MediumMeter mediumMeter) {
+  public void addMediumMeter(Long mediumConnectionId,
+                             MediumMeterForm mediumMeterForm) {
+
+    if (mediumMeterForm.getFirstReading() < 0) {
+      throw new InputException(
+          customMessageSource.getMessage("error.negativeReading"));
+    }
+
     mediumConnectionRepository.findById(mediumConnectionId)
         .ifPresentOrElse(connection -> {
-          connection.addMediumMeter(mediumMeter);
+          MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
+          mediumMeter.setMediumConnection(connection);
+          mediumMeterRepository.save(mediumMeter);
         }, () -> {
           throw new MainException(
               customMessageSource
                   .getMessage("error.connectionNotExists"));
         });
-  }
-
-  @Transactional
-  public void addMediumMeter(Long mediumConnectionId,
-                             MediumMeterForm mediumMeterForm) {
-    if (mediumMeterForm.getFirstReading() < 0) {
-      throw new InputException(
-          customMessageSource.getMessage("error.negativeReading"));
-    }
-    MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
-    addMediumMeter(mediumConnectionId, mediumMeter);
   }
 
 

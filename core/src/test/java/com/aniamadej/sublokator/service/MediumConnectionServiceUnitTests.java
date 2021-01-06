@@ -17,7 +17,9 @@ import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
+import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
+import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ class MediumConnectionServiceUnitTests {
 
   private static MediumConnectionRepository mockMediumConnectionRepository;
   private static MediumConnectionService mediumConnectionService;
+  private static MediumMeterRepository mockMediumMeterRepository;
 
   @BeforeEach
   public void setUp() {
@@ -41,10 +44,12 @@ class MediumConnectionServiceUnitTests {
         mock(MediumConnectionRepository.class);
     CustomMessageSource mockCustomMessageSource =
         mock(CustomMessageSource.class);
+    mockMediumMeterRepository = mock(MediumMeterRepository.class);
+
 
     mediumConnectionService
         = new MediumConnectionService(mockMediumConnectionRepository,
-        mockCustomMessageSource);
+        mockMediumMeterRepository, mockCustomMessageSource);
 
     ArgumentCaptor<String> errorCodeCaptor =
         ArgumentCaptor.forClass(String.class);
@@ -108,7 +113,27 @@ class MediumConnectionServiceUnitTests {
 
     mediumConnectionService.addMediumMeter(1L, mediumMeterForm);
 
-    // TODO: add spy
+    ArgumentCaptor<MediumMeter> mediumConnectionCaptor =
+        ArgumentCaptor.forClass(MediumMeter.class);
+    verify(mockMediumMeterRepository, times(1))
+        .save(mediumConnectionCaptor.capture());
+    MediumMeter savedMediumMeter = mediumConnectionCaptor.getValue();
+
+    assertThat(savedMediumMeter.getNumber())
+        .isEqualTo(mediumMeterForm.getNumber());
+    assertThat(savedMediumMeter.getUnitName())
+        .isEqualTo(mediumMeterForm.getUnitName());
+
+    assertThat(savedMediumMeter.getReadings().get(0).getReading())
+        .isEqualTo(mediumMeterForm.getFirstReading());
+    assertThat(savedMediumMeter.getReadings().get(0).getDate())
+        .isEqualTo(mediumMeterForm.getActiveSince());
+    assertThat(savedMediumMeter.getReadings().get(0).getMediumMeter())
+        .isEqualTo(savedMediumMeter);
+
+    assertEquals(1,
+        savedMediumMeter.getReadings().size());
+
   }
 
   @Test

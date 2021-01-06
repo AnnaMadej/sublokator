@@ -2,7 +2,7 @@ package com.aniamadej.sublokator.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,7 +36,7 @@ public class MediumMeter {
   private boolean resettable = false;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
-  private Collection<Reading> readings = new ArrayList<>();
+  private List<Reading> readings = new ArrayList<>();
   @ManyToOne
   @JoinColumn(name = "connection_id")
   private MediumConnection mediumConnection;
