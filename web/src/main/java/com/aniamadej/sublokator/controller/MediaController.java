@@ -68,7 +68,6 @@ public class MediaController {
   public String addNewMedium(
       @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName) {
     mediumConnectionService.save(mediumName);
-
     return "redirect:" + Mappings.MEDIA_PAGE;
   }
 
