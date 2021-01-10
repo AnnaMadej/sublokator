@@ -1,6 +1,6 @@
 <thLogic>
     <attr sel="#head" th:replace="~{fragments/head::head}"/>
-    <attr sel="#mediumHeader" th:text="#{page.connectedMedium}"/>
+    <attr sel="#pageHeader" th:text="#{page.connectedMedium}"/>
     <attr sel="#mediumName" th:text="${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}__}"/>
     <attr sel="#metersButton" th:text="#{page.meters}"
           th:href="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).METERS_SUBPAGE}__}"/>

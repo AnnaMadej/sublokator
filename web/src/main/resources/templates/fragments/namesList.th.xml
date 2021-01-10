@@ -1,9 +1,13 @@
 <thLogic>
-    <attr sel="#namesListFragment" th:fragment="namesListFragment"/>
-    <attr sel="#namesList" th:each="name : ${__${T(com.aniamadej.sublokator.util.Attributes).NAMES}__}">
-        <attr sel=".namesListEntry"
-              th:href="${__${T(com.aniamadej.sublokator.util.Attributes).REDIRECT_PAGE}__} + '/' +   ${name.getId}"
-              th:text="${name.getName()}"/>
+    <attr sel="#namesList" th:fragment="namesListFragment">
+        <attr sel="ul">
+            <attr sel="li" th:each="name : ${__${T(com.aniamadej.sublokator.util.Attributes).NAMES}__}">
+                <attr sel="a"
+                      th:href="${__${T(com.aniamadej.sublokator.util.Attributes).REDIRECT_PAGE}__} + '/' +   ${name.getId}"
+                      th:text="${name.getName()}"/>
+            </attr>
+        </attr>
+
 
     </attr>
 </thLogic>

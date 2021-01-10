@@ -8,6 +8,7 @@ import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
+import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -18,18 +19,22 @@ public class MediumConnectionService {
 
   // == fields ==
   private final MediumConnectionRepository mediumConnectionRepository;
+  private final MediumMeterRepository mediumMeterRepository;
   private final CustomMessageSource customMessageSource;
 
   // == constructors ==
-
-
   @Autowired
   MediumConnectionService(
       MediumConnectionRepository mediumConnectionRepository,
+      MediumMeterRepository mediumMeterRepository,
       CustomMessageSource customMessageSource) {
     this.mediumConnectionRepository = mediumConnectionRepository;
+    this.mediumMeterRepository = mediumMeterRepository;
     this.customMessageSource = customMessageSource;
   }
+
+
+
 
   // == public methods ==
   public List<NumberedName> getNamesList() {
@@ -50,6 +55,10 @@ public class MediumConnectionService {
   }
 
   public String getMediumName(long mediumConnectionId) {
+    if (!existsById(mediumConnectionId)) {
+      throw new MainException(customMessageSource
+          .getMessage("error.connectionNotExists"));
+    }
     return mediumConnectionRepository.findMediumName(mediumConnectionId)
         .orElse("");
   }
@@ -74,6 +83,7 @@ public class MediumConnectionService {
     mediumConnectionRepository.save(connection);
   }
 
+
   public void addMediumMeter(Long mediumConnectionId,
                              MediumMeterForm mediumMeterForm) {
 
@@ -83,15 +93,15 @@ public class MediumConnectionService {
     }
 
     mediumConnectionRepository.findById(mediumConnectionId)
-        .map(connection -> {
+        .ifPresentOrElse(connection -> {
           MediumMeter mediumMeter = mediumMeterForm.toMediumMeter();
-          connection.addMediumMeter(mediumMeter);
-          return mediumConnectionRepository.save(connection);
-        })
-        .orElseThrow(() ->
-            new MainException(
-                customMessageSource
-                    .getMessage("error.connectionNotExists")));
+          mediumMeter.setMediumConnection(connection);
+          mediumMeterRepository.save(mediumMeter);
+        }, () -> {
+          throw new MainException(
+              customMessageSource
+                  .getMessage("error.connectionNotExists"));
+        });
   }
 
 

@@ -3,7 +3,6 @@ package com.aniamadej.sublokator.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -18,7 +17,9 @@ import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.model.MediumConnection;
+import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
+import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,7 @@ class MediumConnectionServiceUnitTests {
 
   private static MediumConnectionRepository mockMediumConnectionRepository;
   private static MediumConnectionService mediumConnectionService;
+  private static MediumMeterRepository mockMediumMeterRepository;
 
   @BeforeEach
   public void setUp() {
@@ -42,10 +44,12 @@ class MediumConnectionServiceUnitTests {
         mock(MediumConnectionRepository.class);
     CustomMessageSource mockCustomMessageSource =
         mock(CustomMessageSource.class);
+    mockMediumMeterRepository = mock(MediumMeterRepository.class);
+
 
     mediumConnectionService
         = new MediumConnectionService(mockMediumConnectionRepository,
-        mockCustomMessageSource);
+        mockMediumMeterRepository, mockCustomMessageSource);
 
     ArgumentCaptor<String> errorCodeCaptor =
         ArgumentCaptor.forClass(String.class);
@@ -109,27 +113,26 @@ class MediumConnectionServiceUnitTests {
 
     mediumConnectionService.addMediumMeter(1L, mediumMeterForm);
 
-    ArgumentCaptor<MediumConnection> mediumConnectionCaptor =
-        ArgumentCaptor.forClass(MediumConnection.class);
-    verify(mockMediumConnectionRepository, times(1))
+    ArgumentCaptor<MediumMeter> mediumConnectionCaptor =
+        ArgumentCaptor.forClass(MediumMeter.class);
+    verify(mockMediumMeterRepository, times(1))
         .save(mediumConnectionCaptor.capture());
-    MediumConnection savedMediumConnection = mediumConnectionCaptor.getValue();
+    MediumMeter savedMediumMeter = mediumConnectionCaptor.getValue();
 
-    assertTrue(savedMediumConnection
-        .getMediumMeters().stream()
-        .anyMatch(mm -> mm.getNumber().equals(mediumMeterForm.getNumber())
-            && mm.getUnitName().equals(mediumMeterForm.getUnitName())));
+    assertThat(savedMediumMeter.getNumber())
+        .isEqualTo(mediumMeterForm.getMeterNumber());
+    assertThat(savedMediumMeter.getUnitName())
+        .isEqualTo(mediumMeterForm.getMeterUnit());
 
-    assertTrue(savedMediumConnection.getMediumMeters()
-        .stream()
-        .flatMap(mm -> mm.getReadings().stream())
-        .anyMatch(r ->
-            r.getDate().equals(LocalDate.now())
-                && r.getReading().equals(mediumMeterForm.getFirstReading())));
+    assertThat(savedMediumMeter.getReadings().get(0).getReading())
+        .isEqualTo(mediumMeterForm.getFirstReading());
+    assertThat(savedMediumMeter.getReadings().get(0).getDate())
+        .isEqualTo(mediumMeterForm.getActiveSince());
+    assertThat(savedMediumMeter.getReadings().get(0).getMediumMeter())
+        .isEqualTo(savedMediumMeter);
 
-    assertEquals(1, savedMediumConnection.getMediumMeters().size());
     assertEquals(1,
-        savedMediumConnection.getMediumMeters().get(0).getReadings().size());
+        savedMediumMeter.getReadings().size());
 
   }
 
@@ -272,6 +275,7 @@ class MediumConnectionServiceUnitTests {
 
     long mediumId = 1L;
 
+    when(mockMediumConnectionRepository.existsById(mediumId)).thenReturn(true);
     when(mockMediumConnectionRepository.findMediumName(mediumId))
         .thenReturn(Optional.of(mediumName));
 
@@ -293,6 +297,7 @@ class MediumConnectionServiceUnitTests {
 
     long mediumId = 1L;
 
+    when(mockMediumConnectionRepository.existsById(mediumId)).thenReturn(true);
     when(mockMediumConnectionRepository.findMediumName(mediumId))
         .thenReturn(Optional.empty());
 
@@ -409,9 +414,9 @@ class MediumConnectionServiceUnitTests {
 
   private MediumMeterForm getMediumMeterForm() {
     MediumMeterForm mediumMeterForm = new MediumMeterForm();
-    mediumMeterForm.setNumber("11");
+    mediumMeterForm.setMeterNumber("11");
     mediumMeterForm.setFirstReading(11D);
-    mediumMeterForm.setUnitName("kwh");
+    mediumMeterForm.setMeterUnit("kwh");
     mediumMeterForm.setActiveSince(LocalDate.now().toString());
     return mediumMeterForm;
   }

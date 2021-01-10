@@ -2,7 +2,7 @@ package com.aniamadej.sublokator.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,10 @@ public class MediumMeter {
 
   // == fields ==
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.SEQUENCE,
+      generator = "meter_sequence")
+  @SequenceGenerator(name = "meter_sequence",
+      sequenceName = "meter_sequence", allocationSize = 1)
   private long id;
   private String number;
   private String unitName;
@@ -32,7 +36,7 @@ public class MediumMeter {
   private boolean resettable = false;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
-  private Collection<Reading> readings = new ArrayList<>();
+  private List<Reading> readings = new ArrayList<>();
   @ManyToOne
   @JoinColumn(name = "connection_id")
   private MediumConnection mediumConnection;

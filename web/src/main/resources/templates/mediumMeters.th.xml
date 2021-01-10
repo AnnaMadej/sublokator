@@ -6,7 +6,7 @@
     <attr sel="#showActive" th:unless="${(param.inactive == null) or (param.inactive[0] == 'false')}"
           th:href="@{''(inactive=false)}" th:text="#{page.showActive}"/>
     <attr sel="#namesList" th:replace="~{fragments/namesList::namesListFragment}"/>
-    <attr sel="#meters" th:text="#{page.meters}"/>
+    <attr sel="#pageHeader" th:text="#{page.meters}"/>
     <attr sel="#addMeter"
           th:href="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).ADD}__}"
           th:text="#{page.addMeter}"/>

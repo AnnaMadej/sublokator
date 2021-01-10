@@ -1,7 +1,5 @@
 package com.aniamadej.sublokator.controller;
 
-import com.aniamadej.sublokator.CustomMessageSource;
-import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
 import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.util.Attributes;
@@ -23,14 +21,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MediaController {
 
   private final MediumConnectionService mediumConnectionService;
-  private final CustomMessageSource errorsMessageSource;
 
   @Autowired
   MediaController(
-      MediumConnectionService mediumConnectionService,
-      CustomMessageSource errorsMessageSource) {
+      MediumConnectionService mediumConnectionService) {
     this.mediumConnectionService = mediumConnectionService;
-    this.errorsMessageSource = errorsMessageSource;
   }
 
 
@@ -42,16 +37,19 @@ public class MediaController {
     return Views.MEDIA_CONNECTIONS;
   }
 
+  @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
+  public String showMediumConnection(Model model, @PathVariable long mediumId) {
+    model.addAttribute(Attributes.MEDIUM_NAME,
+        mediumConnectionService.getMediumName(mediumId));
+    return Views.MEDIUM;
+  }
+
   @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}" + Mappings.METERS_SUBPAGE)
   public String showMediumMeters(Model model, @PathVariable long mediumId,
                                  @RequestParam(required = false)
                                      boolean inactive,
                                  Pageable pageable) {
-    if (!mediumConnectionService.existsById(mediumId)) {
-      throw new MainException(
-          errorsMessageSource
-              .getMessage("error.connectionNotExists"));
-    }
+
     model.addAttribute(Attributes.NAMES,
         mediumConnectionService.getMeterNumbers(mediumId, pageable, inactive));
     model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.METER_PAGE);
@@ -60,16 +58,6 @@ public class MediaController {
     return Views.MEDIUM_METERS;
   }
 
-  @GetMapping(Mappings.MEDIUM_PAGE + "/{mediumId}")
-  public String showMediumConnection(Model model, @PathVariable long mediumId) {
-    if (!mediumConnectionService.existsById(mediumId)) {
-      throw new MainException(errorsMessageSource
-          .getMessage("error.connectionNotExists"));
-    }
-    model.addAttribute(Attributes.MEDIUM_NAME,
-        mediumConnectionService.getMediumName(mediumId));
-    return Views.MEDIUM;
-  }
 
   @GetMapping(Mappings.MEDIA_ADD)
   public String addNewMedium() {
@@ -79,8 +67,7 @@ public class MediaController {
   @PostMapping(Mappings.MEDIA_ADD)
   public String addNewMedium(
       @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName) {
-      mediumConnectionService.save(mediumName);
-
+    mediumConnectionService.save(mediumName);
     return "redirect:" + Mappings.MEDIA_PAGE;
   }
 
