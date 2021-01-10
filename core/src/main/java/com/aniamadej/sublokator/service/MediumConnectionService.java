@@ -87,7 +87,7 @@ public class MediumConnectionService {
   public void addMediumMeter(Long mediumConnectionId,
                              MediumMeterForm mediumMeterForm) {
 
-    if (mediumMeterForm.getFirstReading() < 0) {
+    if (Double.parseDouble(mediumMeterForm.getFirstReading()) < 0) {
       throw new InputException(
           customMessageSource.getMessage("error.negativeReading"));
     }

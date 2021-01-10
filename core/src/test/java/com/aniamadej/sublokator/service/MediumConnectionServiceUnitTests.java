@@ -67,7 +67,7 @@ class MediumConnectionServiceUnitTests {
 
     String errorCode = "error.negativeReading";
     MediumMeterForm mockMediumMeterForm = mock(MediumMeterForm.class);
-    when(mockMediumMeterForm.getFirstReading()).thenReturn(-2.);
+    when(mockMediumMeterForm.getFirstReading()).thenReturn("-2.0");
 
     Throwable exception =
         catchThrowable(() -> mediumConnectionService
@@ -125,7 +125,7 @@ class MediumConnectionServiceUnitTests {
         .isEqualTo(mediumMeterForm.getMeterUnit());
 
     assertThat(savedMediumMeter.getReadings().get(0).getReading())
-        .isEqualTo(mediumMeterForm.getFirstReading());
+        .isEqualTo(Double.parseDouble(mediumMeterForm.getFirstReading()));
     assertThat(savedMediumMeter.getReadings().get(0).getDate())
         .isEqualTo(mediumMeterForm.getActiveSince());
     assertThat(savedMediumMeter.getReadings().get(0).getMediumMeter())
@@ -415,7 +415,7 @@ class MediumConnectionServiceUnitTests {
   private MediumMeterForm getMediumMeterForm() {
     MediumMeterForm mediumMeterForm = new MediumMeterForm();
     mediumMeterForm.setMeterNumber("11");
-    mediumMeterForm.setFirstReading(11D);
+    mediumMeterForm.setFirstReading("11");
     mediumMeterForm.setMeterUnit("kwh");
     mediumMeterForm.setActiveSince(LocalDate.now().toString());
     return mediumMeterForm;

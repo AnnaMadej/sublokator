@@ -137,7 +137,7 @@ class MediumMeterServiceUnitTests {
 
     ReadingForm readingForm = mock(ReadingForm.class);
     when(readingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(readingForm.getReading()).thenReturn(12.);
+    when(readingForm.getReading()).thenReturn("12.0");
 
     when(mockMediumMeteRepository.findById(anyLong()))
         .thenReturn(Optional.of(new MediumMeter()));
@@ -167,7 +167,7 @@ class MediumMeterServiceUnitTests {
 
     ReadingForm readingForm = mock(ReadingForm.class);
     when(readingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(readingForm.getReading()).thenReturn(12.);
+    when(readingForm.getReading()).thenReturn("12.0");
 
     when(mockReadingRepository
         .isResetDate(any(LocalDate.class), anyLong()))
@@ -212,7 +212,7 @@ class MediumMeterServiceUnitTests {
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
     when(mockMediumMeter.getActiveSince())
         .thenReturn(LocalDate.now().plusDays(1));
@@ -240,7 +240,7 @@ class MediumMeterServiceUnitTests {
     String errorMessage = "error.readingAfterDeactivation";
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
     when(mockMediumMeter.getActiveSince())
         .thenReturn(LocalDate.now().minusDays(5));
@@ -269,12 +269,12 @@ class MediumMeterServiceUnitTests {
       + "from previous date (can't insert reading smaller than preceding)")
   public void addReadingSmallerThanPrecedingThrowsInputException() {
     String errorMessage = "error.wrongReadingValue";
-    Double biggestReadingFromPreviousDate = 13.;
+    Double biggestReadingFromPreviousDate = 13.0;
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     Long mediumMeterId = 1L;
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
     when(mockReadingForm.getReading())
-        .thenReturn(12.);
+        .thenReturn("12.0");
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
     when(mockMediumMeter.getActiveSince())
         .thenReturn(LocalDate.now().minusDays(5));
@@ -316,7 +316,7 @@ class MediumMeterServiceUnitTests {
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     Long mediumMeterId = 1L;
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
     when(mockMediumMeter.getActiveSince())
         .thenReturn(LocalDate.now().minusDays(5));
@@ -360,7 +360,7 @@ class MediumMeterServiceUnitTests {
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
 
     Long mediumMeterId = 1L;
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
@@ -371,7 +371,7 @@ class MediumMeterServiceUnitTests {
     doNothing().when(mockMediumMeter).addReading(any(Reading.class));
 
     Reading reading = new Reading(LocalDate.parse(mockReadingForm.getDate()),
-        mockReadingForm.getReading());
+        Double.parseDouble(mockReadingForm.getReading()));
     List<Reading> readings = new ArrayList<>();
     readings.add(reading);
     when(mockMediumMeter.getReadings()).thenReturn(readings);
@@ -410,7 +410,7 @@ class MediumMeterServiceUnitTests {
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(-2.);
+    when(mockReadingForm.getReading()).thenReturn("-2.0");
 
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
     when(mockMediumMeter.getActiveSince())
@@ -459,7 +459,7 @@ class MediumMeterServiceUnitTests {
 
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
 
     Long mediumMeterId = 1L;
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
@@ -470,7 +470,7 @@ class MediumMeterServiceUnitTests {
     doNothing().when(mockMediumMeter).addReading(any(Reading.class));
 
     Reading reading = new Reading(LocalDate.parse(mockReadingForm.getDate()),
-        mockReadingForm.getReading());
+        Double.parseDouble(mockReadingForm.getReading()));
     List<Reading> readings = new ArrayList<>();
     readings.add(reading);
     when(mockMediumMeter.getReadings()).thenReturn(readings);
@@ -505,7 +505,7 @@ class MediumMeterServiceUnitTests {
   public void addReadingSuccessfulNextAndPreviousNotExistActUntilNull() {
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
 
     Long mediumMeterId = 1L;
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
@@ -516,7 +516,7 @@ class MediumMeterServiceUnitTests {
     doNothing().when(mockMediumMeter).addReading(any(Reading.class));
 
     Reading reading = new Reading(LocalDate.parse(mockReadingForm.getDate()),
-        mockReadingForm.getReading());
+        Double.parseDouble(mockReadingForm.getReading()));
     List<Reading> readings = new ArrayList<>();
     readings.add(reading);
     when(mockMediumMeter.getReadings()).thenReturn(readings);
@@ -551,7 +551,7 @@ class MediumMeterServiceUnitTests {
   public void addReadingSuccessfulNextAndPreviousNotExistActUntilAfterReading() {
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(mockReadingForm.getReading()).thenReturn(12.);
+    when(mockReadingForm.getReading()).thenReturn("12.0");
 
     Long mediumMeterId = 1L;
     MediumMeter mockMediumMeter = mock(MediumMeter.class);
@@ -562,7 +562,7 @@ class MediumMeterServiceUnitTests {
     doNothing().when(mockMediumMeter).addReading(any(Reading.class));
 
     Reading reading = new Reading(LocalDate.parse(mockReadingForm.getDate()),
-        mockReadingForm.getReading());
+        Double.parseDouble(mockReadingForm.getReading()));
     List<Reading> readings = new ArrayList<>();
     readings.add(reading);
     when(mockMediumMeter.getReadings()).thenReturn(readings);

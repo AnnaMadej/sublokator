@@ -5,6 +5,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.NumberFormat;
 
 @Getter
 @Setter
@@ -15,5 +16,6 @@ public class ReadingForm {
   private String date;
   @NotNull(message = "{error.empty}")
   @Digits(integer = 10, fraction = 10, message = "{error.number}")
-  private Double reading = 0D;
+  @NumberFormat
+  private String reading = "0.0";
 }

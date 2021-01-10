@@ -78,7 +78,7 @@ public class MediumMeterService {
               .getMessage("error.readingAfterDeactivation"));
     }
 
-    Double readingValue = readingForm.getReading();
+    Double readingValue = Double.parseDouble(readingForm.getReading());
     checkIfInTheMiddleOfPreviousAndNext(meterId, readingDate,
         readingValue);
     addReading(mediumMeter, readingDate, readingValue);

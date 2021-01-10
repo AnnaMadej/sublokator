@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.NumberFormat;
 
 @Getter
 @Setter
@@ -24,7 +25,8 @@ public class MediumMeterForm {
   @NotNull(message = "{error.empty}")
   @DecimalMin(value = "0.0", message = "{error.onlyPositive}")
   @Digits(integer = 10, fraction = 10, message = "{error.number}")
-  private Double firstReading = 0D;
+  @NumberFormat
+  private String firstReading = "0.0";
 
   @NotNull(message = "{error.empty}")
   @Pattern(regexp = "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$",
@@ -41,9 +43,10 @@ public class MediumMeterForm {
     mediumMeter.setActiveSince(activeSinceDate);
     mediumMeter.setResettable(this.resettable);
     if (this.getFirstReading() == null) {
-      this.setFirstReading(0D);
+      this.setFirstReading("0.0");
     }
-    Reading reading = new Reading(activeSinceDate, this.firstReading);
+    Reading reading =
+        new Reading(activeSinceDate, Double.parseDouble(this.firstReading));
     mediumMeter.addReading(reading);
     return mediumMeter;
   }

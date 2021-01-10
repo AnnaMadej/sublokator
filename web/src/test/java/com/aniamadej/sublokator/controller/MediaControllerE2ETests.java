@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
+import com.aniamadej.sublokator.CustomMessageSource;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
@@ -55,6 +56,9 @@ class MediaControllerE2ETests {
 
   @Autowired
   private MessageSource messageSource;
+
+  @Autowired
+  private CustomMessageSource errorsMessageSource;
 
   @Autowired
   MediumMeterRepository mediumMeterRepository;
@@ -522,7 +526,7 @@ class MediaControllerE2ETests {
 
     // added medium link on page
     assertThat(media.size()).isEqualTo(initialNumberOfMedia + 1);
-    
+
     assertTrue(media.stream().map(m -> m.select("a").first())
         .anyMatch(a -> a.text().equals(addedMediumName)
             && a.attr("href")
@@ -700,8 +704,8 @@ class MediaControllerE2ETests {
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with invalid "
-          + "meter form should show same page with error")
-  public void httpPost_invalidForm() {
+          + "meter form (inputs are null) should show same page with 3 errors")
+  public void httpPost_invalidFormNullInputs() {
     // request data
     String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
@@ -711,9 +715,12 @@ class MediaControllerE2ETests {
     MultiValueMap<String, String> map =
         new LinkedMultiValueMap<String, String>();
 
-    String meterNumber = "123";
+    String activeSince = null;
+    String firstReading = null;
 
-    map.add(Attributes.METER_NUMBER, meterNumber);
+    map.add("firstReading", firstReading);
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
 
     HttpEntity<MultiValueMap<String, String>>
         request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
@@ -733,16 +740,288 @@ class MediaControllerE2ETests {
     Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
     assertNotNull(form);
 
-    Elements paragraphs = form.select("p");
+    Elements errorsParagraphs = form.getElementsByTag("p");
 
-    assertTrue(
-        paragraphs.stream()
-            .anyMatch(p -> p.attr("id").contains("Error")));
+    assertEquals(4, errorsParagraphs.size());
+
+    assertEquals(errorsMessageSource.getMessage("error.empty"),
+        errorsParagraphs.get(0).text());
+
+
+    assertEquals(errorsMessageSource.getMessage("error.empty"),
+        errorsParagraphs.get(1).text());
+
+
+    assertEquals(errorsMessageSource.getMessage("error.date"),
+        errorsParagraphs.get(2).text());
+
+    assertTrue(errorsParagraphs.get(3).text()
+        .contains(errorsMessageSource.getMessage("error.positiveOnly")));
+
+    assertTrue(errorsParagraphs.get(3).text()
+        .contains(errorsMessageSource.getMessage("error.number")));
 
     assertEquals(webPage.getElementById("header").text(),
         getMessage("page.addMeter"));
 
+  }
+
+  @Transactional
+  @Test
+  @DisplayName(
+      "result of post request to medium meter adding page with invalid "
+          + "meter form (inputs are blank) should show same page with 3 errors")
+  public void httpPost_invalidFormBlankInputs() {
+    // request data
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    MultiValueMap<String, String> map =
+        new LinkedMultiValueMap<String, String>();
+
+    String meterNumber = " ";
+    String meterUnit = " ";
+    String activeSince = " ";
+    String firstReading = " ";
+
+    map.add("firstReading", firstReading);
+    map.add(Attributes.METER_NUMBER, meterNumber);
+    map.add(Attributes.METER_UNIT, meterUnit);
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
+
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
+
+    HttpEntity<MultiValueMap<String, String>>
+        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+
+    // sending request
+    ResponseEntity<String> responseEntity =
+        testRestTemplate.postForEntity(url, request,
+            String.class);
+
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
+    assertNotNull(form);
+
+    Elements errorsParagraphs = form.getElementsByTag("p");
+
+    assertEquals(4, errorsParagraphs.size());
+
+    assertEquals(errorsMessageSource.getMessage("error.empty"),
+        errorsParagraphs.get(0).text());
+
+
+    assertEquals(errorsMessageSource.getMessage("error.empty"),
+        errorsParagraphs.get(1).text());
+
+
+    assertEquals(errorsMessageSource.getMessage("error.date"),
+        errorsParagraphs.get(2).text());
+
+    assertTrue(errorsParagraphs.get(3).text()
+        .contains(errorsMessageSource.getMessage("error.positiveOnly")));
+
+    assertTrue(errorsParagraphs.get(3).text()
+        .contains(errorsMessageSource.getMessage("error.number")));
+
+    assertEquals(webPage.getElementById("header").text(),
+        getMessage("page.addMeter"));
 
   }
 
+  @Transactional
+  @Test
+  @DisplayName(
+      "result of post request to medium meter adding page with invalid "
+          + "meter form (inputs are empty) should show same page with 3 errors")
+  public void httpPost_invalidFormEmptyInputs() {
+    // request data
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    MultiValueMap<String, String> map =
+        new LinkedMultiValueMap<String, String>();
+
+    String meterNumber = "";
+    String meterUnit = "";
+    String activeSince = "";
+    String firstReading = "";
+
+    map.add("firstReading", firstReading);
+    map.add(Attributes.METER_NUMBER, meterNumber);
+    map.add(Attributes.METER_UNIT, meterUnit);
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
+
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
+
+    HttpEntity<MultiValueMap<String, String>>
+        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+
+    // sending request
+    ResponseEntity<String> responseEntity =
+        testRestTemplate.postForEntity(url, request,
+            String.class);
+
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
+    assertNotNull(form);
+
+    Elements errorsParagraphs = form.getElementsByTag("p");
+
+    assertEquals(4, errorsParagraphs.size());
+
+    assertEquals(errorsMessageSource.getMessage("error.empty"),
+        errorsParagraphs.get(0).text());
+
+
+    assertEquals(errorsMessageSource.getMessage("error.empty"),
+        errorsParagraphs.get(1).text());
+
+
+    assertEquals(errorsMessageSource.getMessage("error.date"),
+        errorsParagraphs.get(2).text());
+
+    assertTrue(errorsParagraphs.get(3).text()
+        .contains(errorsMessageSource.getMessage("error.positiveOnly")));
+
+    assertTrue(errorsParagraphs.get(3).text()
+        .contains(errorsMessageSource.getMessage("error.number")));
+
+    assertEquals(webPage.getElementById("header").text(),
+        getMessage("page.addMeter"));
+
+  }
+
+  @Transactional
+  @Test
+  @DisplayName(
+      "result of post request to medium meter adding page with invalid "
+          + "meter form (date is in wrong format) should show same page"
+          + " with 1 error")
+  public void httpPost_invalidFormWrongDate() {
+    // request data
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    MultiValueMap<String, String> map =
+        new LinkedMultiValueMap<String, String>();
+
+    String meterNumber = "number";
+    String meterUnit = "unit";
+    String activeSince = "wrong date format!";
+    String firstReading = "15.5";
+
+    map.add("firstReading", firstReading);
+    map.add(Attributes.METER_NUMBER, meterNumber);
+    map.add(Attributes.METER_UNIT, meterUnit);
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
+
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+
+
+    HttpEntity<MultiValueMap<String, String>>
+        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+
+    // sending request
+    ResponseEntity<String> responseEntity =
+        testRestTemplate.postForEntity(url, request,
+            String.class);
+
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
+    assertNotNull(form);
+
+    Elements errorsParagraphs = form.getElementsByTag("p");
+
+    assertEquals(1, errorsParagraphs.size());
+
+    assertEquals(errorsMessageSource.getMessage("error.date"),
+        errorsParagraphs.get(0).text());
+
+    assertEquals(webPage.getElementById("header").text(),
+        getMessage("page.addMeter"));
+  }
+
+  @Transactional
+  @Test
+  @DisplayName(
+      "result of post request to medium meter adding page with invalid "
+          + "meter form (reading value is in wrong format) should show same "
+          + "page with 1 error")
+  public void httpPost_invalidFormWrongReadingFormat() {
+    // request data
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    MultiValueMap<String, String> map =
+        new LinkedMultiValueMap<String, String>();
+
+    String meterNumber = "number";
+    String meterUnit = "unit";
+    String firstReading = "wrong reading format";
+
+    map.add("firstReading", firstReading);
+    map.add(Attributes.METER_NUMBER, meterNumber);
+    map.add(Attributes.METER_UNIT, meterUnit);
+
+
+    HttpEntity<MultiValueMap<String, String>>
+        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+
+    // sending request
+    ResponseEntity<String> responseEntity =
+        testRestTemplate.postForEntity(url, request,
+            String.class);
+
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
+    assertNotNull(form);
+
+    Elements errorsParagraphs = form.getElementsByTag("p");
+
+    assertEquals(1, errorsParagraphs.size());
+
+    assertTrue(errorsParagraphs.get(0).text()
+        .contains(errorsMessageSource.getMessage("error.positiveOnly")));
+
+    assertTrue(errorsParagraphs.get(0).text()
+        .contains(errorsMessageSource.getMessage("error.number")));
+
+    assertEquals(webPage.getElementById("header").text(),
+        getMessage("page.addMeter"));
+
+  }
 }
