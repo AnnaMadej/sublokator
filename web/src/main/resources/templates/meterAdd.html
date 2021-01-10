@@ -7,20 +7,20 @@
 </head>
 <body>
 <h1 id="header">Add medium meter</h1>
-<form id="newMeterForm">
-    <div cladd="form-group">
+<form id="mediumMeterForm">
+    <div class="form-group">
         <label for="numberInput" id="numberInputLabel">Meter number</label>
-        <input class="form-control" id="numberInput" name="number" type="text">
+        <input class="form-control" id="numberInput" name="meterNumber" type="text">
         <p class="alert alert-danger" id="numberError">Number error</p>
     </div>
-    <div cladd="form-group">
+    <div class="form-group">
         <label for="unitNameInput" id="unitNameLabel">Unit name</label>
-        <input class="form-control" id="unitNameInput" name="unitName" type="text">
+        <input class="form-control" id="unitNameInput" name="meterUnit" type="text">
         <p class="alert alert-danger" id="unitNameError">Unit name error</p>
     </div>
     <div class="form-group">
-        <input class="form-check-inline" id="resettableInput" name="resettable" type="checkbox">
-        <label for="resettableInput" id="resettableLabel">is resettable</label>
+        <input class="form-check-inline" id="ressetableCheckBox" type="checkbox">
+        <label for="ressetableCheckBox" id="resettableLabel">is resettable</label>
     </div>
     <div class="form-group">
         <label for="activeSinceInput" id="activeSinceLabel">Active since</label>
@@ -28,8 +28,10 @@
         <p class="alert alert-danger" id="activeSinceError">Unit name error</p>
     </div>
     <div class="form-check">
-        <input class="form-check-input" id="firstReadingCheckBox" onclick="check()" type="checkbox"/>
-        <label for="firstReadingCheckBox" id="firstReadingCheckboxLabel">Add a first reading</label>
+        <input class="form-check-input" id="firstReadingCheckBox" onclick="check()" type="checkbox"
+               name="hasFirstReading"/>
+        <label for="firstReadingCheckBox" id="firstReadingCheckboxLabel">Add a first
+            reading</label>
         <p class="alert alert-danger" id="firstReadingError">First reading error</p>
     </div>
     <div class="form-group" id="firstReadingGroup">

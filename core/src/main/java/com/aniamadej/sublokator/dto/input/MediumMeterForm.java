@@ -16,10 +16,10 @@ import lombok.Setter;
 public class MediumMeterForm {
 
   @NotBlank(message = "{error.empty}")
-  private String number;
+  private String meterNumber;
 
   @NotBlank(message = "{error.empty}")
-  private String unitName;
+  private String meterUnit;
 
   @NotNull(message = "{error.empty}")
   @DecimalMin(value = "0.0", message = "{error.onlyPositive}")
@@ -31,12 +31,12 @@ public class MediumMeterForm {
       message = "{error.date}")
   private String activeSince = LocalDate.now().toString();
 
-  private boolean resettable;
+  private boolean resettable = false;
 
   public MediumMeter toMediumMeter() {
     MediumMeter mediumMeter = new MediumMeter();
-    mediumMeter.setUnitName(this.getUnitName());
-    mediumMeter.setNumber(this.getNumber());
+    mediumMeter.setUnitName(this.getMeterUnit());
+    mediumMeter.setNumber(this.getMeterNumber());
     LocalDate activeSinceDate = LocalDate.parse(this.getActiveSince());
     mediumMeter.setActiveSince(activeSinceDate);
     mediumMeter.setResettable(this.resettable);

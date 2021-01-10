@@ -120,9 +120,9 @@ class MediumConnectionServiceUnitTests {
     MediumMeter savedMediumMeter = mediumConnectionCaptor.getValue();
 
     assertThat(savedMediumMeter.getNumber())
-        .isEqualTo(mediumMeterForm.getNumber());
+        .isEqualTo(mediumMeterForm.getMeterNumber());
     assertThat(savedMediumMeter.getUnitName())
-        .isEqualTo(mediumMeterForm.getUnitName());
+        .isEqualTo(mediumMeterForm.getMeterUnit());
 
     assertThat(savedMediumMeter.getReadings().get(0).getReading())
         .isEqualTo(mediumMeterForm.getFirstReading());
@@ -414,9 +414,9 @@ class MediumConnectionServiceUnitTests {
 
   private MediumMeterForm getMediumMeterForm() {
     MediumMeterForm mediumMeterForm = new MediumMeterForm();
-    mediumMeterForm.setNumber("11");
+    mediumMeterForm.setMeterNumber("11");
     mediumMeterForm.setFirstReading(11D);
-    mediumMeterForm.setUnitName("kwh");
+    mediumMeterForm.setMeterUnit("kwh");
     mediumMeterForm.setActiveSince(LocalDate.now().toString());
     return mediumMeterForm;
   }

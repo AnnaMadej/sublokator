@@ -1,10 +1,10 @@
 <thLogic>
     <attr sel="#head" th:replace="~{fragments/head::head}"/>
-    <attr sel="#newMeterForm"
+    <attr sel="#mediumMeterForm"
           th:action="@{__${#httpServletRequest.requestURI}__}"
           th:method="post" th:object="${__${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_METER_FORM}__}"/>
-    <attr sel="#numberInput" th:field="*{number}" th:type="text"/>
-    <attr sel="#unitNameInput" th:field="*{unitName}" th:type="text"/>
+    <attr sel="#numberInput" th:field="*{meterNumber}" th:type="text"/>
+    <attr sel="#unitNameInput" th:field="*{meterUnit}" th:type="text"/>
     <attr sel="#firstReadingInput" th:field="*{firstReading}" th:type="number"/>
     <attr sel="#activeSinceInput" th:field="*{activeSince}" th:type="date"/>
     <attr sel="#addButton" th:text="#{page.addButton}"/>
@@ -14,11 +14,11 @@
     <attr sel="#activeSinceLabel" th:text="#{page.activeSince}"/>
     <attr sel="#firstReadingCheckboxLabel" th:text="#{page.addReading}"/>
     <attr sel="#header" th:text="#{page.addMeter}"/>
-    <attr sel="#numberError" th:if="${#fields.hasErrors('number')}" th:errors="*{number}"/>
-    <attr sel="#unitNameError" th:if="${#fields.hasErrors('unitName')}" th:errors="*{unitName}"/>
+    <attr sel="#numberError" th:if="${#fields.hasErrors('meterNumber')}" th:errors="*{meterNumber}"/>
+    <attr sel="#unitNameError" th:if="${#fields.hasErrors('meterUnit')}" th:errors="*{meterUnit}"/>
     <attr sel="#firstReadingError" th:if="${#fields.hasErrors('firstReading')}" th:errors="*{firstReading}"/>
     <attr sel="#activeSinceError" th:if="${#fields.hasErrors('activeSince')}" th:errors="*{activeSince}"/>
-    <attr sel="#resettableInput" th:field="*{resettable}"/>
+    <attr sel="#ressetableCheckBox" th:field="*{resettable}"/>
     <attr sel="#resettableLabel" th:text="#{page.resettable}"/>
 
 </thLogic>

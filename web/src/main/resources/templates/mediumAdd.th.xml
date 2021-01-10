@@ -1,6 +1,6 @@
 <thLogic>
     <attr sel="#head" th:replace="~{fragments/head::head}"/>
-    <attr sel="#addMediumHeader" th:text="#{page.addMedium}"/>
+    <attr sel="#pageHeader" th:text="#{page.addMedium}"/>
     <attr
             sel="#newMediumForm"
             th:action="@{__${#httpServletRequest.requestURI}__}"

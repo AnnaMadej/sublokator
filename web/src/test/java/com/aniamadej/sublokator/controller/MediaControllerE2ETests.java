@@ -2,6 +2,7 @@ package com.aniamadej.sublokator.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -13,6 +14,10 @@ import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,8 +28,13 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -105,7 +115,7 @@ class MediaControllerE2ETests {
   @Test
   @DisplayName("result of get request to media page should "
       + "contain names of saved media, links to their pages, title of page, "
-      + "and link to connection adding page")
+      + "and link to media connection adding page")
   public void httpGet_returnsMediaPage() {
 
     int numberOfMedia = mediumConnectionService.getNamesList().size();
@@ -118,48 +128,53 @@ class MediaControllerE2ETests {
 
     assertEquals(200, responseEntity.getStatusCodeValue());
 
+    Document webPage = Jsoup.parse(responseBody);
+
     // page title header
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.mediaConnections", null,
-                LocaleContextHolder.getLocale()));
+    String mediaConnectionsText = getMessage("page.mediaConnections");
+
+    assertThat(webPage.getElementById("pageHeader")).isNotNull();
+    assertThat(webPage.getElementById("pageHeader").text())
+        .contains(mediaConnectionsText);
+
 
     // number of media
-    int numberOfListEntries = responseBody.split("<li>").length - 1;
-    assertThat(numberOfListEntries)
-        .isEqualTo(numberOfMedia);
+    Element mediaList = webPage.getElementById("namesList");
+
+    Elements media = mediaList.select("li");
+
+    assertThat(media.size()).isEqualTo(numberOfMedia);
+
+    // proper media links
+    assertTrue(media.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(medium1.getMediumName())
+            && a.attr("href")
+            .equals(Mappings.MEDIUM_PAGE + "/" + medium1.getId())));
+
+    assertTrue(media.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(medium2.getMediumName())
+            && a.attr("href")
+            .equals(Mappings.MEDIUM_PAGE + "/" + medium2.getId())));
 
 
-    // media names
-    assertThat(responseBody)
-        .contains(medium1.getMediumName());
+    // media adding link
+    String linkText = getMessage("page.addMedium");
 
-    assertThat(responseBody)
-        .contains(medium2.getMediumName());
+    assertTrue(webPage.select("a").stream().anyMatch(a ->
+        a.text().equals(linkText) && a.attr("href")
+            .equals(Mappings.MEDIA_ADD)));
+  }
 
-    // media links
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.MEDIUM_PAGE + "/" + medium1.getId());
-
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.MEDIUM_PAGE + "/" + medium2.getId());
-
-    // media adding button text
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.addMedium", null,
-                LocaleContextHolder.getLocale()));
-
-    // media adding button link
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.MEDIA_ADD + "\"");
-
+  private String getMessage(String messageCode) {
+    return messageSource
+        .getMessage(messageCode, null,
+            LocaleContextHolder.getLocale());
   }
 
 
   @Test
   @DisplayName("result of get request to existing medium page should "
-      + "contain title of page, name of medium and links to medium meters")
+      + "contain title of page, name of medium and link to medium meters page")
   public void httpGet_returnsMediumPage() throws Exception {
     ResponseEntity<String> responseEntity = testRestTemplate
         .getForEntity(
@@ -171,28 +186,30 @@ class MediaControllerE2ETests {
 
     assertEquals(200, responseEntity.getStatusCodeValue());
 
-    // page title
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.connectedMedium", null,
-                LocaleContextHolder.getLocale()));
+    Document webPage = Jsoup.parse(responseBody);
 
-    // meters link text
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.meters", null,
-                LocaleContextHolder.getLocale()));
+    // page title header
+    String mediaConnectionsText = getMessage("page.connectedMedium");
 
-    // meters link href
-    assertThat(responseBody)
-        .contains(
-            "href=\"" + Mappings.MEDIUM_PAGE + "/" + medium1.getId()
-                + Mappings.METERS_SUBPAGE
-                + "\"");
+    assertThat(webPage.getElementById("pageHeader")).isNotNull();
+    assertThat(webPage.getElementById("pageHeader").text())
+        .contains(mediaConnectionsText);
+
+
+    // meters link
+    String metersLinkText = getMessage("page.meters");
+    String metersLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
+        + Mappings.METERS_SUBPAGE;
+
+    Elements pageLinks = webPage.select("a");
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(metersLinkText) && l.attr("href")
+            .equals(metersLinkHref)));
 
     // medium name
-    assertThat(responseBody)
-        .contains(medium1.getMediumName());
+    assertThat(
+        webPage.getElementsContainingOwnText(medium1.getMediumName()).size()
+            == 1);
   }
 
   @Test
@@ -207,62 +224,67 @@ class MediaControllerE2ETests {
                 + medium1.getId() + Mappings.METERS_SUBPAGE,
             String.class);
 
+    assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
 
-    assertEquals(200, responseEntity.getStatusCodeValue());
+    // page title header
+    String mediaConnectionsText = getMessage("page.connectedMedium");
+    Document webPage = Jsoup.parse(responseBody);
 
-    // page title
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.meters", null,
-                LocaleContextHolder.getLocale()));
+
+    String metersText = getMessage("page.meters");
+
+    assertThat(webPage.getElementById("pageHeader")).isNotNull();
+    assertThat(webPage.getElementById("pageHeader").text())
+        .contains(metersText);
+
 
     // medium name
-    assertThat(responseBody)
-        .contains(medium1.getMediumName());
+    assertTrue(
+        webPage
+            .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
+            .size() == 1);
+
     // number of list entries
-    int numberOfListEntries = responseBody.split("<li>").length - 1;
-    assertThat(numberOfListEntries)
-        .isEqualTo(2);
+    Element mediaList = webPage.getElementById("namesList");
 
-    // active meters names
-    assertThat(responseBody)
-        .contains(mediumMeter1.getNumber());
+    Elements meters = mediaList.select("li");
 
-    assertThat(responseBody)
-        .contains(mediumMeter2.getNumber());
+    assertThat(meters.size()).isEqualTo(
+        mediumConnectionService.getMeterNumbers(medium1.getId(), null, false)
+            .size());
 
-    // meters links
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.METER_PAGE + "/" + mediumMeter1.getId()
-            + "\"");
+    // proper meters links
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(mediumMeter1.getNumber())
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + mediumMeter1.getId())));
 
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.METER_PAGE + "/" + mediumMeter2.getId()
-            + "\"");
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(mediumMeter2.getNumber())
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + mediumMeter2.getId())));
 
-    // show inactive button label
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.showInactive", null,
-                LocaleContextHolder.getLocale()));
 
-    // show inactive button link
-    assertThat(responseBody)
-        .contains("href=\"?inactive=true\"");
+    // show inactive link
+    String showInactiveLinkText =
+        getMessage("page.showInactive");
+    String showInactiveLinkHref = "?inactive=true";
 
-    // meter add button label
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.addMeter", null,
-                LocaleContextHolder.getLocale()));
+    Elements pageLinks = webPage.select("a");
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(showInactiveLinkText) && l.attr("href")
+            .equals(showInactiveLinkHref)));
 
-    // meter add button link
-    assertThat(responseBody)
-        .contains("href=\"" +
-            Mappings.MEDIUM_PAGE + "/" + medium1.getId()
-            + Mappings.METERS_ADD_SUBPAGE
-            + "\"");
+
+    // meter add link
+    String addMeterLinkText = getMessage("page.addMeter");
+    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
+        + Mappings.METERS_ADD_SUBPAGE;
+
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(addMeterLinkText) && l.attr("href")
+            .equals(addMeterLinkHref)));
   }
 
   @Test
@@ -272,66 +294,73 @@ class MediaControllerE2ETests {
           + "and list of active medium meters, showInactive button "
           + "and addMeter button")
   public void httpGet_returnsActiveMediumMetersList() {
-
     ResponseEntity<String> responseEntity = testRestTemplate
         .getForEntity(
             "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
                 + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=false",
             String.class);
 
+    assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
 
-    assertEquals(200, responseEntity.getStatusCodeValue());
+    // page title header
+    String mediaConnectionsText = getMessage("page.connectedMedium");
+    Document webPage = Jsoup.parse(responseBody);
 
-    // page title
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.meters", null,
-                LocaleContextHolder.getLocale()));
+
+    String metersText = getMessage("page.meters");
+
+    assertThat(webPage.getElementById("pageHeader")).isNotNull();
+    assertThat(webPage.getElementById("pageHeader").text())
+        .contains(metersText);
+
 
     // medium name
-    assertThat(responseBody)
-        .contains(medium1.getMediumName());
+    assertTrue(
+        webPage
+            .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
+            .size() == 1);
+
     // number of list entries
-    int numberOfListEntries = responseBody.split("<li>").length - 1;
-    assertThat(numberOfListEntries)
-        .isEqualTo(2);
+    Element metersList = webPage.getElementById("namesList");
 
-    // active meters names
-    assertThat(responseBody)
-        .contains(mediumMeter1.getNumber());
+    Elements meters = metersList.select("li");
 
-    assertThat(responseBody)
-        .contains(mediumMeter2.getNumber());
+    assertThat(meters.size()).isEqualTo(
+        mediumConnectionService.getMeterNumbers(medium1.getId(), null, false)
+            .size());
 
-    // meters links
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.METER_PAGE + "/" + mediumMeter1.getId());
+    // proper meters links
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(mediumMeter1.getNumber())
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + mediumMeter1.getId())));
 
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.METER_PAGE + "/" + mediumMeter2.getId());
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(mediumMeter2.getNumber())
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + mediumMeter2.getId())));
 
-    // show inactive button label
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.showInactive", null,
-                LocaleContextHolder.getLocale()));
 
-    // show inactive button link
-    assertThat(responseBody)
-        .contains("href=\"?inactive=true\"");
+    // show inactive link
+    String showInactiveLinkText =
+        getMessage("page.showInactive");
+    String showInactiveLinkHref = "?inactive=true";
 
-    // meter add button label
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.addMeter", null,
-                LocaleContextHolder.getLocale()));
+    Elements pageLinks = webPage.select("a");
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(showInactiveLinkText) && l.attr("href")
+            .equals(showInactiveLinkHref)));
 
-    // meter add button link
-    assertThat(responseBody)
-        .contains("href=\"" +
-            Mappings.MEDIUM_PAGE + "/" + medium1.getId() + Mappings.METERS_ADD_SUBPAGE
-            + "\"");
+
+    // meter add link
+    String addMeterLinkText = getMessage("page.addMeter");
+    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
+        + Mappings.METERS_ADD_SUBPAGE;
+
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(addMeterLinkText) && l.attr("href")
+            .equals(addMeterLinkHref)));
   }
 
   @Test
@@ -341,65 +370,73 @@ class MediaControllerE2ETests {
           + "and list of inactive medium meters , showActive button "
           + "and addMeter button")
   public void httpGet_returnsInactiveMediumMetersList() {
-
     ResponseEntity<String> responseEntity = testRestTemplate
         .getForEntity(
-            "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/" + medium1.getId()
-                + Mappings.METERS_SUBPAGE + "?inactive=true",
+            "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+                + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=true",
             String.class);
 
-    String responseBody = responseEntity.getBody();
     assertEquals(200, responseEntity.getStatusCodeValue());
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
 
-    // page title
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.meters", null,
-                LocaleContextHolder.getLocale()));
+
+    // page title header
+    String mediaConnectionsText = getMessage("page.connectedMedium");
+
+    String metersText = getMessage("page.meters");
+
+    assertThat(webPage.getElementById("pageHeader")).isNotNull();
+    assertThat(webPage.getElementById("pageHeader").text())
+        .contains(metersText);
+
 
     // medium name
-    assertThat(responseBody)
-        .contains(medium1.getMediumName());
+    assertTrue(
+        webPage
+            .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
+            .size() == 1);
+
     // number of list entries
-    int numberOfListEntries = responseBody.split("<li>").length - 1;
-    assertThat(numberOfListEntries)
-        .isEqualTo(2);
+    Element mediaList = webPage.getElementById("namesList");
 
-    // active meters names
-    assertThat(responseBody)
-        .contains(mediumMeter3.getNumber());
+    Elements meters = mediaList.select("li");
 
-    assertThat(responseBody)
-        .contains(mediumMeter4.getNumber());
+    assertThat(meters.size()).isEqualTo(
+        mediumConnectionService.getMeterNumbers(medium1.getId(), null, false)
+            .size());
 
-    // meters links
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.METER_PAGE + "/" + mediumMeter3.getId());
+    // proper meters links
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(mediumMeter3.getNumber())
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + mediumMeter3.getId())));
 
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.METER_PAGE + "/" + mediumMeter4.getId());
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(mediumMeter4.getNumber())
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + mediumMeter4.getId())));
 
-    // show active button label
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.showActive", null,
-                LocaleContextHolder.getLocale()));
 
-    // show active button link
-    assertThat(responseBody)
-        .contains("href=\"?inactive=false\"");
+    // show active link
+    String shoInactiveLinkText =
+        getMessage("page.showActive");
+    String showInactiveLinkHref = "?inactive=false";
 
-    // meter add button label
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.addMeter", null,
-                LocaleContextHolder.getLocale()));
+    Elements pageLinks = webPage.select("a");
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(shoInactiveLinkText) && l.attr("href")
+            .equals(showInactiveLinkHref)));
 
-    // meter add button link
-    assertThat(responseBody)
-        .contains("href=\"" +
-            Mappings.MEDIUM_PAGE + "/" + medium1.getId() + Mappings.METERS_ADD_SUBPAGE
-            + "\"");
+
+    // meter add link
+    String addMeterLinkText = getMessage("page.addMeter");
+    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
+        + Mappings.METERS_ADD_SUBPAGE;
+
+    assertTrue(pageLinks.stream().anyMatch(
+        l -> l.text().equals(addMeterLinkText) && l.attr("href")
+            .equals(addMeterLinkHref)));
   }
 
   @Test
@@ -412,32 +449,40 @@ class MediaControllerE2ETests {
         .getForEntity("http://localhost:" + port + Mappings.MEDIA_ADD,
             String.class);
     String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
 
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.addMedium", null,
-                LocaleContextHolder.getLocale()));
+    // page title header
+    String addMediumText = getMessage("page.addMedium");
 
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.mediumName", null,
-                LocaleContextHolder.getLocale()));
+    String addNewMediumText = getMessage("page.addMedium");
 
-    assertThat(responseBody)
-        .contains(
-            "<input id=\"mediumNameInput\" type=\"text\" name=\""
-                + Attributes.MEDIUM_NAME + "\"/>");
+    assertThat(webPage.getElementById("pageHeader")).isNotNull();
+    assertThat(webPage.getElementById("pageHeader").text())
+        .contains(addNewMediumText);
 
-    assertThat(responseBody)
-        .contains(messageSource
-            .getMessage("page.addButton", null,
-                LocaleContextHolder.getLocale()));
+    Element form = webPage.getElementById("newMediumForm");
+    Element label = form.select("label").first();
+
+    String labelText = getMessage("page.mediumName");
+
+    assertThat(label.text()).isEqualTo(labelText);
+
+    Element input = form.select("input").first();
+    assertThat(input.attr("name")).isEqualTo(Attributes.MEDIUM_NAME);
+    assertThat(input.attr("type")).isEqualTo("text");
+
+    Element button = form.select("button").first();
+    assertThat(button.attr("type")).isEqualTo("submit");
+
+    String addButtonText = getMessage("page.addButton");
+
+    assertThat(button.text()).isEqualTo(addButtonText);
+
   }
 
   @Test
-  @Transactional
   @DisplayName(
       "post request to medium connection adding page should add medium meter "
           + "with provided name and redirect to valid page with added medium "
@@ -459,29 +504,244 @@ class MediaControllerE2ETests {
     ResponseEntity<String> responseEntity =
         testRestTemplate.postForEntity(url, null,
             String.class);
-
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
 
     // medium added to database
     assertTrue(mediumConnectionService.getNamesList().stream()
         .anyMatch(name -> name.getName().equals(addedMediumName)
             && name.getId() == initialNumberOfMedia + 1));
 
-    String responseBody = responseEntity.getBody();
 
-    // added medium name on page
-    assertThat(responseBody)
-        .contains(addedMediumName);
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+    Element mediaList = webPage.getElementById("namesList");
+
+    Elements media = mediaList.select("li");
+
 
     // added medium link on page
-    assertThat(responseBody)
-        .contains("href=\"" + Mappings.MEDIUM_PAGE + "/" + (initialNumberOfMedia
-            + 1));
+    assertThat(media.size()).isEqualTo(initialNumberOfMedia + 1);
+    
+    assertTrue(media.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(addedMediumName)
+            && a.attr("href")
+            .equals(Mappings.MEDIUM_PAGE + "/" + (initialNumberOfMedia + 1))));
 
-    // increased number of media on page
-    int numberOfListEntries = responseBody.split("<li>").length - 1;
-    assertThat(numberOfListEntries)
-        .isEqualTo(initialNumberOfMedia + 1);
+  }
+
+  @Test
+  @DisplayName(
+      "result of get request to medium meter adding page should contain "
+          + "page title, and meter adding form with proper fields and button")
+  public void httpGet_showsMetersAddingForm() {
+
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    ResponseEntity<String> responseEntity = testRestTemplate
+        .getForEntity(
+            url,
+            String.class);
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
+
+    assertEquals(form.attr("action"), Mappings.MEDIUM_PAGE
+        + "/" + medium1.getId() + Mappings.METERS_ADD_SUBPAGE);
+    assertEquals(form.attr("method"), "post");
+
+    Elements labels = form.select("div > label");
+
+
+    assertEquals(6, labels.size());
+    String meterNumberText = getMessage("page.meterNumber");
+    assertTrue(labels.stream().anyMatch(l -> l.text().equals(meterNumberText)));
+
+    String meterUnitText = getMessage("page.meterUnit");
+    assertTrue(labels.stream().anyMatch(l -> l.text().equals(meterUnitText)));
+
+    String resettableText = getMessage("page.resettable");
+    assertTrue(labels.stream().anyMatch(l -> l.text().equals(resettableText)));
+
+    String activeSinceText = getMessage("page.activeSince");
+    assertTrue(labels.stream().anyMatch(l -> l.text().equals(activeSinceText)));
+
+    String firstReadingText = getMessage("page.firstReading");
+    assertTrue(
+        labels.stream().anyMatch(l -> l.text().equals(firstReadingText)));
+
+    Elements inputs = form.select("div > input");
+
+    assertEquals(7, inputs.size());
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals(Attributes.METER_NUMBER)
+            && i.attr("type").equals("text")));
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals(Attributes.METER_UNIT)
+            && i.attr("type").equals("text")));
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals(Attributes.ACTIVE_SINCE)
+            && i.attr("type").equals("date")));
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals(Attributes.FIRST_READING)
+            && i.attr("type").equals("number")));
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals("resettable")
+            && i.attr("type").equals("checkbox")));
+
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals("resettable")
+            && i.attr("type").equals("checkbox")));
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals("_resettable")
+            && i.attr("type").equals("hidden")));
+
+    assertTrue(inputs.stream()
+        .anyMatch(i -> i.attr("name").equals("hasFirstReading")
+            && i.attr("type").equals("checkbox")));
+
+    Element button = form.select("button").first();
+    assertTrue(button.attr("type").equals("submit") && button.text()
+        .equals(getMessage("page.addButton")));
+  }
+
+  @Transactional
+  @Test
+  @DisplayName(
+      "result of post request to medium meter adding page with good meter form "
+          + "should add new medium meter")
+  public void httpPost_addsMetiumMeter() {
+    int initialNumberOfMeters =
+        mediumConnectionRepository
+            .fetchActiveMeterNumbers(medium1.getId(), null)
+            .getSize() + mediumConnectionRepository
+            .fetchInactiveMeterNumbers(medium1.getId(), null)
+            .getSize();
+
+    // request data
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    MultiValueMap<String, String> map =
+        new LinkedMultiValueMap<String, String>();
+
+    String meterNumber = "123";
+    String meterUnit = "kwh";
+    String activeSince = LocalDate.now().toString();
+    String resettable = "true";
+    String firstReading = "12";
+
+    map.add(Attributes.METER_NUMBER, meterNumber);
+    map.add(Attributes.METER_UNIT, meterUnit);
+    map.add(Attributes.ACTIVE_SINCE, activeSince);
+    map.add("resettable", resettable);
+    map.add("firstReading", firstReading);
+
+
+    HttpEntity<MultiValueMap<String, String>>
+        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+
+    // sending request
+    ResponseEntity<String> responseEntity =
+        testRestTemplate.postForEntity(url, request,
+            String.class);
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+    String responseBody = responseEntity.getBody();
+
+    // number of meters increased after post
+    int resultNumberOfMeters =
+        mediumConnectionRepository
+            .fetchActiveMeterNumbers(medium1.getId(), null)
+            .getSize() + mediumConnectionRepository
+            .fetchInactiveMeterNumbers(medium1.getId(), null)
+            .getSize();
+
+    assertEquals(resultNumberOfMeters, initialNumberOfMeters + 1);
+
+    // correct medium meter added
+    MediumMeter addedMediumMeter =
+        mediumMeterRepository.findById((long) resultNumberOfMeters).get();
+
+    assertEquals(addedMediumMeter.getNumber(), meterNumber);
+    assertEquals(addedMediumMeter.getUnitName(), meterUnit);
+    assertEquals(addedMediumMeter.getActiveSince(),
+        LocalDate.parse(activeSince));
+    assertEquals(addedMediumMeter.getReadings().size(), 1);
+    assertEquals(addedMediumMeter.getReadings().get(0).getReading(),
+        Double.parseDouble(firstReading));
+    assertEquals(addedMediumMeter.getReadings().get(0).getDate(),
+        LocalDate.parse(activeSince));
+    assertEquals(addedMediumMeter.isResettable(), Boolean.valueOf(resettable));
+
+
+    // link to added meter on result page
+    Document webPage = Jsoup.parse(responseBody);
+    Element metersList = webPage.getElementById("namesList");
+
+    Elements meters = metersList.select("li");
+    assertTrue(meters.stream().map(m -> m.select("a").first())
+        .anyMatch(a -> a.text().equals(meterNumber)
+            && a.attr("href")
+            .equals(Mappings.METER_PAGE + "/" + resultNumberOfMeters)));
+  }
+
+  @Transactional
+  @Test
+  @DisplayName(
+      "result of post request to medium meter adding page with invalid "
+          + "meter form should show same page with error")
+  public void httpPost_invalidForm() {
+    // request data
+    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    MultiValueMap<String, String> map =
+        new LinkedMultiValueMap<String, String>();
+
+    String meterNumber = "123";
+
+    map.add(Attributes.METER_NUMBER, meterNumber);
+
+    HttpEntity<MultiValueMap<String, String>>
+        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+
+    // sending request
+    ResponseEntity<String> responseEntity =
+        testRestTemplate.postForEntity(url, request,
+            String.class);
+
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+
+    String responseBody = responseEntity.getBody();
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
+    assertNotNull(form);
+
+    Elements paragraphs = form.select("p");
+
+    assertTrue(
+        paragraphs.stream()
+            .anyMatch(p -> p.attr("id").contains("Error")));
+
+    assertEquals(webPage.getElementById("header").text(),
+        getMessage("page.addMeter"));
+
 
   }
 
