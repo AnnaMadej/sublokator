@@ -267,15 +267,31 @@ class MediumConnectionServiceUnitTests {
   }
 
   @Test
+  @DisplayName("Getting medium name should throw Main exception "
+      + " as medium not exists")
+  public void getMediumNameThrowsMainExceptionMediumNotExists() {
+    long mediumId = 1L;
+
+    when(mockMediumConnectionRepository.findMediumName(mediumId))
+        .thenReturn(Optional.empty());
+
+    Throwable exception =
+        catchThrowable(() -> mediumConnectionService.getMediumName(mediumId));
+
+    assertThat(exception).isInstanceOf(MainException.class)
+        .hasMessage("error.connectionNotExists");
+
+  }
+
+  @Test
   @DisplayName("Getting medium name should call appropriate method"
-      + " of MediumConnectionRepository and return what it returns if exists")
+      + " of MediumConnectionRepository and return what it returns")
   public void getMediumNameCallsAppropriateMethodAndReturnsCorrectValue() {
 
     String mediumName = "medium name";
 
     long mediumId = 1L;
 
-    when(mockMediumConnectionRepository.existsById(mediumId)).thenReturn(true);
     when(mockMediumConnectionRepository.findMediumName(mediumId))
         .thenReturn(Optional.of(mediumName));
 
@@ -287,28 +303,6 @@ class MediumConnectionServiceUnitTests {
 
 
     assertThat(fetchedMediumName).isEqualTo(mediumName);
-
-  }
-
-  @Test
-  @DisplayName("Getting medium name should call appropriate method"
-      + " of MediumConnectionRepository and return empty String if not exists")
-  public void getMediumNameCallsAppropriateMethodAndReturnsCorrectEmptyValue() {
-
-    long mediumId = 1L;
-
-    when(mockMediumConnectionRepository.existsById(mediumId)).thenReturn(true);
-    when(mockMediumConnectionRepository.findMediumName(mediumId))
-        .thenReturn(Optional.empty());
-
-    String fetchedMediumName = mediumConnectionService.getMediumName(mediumId);
-
-
-    verify(mockMediumConnectionRepository, times(1))
-        .findMediumName(mediumId);
-
-
-    assertThat(fetchedMediumName).isEqualTo("");
 
   }
 
