@@ -55,12 +55,9 @@ public class MediumConnectionService {
   }
 
   public String getMediumName(long mediumConnectionId) {
-    if (!existsById(mediumConnectionId)) {
-      throw new MainException(customMessageSource
-          .getMessage("error.connectionNotExists"));
-    }
     return mediumConnectionRepository.findMediumName(mediumConnectionId)
-        .orElse("");
+        .orElseThrow(() -> new MainException(customMessageSource
+            .getMessage("error.connectionNotExists")));
   }
 
   public boolean existsById(Long mediumConnectionId) {
