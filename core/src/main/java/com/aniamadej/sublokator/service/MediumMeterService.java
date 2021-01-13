@@ -84,7 +84,6 @@ public class MediumMeterService {
     addReading(mediumMeter, readingDate, readingValue);
   }
 
-  @Transactional
   public void deactivate(Long meterId, String deactivationDate) {
     LocalDate activeUntil = parseDate(deactivationDate);
 
