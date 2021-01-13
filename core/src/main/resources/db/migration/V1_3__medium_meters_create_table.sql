@@ -1,5 +1,5 @@
 create table medium_meters(
-  id bigint NOT NULL,
+  id bigint AUTO_INCREMENT NOT NULL,
   number varchar(255) DEFAULT NULL,
   unit_name varchar(255) DEFAULT NULL,
   connection_id bigint DEFAULT NULL,

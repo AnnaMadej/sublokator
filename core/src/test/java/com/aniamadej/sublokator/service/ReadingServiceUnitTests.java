@@ -48,7 +48,7 @@ class ReadingServiceUnitTests {
     when(mockReadingRepository.findById(anyLong()))
         .thenReturn(Optional.empty());
 
-    String errorCode = "error.noReadingId";
+    String errorCode = "error.noId";
     Throwable exception
         = catchThrowable(() -> readingService.delete(1L));
     assertThat(exception).isInstanceOf(MainException.class)
@@ -137,7 +137,7 @@ class ReadingServiceUnitTests {
   @DisplayName("finding meterId of reading that does not exist "
       + "should throw MainException with proper message")
   public void findMeterIdMeterNotExistsThrowsMainException() {
-    String errorCode = "error.meterNotExists";
+    String errorCode = "error.noId";
     Long readingId = 1L;
     when(mockReadingRepository.findMeterId(readingId))
         .thenReturn(Optional.empty());

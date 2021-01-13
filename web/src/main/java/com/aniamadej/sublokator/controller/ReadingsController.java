@@ -27,6 +27,7 @@ public class ReadingsController {
     Long meterId;
     meterId = readingService.findMediumId(readingId);
     readingService.delete(readingId);
-    return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
+    String url = Mappings.METER_PAGE + "/" + meterId;
+    return "redirect:" + url;
   }
 }

@@ -33,7 +33,6 @@ public class ExceptionHandlingController {
     redirectAttrs.addFlashAttribute(Attributes.ERROR, errorMessage);
 
     String uri = request.getHeader("referer");
-
     return "redirect:" + uri;
 
   }

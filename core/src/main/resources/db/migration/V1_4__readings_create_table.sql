@@ -1,5 +1,5 @@
 CREATE TABLE readings (
-  id bigint NOT NULL,
+  id bigint AUTO_INCREMENT NOT NULL,
   date date DEFAULT NULL,
   reading double DEFAULT NULL,
   meter_id bigint DEFAULT NULL,

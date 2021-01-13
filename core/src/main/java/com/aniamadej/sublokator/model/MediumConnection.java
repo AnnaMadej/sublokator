@@ -8,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,10 +20,7 @@ public class MediumConnection {
 
   // == fields ==
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE,
-      generator = "connection_sequence")
-  @SequenceGenerator(name = "connection_sequence",
-      sequenceName = "connection_sequence", allocationSize = 1)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
   private String mediumName;
 
@@ -36,11 +32,12 @@ public class MediumConnection {
     this.mediumName = mediumName;
   }
 
-
   // == public methods ==
   public void addMediumMeter(MediumMeter mediumMeter) {
-    mediumMeter.setMediumConnection(this);
-    this.mediumMeters.add(mediumMeter);
+    if (!mediumMeters.contains(mediumMeter)) {
+      this.mediumMeters.add(mediumMeter);
+      mediumMeter.setMediumConnection(this);
+    }
   }
 
   public void removeMediumMeter(MediumMeter mediumMeter) {

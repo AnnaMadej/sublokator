@@ -49,7 +49,7 @@ public class MediumMeterService {
                 .getMessage("error.meterNotExists")));
   }
 
-
+  @Transactional
   public void addReading(Long meterId, ReadingForm readingForm) {
     MediumMeter mediumMeter = getMediumMeter(meterId);
     LocalDate readingDate = parseDate(readingForm.getDate());
@@ -123,6 +123,7 @@ public class MediumMeterService {
   }
 
 
+  @Transactional
   public void reset(Long meterId, String resetDate) {
     LocalDate dateOfReset = parseDate(resetDate);
     MediumMeter mediumMeter = getMediumMeter(meterId);
@@ -175,8 +176,8 @@ public class MediumMeterService {
     }
 
     Reading reading = new Reading(readingDate, readingValue);
-    mediumMeter.addReading(reading);
-    mediumMeterRepository.save(mediumMeter);
+    reading.setMediumMeter(mediumMeter);
+    readingRepository.save(reading);
   }
 
   private LocalDate findActiveSinceDate(Long mediumMeterId) {

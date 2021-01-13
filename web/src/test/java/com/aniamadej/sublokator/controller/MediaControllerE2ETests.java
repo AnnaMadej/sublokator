@@ -7,14 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
+import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
+import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,7 +36,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -63,6 +65,9 @@ class MediaControllerE2ETests {
   @Autowired
   MediumMeterRepository mediumMeterRepository;
 
+  @Autowired
+  ReadingRepository readingRepository;
+
   private MediumConnection medium1;
   private MediumConnection medium2;
 
@@ -76,16 +81,11 @@ class MediaControllerE2ETests {
 
     medium1 = new MediumConnection();
     medium1.setMediumName("Gaz");
-    medium2 = new MediumConnection();
-    medium2.setMediumName("Prąd");
-    medium1 = mediumConnectionRepository.save(medium1);
-    medium2 = mediumConnectionRepository.save(medium2);
 
     mediumMeter1 = new MediumMeter();
     mediumMeter1.setNumber("Active, Resettable");
     mediumMeter1.setActiveSince(LocalDate.now());
     mediumMeter1.setResettable(true);
-
 
     mediumMeter2 = new MediumMeter();
     mediumMeter2.setNumber("Active, Not resettable");
@@ -113,6 +113,11 @@ class MediaControllerE2ETests {
     mediumMeter2 = mediumMeterRepository.save(mediumMeter2);
     mediumMeter3 = mediumMeterRepository.save(mediumMeter3);
     mediumMeter4 = mediumMeterRepository.save(mediumMeter4);
+
+    medium2 = new MediumConnection();
+    medium2.setMediumName("Prąd");
+    medium2 = mediumConnectionRepository.save(medium2);
+
 
   }
 
@@ -150,12 +155,12 @@ class MediaControllerE2ETests {
     assertThat(media.size()).isEqualTo(numberOfMedia);
 
     // proper media links
-    assertTrue(media.stream().map(m -> m.select("a").first())
+    assertTrue(media.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(medium1.getMediumName())
             && a.attr("href")
             .equals(Mappings.MEDIUM_PAGE + "/" + medium1.getId())));
 
-    assertTrue(media.stream().map(m -> m.select("a").first())
+    assertTrue(media.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(medium2.getMediumName())
             && a.attr("href")
             .equals(Mappings.MEDIUM_PAGE + "/" + medium2.getId())));
@@ -259,12 +264,12 @@ class MediaControllerE2ETests {
             .size());
 
     // proper meters links
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(mediumMeter1.getNumber())
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + mediumMeter1.getId())));
 
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(mediumMeter2.getNumber())
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + mediumMeter2.getId())));
@@ -335,12 +340,12 @@ class MediaControllerE2ETests {
             .size());
 
     // proper meters links
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(mediumMeter1.getNumber())
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + mediumMeter1.getId())));
 
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(mediumMeter2.getNumber())
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + mediumMeter2.getId())));
@@ -411,12 +416,12 @@ class MediaControllerE2ETests {
             .size());
 
     // proper meters links
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(mediumMeter3.getNumber())
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + mediumMeter3.getId())));
 
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(mediumMeter4.getNumber())
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + mediumMeter4.getId())));
@@ -467,17 +472,17 @@ class MediaControllerE2ETests {
         .contains(addNewMediumText);
 
     Element form = webPage.getElementById("newMediumForm");
-    Element label = form.select("label").first();
+    Element label = form.select("label").get(0);
 
     String labelText = getMessage("page.mediumName");
 
     assertThat(label.text()).isEqualTo(labelText);
 
-    Element input = form.select("input").first();
+    Element input = form.select("input").get(0);
     assertThat(input.attr("name")).isEqualTo(Attributes.MEDIUM_NAME);
     assertThat(input.attr("type")).isEqualTo("text");
 
-    Element button = form.select("button").first();
+    Element button = form.select("button").get(0);
     assertThat(button.attr("type")).isEqualTo("submit");
 
     String addButtonText = getMessage("page.addButton");
@@ -527,7 +532,7 @@ class MediaControllerE2ETests {
     // added medium link on page
     assertThat(media.size()).isEqualTo(initialNumberOfMedia + 1);
 
-    assertTrue(media.stream().map(m -> m.select("a").first())
+    assertTrue(media.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(addedMediumName)
             && a.attr("href")
             .equals(Mappings.MEDIUM_PAGE + "/" + (initialNumberOfMedia + 1))));
@@ -612,12 +617,12 @@ class MediaControllerE2ETests {
         .anyMatch(i -> i.attr("name").equals("hasFirstReading")
             && i.attr("type").equals("checkbox")));
 
-    Element button = form.select("button").first();
+    Element button = form.select("button").get(0);
     assertTrue(button.attr("type").equals("submit") && button.text()
         .equals(getMessage("page.addButton")));
   }
 
-  @Transactional
+
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with good meter form "
@@ -664,7 +669,7 @@ class MediaControllerE2ETests {
     String responseBody = responseEntity.getBody();
 
     // number of meters increased after post
-    int resultNumberOfMeters =
+    long resultNumberOfMeters =
         mediumConnectionRepository
             .fetchActiveMeterNumbers(medium1.getId(), null)
             .getSize() + mediumConnectionRepository
@@ -673,18 +678,22 @@ class MediaControllerE2ETests {
 
     assertEquals(resultNumberOfMeters, initialNumberOfMeters + 1);
 
-    // correct medium meter added
+    // proper medium meter added to db
     MediumMeter addedMediumMeter =
-        mediumMeterRepository.findById((long) resultNumberOfMeters).get();
+        mediumMeterRepository.findById(resultNumberOfMeters).get();
+
+    List<ReadingBasics> readings =
+        readingRepository.findByMediumMeterId(addedMediumMeter.getId());
+
+    assertEquals(1, readings.size());
+    assertEquals(Double.parseDouble(firstReading),
+        readings.get(0).getReading());
+    assertEquals(LocalDate.parse(activeSince), readings.get(0).getDate());
+
 
     assertEquals(addedMediumMeter.getNumber(), meterNumber);
     assertEquals(addedMediumMeter.getUnitName(), meterUnit);
     assertEquals(addedMediumMeter.getActiveSince(),
-        LocalDate.parse(activeSince));
-    assertEquals(addedMediumMeter.getReadings().size(), 1);
-    assertEquals(addedMediumMeter.getReadings().get(0).getReading(),
-        Double.parseDouble(firstReading));
-    assertEquals(addedMediumMeter.getReadings().get(0).getDate(),
         LocalDate.parse(activeSince));
     assertEquals(addedMediumMeter.isResettable(), Boolean.valueOf(resettable));
 
@@ -694,13 +703,13 @@ class MediaControllerE2ETests {
     Element metersList = webPage.getElementById("namesList");
 
     Elements meters = metersList.select("li");
-    assertTrue(meters.stream().map(m -> m.select("a").first())
+    assertTrue(meters.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(meterNumber)
             && a.attr("href")
             .equals(Mappings.METER_PAGE + "/" + resultNumberOfMeters)));
   }
 
-  @Transactional
+
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with invalid "
@@ -766,7 +775,7 @@ class MediaControllerE2ETests {
 
   }
 
-  @Transactional
+
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with invalid "
@@ -838,7 +847,7 @@ class MediaControllerE2ETests {
 
   }
 
-  @Transactional
+
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with invalid "
@@ -910,7 +919,7 @@ class MediaControllerE2ETests {
 
   }
 
-  @Transactional
+
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with invalid "
@@ -968,7 +977,6 @@ class MediaControllerE2ETests {
         getMessage("page.addMeter"));
   }
 
-  @Transactional
   @Test
   @DisplayName(
       "result of post request to medium meter adding page with invalid "

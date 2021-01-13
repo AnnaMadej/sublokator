@@ -9,11 +9,13 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.format.annotation.NumberFormat;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class MediumMeterForm {
 
   @NotBlank(message = "{error.empty}")
@@ -49,5 +51,25 @@ public class MediumMeterForm {
         new Reading(activeSinceDate, Double.parseDouble(this.firstReading));
     mediumMeter.addReading(reading);
     return mediumMeter;
+  }
+
+  public MediumMeterForm(
+      @NotBlank(message = "{error.empty}")
+          String meterNumber,
+      @NotBlank(message = "{error.empty}")
+          String meterUnit,
+      @NotNull(message = "{error.empty}")
+      @DecimalMin(value = "0.0", message = "{error.onlyPositive}")
+      @Digits(integer = 10, fraction = 10, message = "{error.number}")
+          String firstReading,
+      @NotNull(message = "{error.empty}")
+      @Pattern(regexp = "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$",
+          message = "{error.date}")
+          String activeSince, boolean resettable) {
+    this.meterNumber = meterNumber;
+    this.meterUnit = meterUnit;
+    this.firstReading = firstReading;
+    this.activeSince = activeSince;
+    this.resettable = resettable;
   }
 }
