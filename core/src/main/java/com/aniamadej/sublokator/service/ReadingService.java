@@ -24,10 +24,9 @@ class ReadingService {
   }
 
   public void delete(Long readingId) {
-
     Reading reading = readingRepository.findById(readingId).orElseThrow(
         () -> new MainException(
-            customMessageSource.getMessage("error.noReadingId")));
+            customMessageSource.getMessage("error.noId")));
     if (readingRepository.isFirst(reading.getId())) {
       String messageCode = "error.firstDelete";
       throw new InputException(
@@ -43,7 +42,7 @@ class ReadingService {
   public Long findMediumId(Long readingId) {
     return readingRepository.findMeterId(readingId).orElseThrow(
         () -> new MainException(
-            customMessageSource.getMessage("error.meterNotExists")));
+            customMessageSource.getMessage("error.noId")));
   }
 
 

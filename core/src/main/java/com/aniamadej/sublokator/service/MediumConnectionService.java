@@ -34,8 +34,6 @@ public class MediumConnectionService {
   }
 
 
-
-
   // == public methods ==
   public List<NumberedName> getNamesList() {
     return mediumConnectionRepository.findMediaNames();

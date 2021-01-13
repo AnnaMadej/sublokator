@@ -11,10 +11,10 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.Hibernate;
 
 @Data
 @Entity
@@ -24,10 +24,7 @@ public class MediumMeter {
 
   // == fields ==
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE,
-      generator = "meter_sequence")
-  @SequenceGenerator(name = "meter_sequence",
-      sequenceName = "meter_sequence", allocationSize = 1)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
   private String number;
   private String unitName;
@@ -37,7 +34,8 @@ public class MediumMeter {
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumMeter")
   private List<Reading> readings = new ArrayList<>();
-  @ManyToOne
+
+  @ManyToOne(cascade = {CascadeType.PERSIST})
   @JoinColumn(name = "connection_id")
   private MediumConnection mediumConnection;
 
@@ -49,12 +47,22 @@ public class MediumMeter {
 
   // == public methods ==
   public void addReading(Reading reading) {
-    reading.setMediumMeter(this);
-    readings.add(reading);
+    if (!this.readings.contains(reading)) {
+      readings.add(reading);
+      reading.setMediumMeter(this);
+    }
   }
 
   public void removeReading(Reading reading) {
     readings.remove(reading);
+  }
+
+  public void setMediumConnection(MediumConnection mediumConnection) {
+    if (this.mediumConnection != mediumConnection) {
+      Hibernate.initialize(mediumConnection.getMediumMeters());
+      this.mediumConnection = mediumConnection;
+      mediumConnection.addMediumMeter(this);
+    }
   }
 
 }
