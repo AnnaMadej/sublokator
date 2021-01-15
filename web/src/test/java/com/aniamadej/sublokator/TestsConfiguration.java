@@ -45,4 +45,5 @@ class TestsConfiguration {
     testRestTemplate.getRestTemplate().setRequestFactory(factory);
     return testRestTemplate;
   }
+
 }

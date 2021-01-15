@@ -1,6 +1,6 @@
 package com.aniamadej.sublokator.service;
 
-import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.ReadingBasics;
@@ -23,14 +23,14 @@ public class MediumMeterService {
   // == fields ==
   private final MediumMeterRepository mediumMeterRepository;
   private final ReadingRepository readingRepository;
-  private final CustomMessageSource errorsMessageSource;
+  private final ErrorMessageSource errorsMessageSource;
 
   // == constructors ==
   @Autowired
   MediumMeterService(
       MediumMeterRepository mediumMeterRepository,
       ReadingRepository readingRepository,
-      CustomMessageSource errorsMessageSource) {
+      ErrorMessageSource errorsMessageSource) {
     this.mediumMeterRepository = mediumMeterRepository;
     this.readingRepository = readingRepository;
     this.errorsMessageSource = errorsMessageSource;
@@ -166,6 +166,7 @@ public class MediumMeterService {
             () -> new MainException(errorsMessageSource
                 .getMessage("error.meterNotExists")));
   }
+
 
   private void addReading(MediumMeter mediumMeter, LocalDate readingDate,
                           Double readingValue) {

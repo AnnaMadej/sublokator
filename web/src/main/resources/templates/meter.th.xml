@@ -3,7 +3,7 @@
     <attr sel="#mediumMeterHeader" th:text="#{page.mediumMeter}"/>
     <attr sel="#meterNumberLabel" th:text="#{page.meterNumber}"/>
     <attr sel="#meterNumber" th:text="${mediumMeter.getNumber()}"/>
-    <attr sel="#unit" th:text="${mediumMeter.getUnit()}"/>
+    <attr sel="#meterUnit" th:text="${mediumMeter.getUnit()}"/>
     <attr sel="#activeSince" th:text="${mediumMeter.getActiveSince()}"/>
     <attr sel="#meterUnitLabel" th:text="#{page.meterUnit}"/>
     <attr sel="#readingsHeader" th:text="#{page.readings}"/>
@@ -22,20 +22,20 @@
     <attr sel="#newReadingForm" th:object="${__${T(com.aniamadej.sublokator.util.Attributes).READING_FORM}__}"
           th:action="@{__${#httpServletRequest.requestURI}____${T(com.aniamadej.sublokator.util.Mappings).READING_ADD_SUBPAGE}__}"/>
 
-    <attr sel="#dateInput" th:field="*{date}"/>
-    <attr sel="#readingInput" th:field="*{reading}"/>
+    <attr sel="#newReadingDateInput" th:field="*{date}"/>
+    <attr sel="#newReadingInput" th:field="*{reading}"/>
     <attr sel="#addReadingHeader" th:text="#{page.addReading}"/>
-    <attr sel="#dateLabel" th:text="#{page.date}"/>
+    <attr sel="#newReadingDateLabel" th:text="#{page.date}"/>
     <attr sel="#activeSinceLabel" th:text="#{page.activeSince}"/>
     <attr sel="#activeUntilLabel" th:text="#{page.activeUntil}"/>
     <attr sel="#activeUntilInputLabel" th:text="#{page.activeUntil}"/>
     <attr sel="#deactivateButton" th:text="#{page.deactivate}"/>
 
 
-    <attr sel="#readingLabel" th:text="#{page.reading}"/>
+    <attr sel="#newReadingLabel" th:text="#{page.reading}"/>
     <attr sel="#addButton" th:text="#{page.addButton}"/>
-    <attr sel="#readingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>
-    <attr sel="#dateError" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"/>
+    <attr sel="#newReadingError" th:if="${#fields.hasErrors('reading')}" th:errors="*{reading}"/>
+    <attr sel="#newReadingDateError" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"/>
     <attr sel="#error" th:if="${error}"
           th:text="${error}"/>
 

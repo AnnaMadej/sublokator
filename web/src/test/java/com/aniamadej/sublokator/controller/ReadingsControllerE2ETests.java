@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.dto.input.ReadingForm;
 import com.aniamadej.sublokator.model.MediumConnection;
@@ -49,7 +49,7 @@ class ReadingsControllerE2ETests {
   private MediumMeterService mediumMeterService;
 
   @Autowired
-  private CustomMessageSource errorMessageSource;
+  private ErrorMessageSource errorMessageSource;
 
 
   private MediumConnection mediumConnection;
@@ -164,6 +164,7 @@ class ReadingsControllerE2ETests {
 
   }
 
+
   @Test
   @DisplayName("should NOT delete reading with provided id which is NOT first "
       + "reading of meter, is NOT last and IS zero")
@@ -275,7 +276,7 @@ class ReadingsControllerE2ETests {
   @DisplayName("should redirect to main page as reading id does not exist")
   public void httpPost_redirectsToMainPageReadingNotExists() {
 
-    Long readingId = 999L;
+    Long readingId = Long.MAX_VALUE;
 
     // this reading does not exist
     assertFalse(readingRepository.existsById(readingId));
@@ -307,8 +308,9 @@ class ReadingsControllerE2ETests {
       String refererUrl) {
     final HttpHeaders headers = new HttpHeaders();
     headers.set("referer", refererUrl);
-    return new HttpEntity<String>(headers);
+    return new HttpEntity<>(headers);
   }
+
 
 }
 

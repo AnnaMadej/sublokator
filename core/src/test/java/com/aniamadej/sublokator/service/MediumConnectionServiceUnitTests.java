@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
@@ -42,19 +42,19 @@ class MediumConnectionServiceUnitTests {
   public void setUp() {
     mockMediumConnectionRepository =
         mock(MediumConnectionRepository.class);
-    CustomMessageSource mockCustomMessageSource =
-        mock(CustomMessageSource.class);
+    ErrorMessageSource mockErrorMessageSource =
+        mock(ErrorMessageSource.class);
     mockMediumMeterRepository = mock(MediumMeterRepository.class);
 
 
     mediumConnectionService
         = new MediumConnectionService(mockMediumConnectionRepository,
-        mockMediumMeterRepository, mockCustomMessageSource);
+        mockMediumMeterRepository, mockErrorMessageSource);
 
     ArgumentCaptor<String> errorCodeCaptor =
         ArgumentCaptor.forClass(String.class);
 
-    when(mockCustomMessageSource
+    when(mockErrorMessageSource
         .getMessage(errorCodeCaptor.capture()))
         .thenAnswer(i -> errorCodeCaptor.getValue());
   }

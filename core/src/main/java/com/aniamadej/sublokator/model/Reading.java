@@ -25,7 +25,7 @@ public class Reading {
   private LocalDate date;
   private Double reading;
 
-  @ManyToOne(cascade = CascadeType.PERSIST)
+  @ManyToOne(cascade = {CascadeType.PERSIST})
   @JoinColumn(name = "meter_id")
   private MediumMeter mediumMeter;
 

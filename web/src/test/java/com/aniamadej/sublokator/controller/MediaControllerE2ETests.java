@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
@@ -60,7 +60,7 @@ class MediaControllerE2ETests {
   private MessageSource messageSource;
 
   @Autowired
-  private CustomMessageSource errorsMessageSource;
+  private ErrorMessageSource errorsMessageSource;
 
   @Autowired
   MediumMeterRepository mediumMeterRepository;
@@ -184,7 +184,7 @@ class MediaControllerE2ETests {
   @Test
   @DisplayName("result of get request to existing medium page should "
       + "contain title of page, name of medium and link to medium meters page")
-  public void httpGet_returnsMediumPage() throws Exception {
+  public void httpGet_returnsMediumPage() {
     ResponseEntity<String> responseEntity = testRestTemplate
         .getForEntity(
             "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/" + medium1
@@ -237,7 +237,6 @@ class MediaControllerE2ETests {
     String responseBody = responseEntity.getBody();
 
     // page title header
-    String mediaConnectionsText = getMessage("page.connectedMedium");
     Document webPage = Jsoup.parse(responseBody);
 
 
@@ -249,10 +248,9 @@ class MediaControllerE2ETests {
 
 
     // medium name
-    assertTrue(
-        webPage
-            .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
-            .size() == 1);
+    assertEquals(1, webPage
+        .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
+        .size());
 
     // number of list entries
     Element mediaList = webPage.getElementById("namesList");
@@ -313,7 +311,6 @@ class MediaControllerE2ETests {
     String responseBody = responseEntity.getBody();
 
     // page title header
-    String mediaConnectionsText = getMessage("page.connectedMedium");
     Document webPage = Jsoup.parse(responseBody);
 
 
@@ -325,10 +322,9 @@ class MediaControllerE2ETests {
 
 
     // medium name
-    assertTrue(
-        webPage
-            .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
-            .size() == 1);
+    assertEquals(1, webPage
+        .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
+        .size());
 
     // number of list entries
     Element metersList = webPage.getElementById("namesList");
@@ -391,8 +387,6 @@ class MediaControllerE2ETests {
 
 
     // page title header
-    String mediaConnectionsText = getMessage("page.connectedMedium");
-
     String metersText = getMessage("page.meters");
 
     assertThat(webPage.getElementById("pageHeader")).isNotNull();
@@ -401,10 +395,9 @@ class MediaControllerE2ETests {
 
 
     // medium name
-    assertTrue(
-        webPage
-            .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
-            .size() == 1);
+    assertEquals(1, webPage
+        .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
+        .size());
 
     // number of list entries
     Element mediaList = webPage.getElementById("namesList");
@@ -463,8 +456,6 @@ class MediaControllerE2ETests {
     assertEquals(200, responseEntity.getStatusCodeValue());
 
     // page title header
-    String addMediumText = getMessage("page.addMedium");
-
     String addNewMediumText = getMessage("page.addMedium");
 
     assertThat(webPage.getElementById("pageHeader")).isNotNull();
@@ -500,11 +491,7 @@ class MediaControllerE2ETests {
 
     int initialNumberOfMedia = mediumConnectionService.getNamesList().size();
 
-    String addedMediumName = "nowe medium";
-
-    // no new medium in database yet
-    assertTrue(mediumConnectionService.getNamesList().stream()
-        .noneMatch(name -> name.getName().equals(addedMediumName)));
+    String addedMediumName = "bbb";
 
     String url =
         "http://localhost:" + port + Mappings.MEDIA_ADD + "?"
@@ -513,16 +500,14 @@ class MediaControllerE2ETests {
     ResponseEntity<String> responseEntity =
         testRestTemplate.postForEntity(url, null,
             String.class);
+
+    Long addedMediumId = mediumConnectionService.getNamesList().stream()
+        .map(name -> name.getId()).max(Long::compareTo).get();
+
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
 
-
-    // medium added to database
-    assertTrue(mediumConnectionService.getNamesList().stream()
-        .anyMatch(name -> name.getName().equals(addedMediumName)
-            && name.getId() == initialNumberOfMedia + 1));
-
-
     String responseBody = responseEntity.getBody();
+
     Document webPage = Jsoup.parse(responseBody);
     Element mediaList = webPage.getElementById("namesList");
 
@@ -535,7 +520,7 @@ class MediaControllerE2ETests {
     assertTrue(media.stream().map(m -> m.select("a").get(0))
         .anyMatch(a -> a.text().equals(addedMediumName)
             && a.attr("href")
-            .equals(Mappings.MEDIUM_PAGE + "/" + (initialNumberOfMedia + 1))));
+            .equals(Mappings.MEDIUM_PAGE + "/" + addedMediumId)));
 
   }
 
@@ -627,7 +612,7 @@ class MediaControllerE2ETests {
   @DisplayName(
       "result of post request to medium meter adding page with good meter form "
           + "should add new medium meter")
-  public void httpPost_addsMetiumMeter() {
+  public void httpPost_addsMediumMeter() {
     int initialNumberOfMeters =
         mediumConnectionRepository
             .fetchActiveMeterNumbers(medium1.getId(), null)
@@ -642,7 +627,7 @@ class MediaControllerE2ETests {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<String, String>();
+        new LinkedMultiValueMap<>();
 
     String meterNumber = "123";
     String meterUnit = "kwh";
@@ -658,7 +643,7 @@ class MediaControllerE2ETests {
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
@@ -679,8 +664,12 @@ class MediaControllerE2ETests {
     assertEquals(resultNumberOfMeters, initialNumberOfMeters + 1);
 
     // proper medium meter added to db
+    Long addedMediumMeterId =
+        mediumConnectionRepository.fetchMeterNumbers(medium1.getId()).stream()
+            .map(mn -> mn.getId()).max(Long::compareTo).get();
+
     MediumMeter addedMediumMeter =
-        mediumMeterRepository.findById(resultNumberOfMeters).get();
+        mediumMeterRepository.findById(addedMediumMeterId).get();
 
     List<ReadingBasics> readings =
         readingRepository.findByMediumMeterId(addedMediumMeter.getId());
@@ -703,10 +692,11 @@ class MediaControllerE2ETests {
     Element metersList = webPage.getElementById("namesList");
 
     Elements meters = metersList.select("li");
+
     assertTrue(meters.stream().map(m -> m.select("a").get(0))
-        .anyMatch(a -> a.text().equals(meterNumber)
+        .anyMatch(a -> a.text().equals(addedMediumMeter.getNumber())
             && a.attr("href")
-            .equals(Mappings.METER_PAGE + "/" + resultNumberOfMeters)));
+            .equals(Mappings.METER_PAGE + "/" + addedMediumMeter.getId())));
   }
 
 
@@ -722,7 +712,7 @@ class MediaControllerE2ETests {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<String, String>();
+        new LinkedMultiValueMap<>();
 
     String activeSince = null;
     String firstReading = null;
@@ -732,7 +722,7 @@ class MediaControllerE2ETests {
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
@@ -788,7 +778,7 @@ class MediaControllerE2ETests {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<String, String>();
+        new LinkedMultiValueMap<>();
 
     String meterNumber = " ";
     String meterUnit = " ";
@@ -805,7 +795,7 @@ class MediaControllerE2ETests {
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
@@ -860,7 +850,7 @@ class MediaControllerE2ETests {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<String, String>();
+        new LinkedMultiValueMap<>();
 
     String meterNumber = "";
     String meterUnit = "";
@@ -877,7 +867,7 @@ class MediaControllerE2ETests {
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
@@ -933,7 +923,7 @@ class MediaControllerE2ETests {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<String, String>();
+        new LinkedMultiValueMap<>();
 
     String meterNumber = "number";
     String meterUnit = "unit";
@@ -950,7 +940,7 @@ class MediaControllerE2ETests {
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
@@ -990,7 +980,7 @@ class MediaControllerE2ETests {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<String, String>();
+        new LinkedMultiValueMap<>();
 
     String meterNumber = "number";
     String meterUnit = "unit";
@@ -1002,7 +992,7 @@ class MediaControllerE2ETests {
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =

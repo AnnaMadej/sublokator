@@ -16,7 +16,7 @@
     </div>
     <div class="row">
         <div class="col-1" id="meterUnitLabel">Medium meter unit:</div>
-        <div class="col-1" id="unit">kwh</div>
+        <div class="col-1" id="meterUnit">kwh</div>
     </div>
     <div class="row">
         <div class="col-1" id="activeSinceLabel">Active since:</div>
@@ -96,17 +96,17 @@
     <h3 id="addReadingHeader">Add a reading:</h3>
     <form action="" class="form-check" id="newReadingForm" method="post">
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label" for="dateInput" id="dateLabel">Reading date: </label>
+            <label class="col-sm-2 col-form-label" for="newReadingDateInput" id="newReadingDateLabel">Reading date: </label>
             <div class="col-sm-3">
-                <input class="form-control" id="dateInput" type="date"/>
-                <p class="alert alert-danger" id="dateError">First reading error</p>
+                <input class="form-control" id="newReadingDateInput" type="date"/>
+                <p class="alert alert-danger" id="newReadingDateError">First reading error</p>
             </div>
         </div>
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label" for="readingInput" id="readingLabel">Reading: </label>
+            <label class="col-sm-2 col-form-label" for="newReadingInput" id="newReadingLabel">Reading: </label>
             <div class="col-sm-3">
-                <input class="form-control" id="readingInput" step="0.01" type="number"/>
-                <p class="alert alert-danger" id="readingError">Reading error</p>
+                <input class="form-control" id="newReadingInput" step="0.01" type="number"/>
+                <p class="alert alert-danger" id="newReadingError">Reading error</p>
             </div>
         </div>
         <div class="form-group row">

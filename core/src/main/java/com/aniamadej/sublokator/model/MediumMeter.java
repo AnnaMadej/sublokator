@@ -14,7 +14,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.Hibernate;
 
 @Data
 @Entity
@@ -59,7 +58,6 @@ public class MediumMeter {
 
   public void setMediumConnection(MediumConnection mediumConnection) {
     if (this.mediumConnection != mediumConnection) {
-      Hibernate.initialize(mediumConnection.getMediumMeters());
       this.mediumConnection = mediumConnection;
       mediumConnection.addMediumMeter(this);
     }

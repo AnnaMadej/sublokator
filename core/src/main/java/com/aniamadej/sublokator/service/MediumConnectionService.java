@@ -1,6 +1,6 @@
 package com.aniamadej.sublokator.service;
 
-import com.aniamadej.sublokator.CustomMessageSource;
+import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
@@ -20,17 +20,17 @@ public class MediumConnectionService {
   // == fields ==
   private final MediumConnectionRepository mediumConnectionRepository;
   private final MediumMeterRepository mediumMeterRepository;
-  private final CustomMessageSource customMessageSource;
+  private final ErrorMessageSource errorMessageSource;
 
   // == constructors ==
   @Autowired
   MediumConnectionService(
       MediumConnectionRepository mediumConnectionRepository,
       MediumMeterRepository mediumMeterRepository,
-      CustomMessageSource customMessageSource) {
+      ErrorMessageSource errorMessageSource) {
     this.mediumConnectionRepository = mediumConnectionRepository;
     this.mediumMeterRepository = mediumMeterRepository;
-    this.customMessageSource = customMessageSource;
+    this.errorMessageSource = errorMessageSource;
   }
 
 
@@ -54,7 +54,7 @@ public class MediumConnectionService {
 
   public String getMediumName(long mediumConnectionId) {
     return mediumConnectionRepository.findMediumName(mediumConnectionId)
-        .orElseThrow(() -> new MainException(customMessageSource
+        .orElseThrow(() -> new MainException(errorMessageSource
             .getMessage("error.connectionNotExists")));
   }
 
@@ -65,12 +65,12 @@ public class MediumConnectionService {
   public void save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
       throw new InputException(
-          customMessageSource.getMessage("error.blankName"));
+          errorMessageSource.getMessage("error.blankName"));
     }
 
     if (name.length() > 50) {
       throw new InputException(
-          customMessageSource.getMessage("error.tooLongName"));
+          errorMessageSource.getMessage("error.tooLongName"));
     }
 
     MediumConnection connection = new MediumConnection();
@@ -84,7 +84,7 @@ public class MediumConnectionService {
 
     if (Double.parseDouble(mediumMeterForm.getFirstReading()) < 0) {
       throw new InputException(
-          customMessageSource.getMessage("error.negativeReading"));
+          errorMessageSource.getMessage("error.negativeReading"));
     }
 
     mediumConnectionRepository.findById(mediumConnectionId)
@@ -94,7 +94,7 @@ public class MediumConnectionService {
           mediumMeterRepository.save(mediumMeter);
         }, () -> {
           throw new MainException(
-              customMessageSource
+              errorMessageSource
                   .getMessage("error.connectionNotExists"));
         });
   }
