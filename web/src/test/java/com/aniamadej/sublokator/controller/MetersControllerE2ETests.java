@@ -9,6 +9,7 @@ import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
+import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumMeterService;
@@ -53,14 +54,19 @@ class MetersControllerE2ETests {
   private ErrorMessageSource errorMessageSource;
 
   @Autowired
+  private MediumConnectionRepository mediumConnectionRepository;
+
+  @Autowired
   private MessageSource messageSource;
 
   private MediumMeter activeResettableMediumMeter;
 
+  private MediumConnection mediumConnection;
+
   @BeforeAll
   public void init() {
 
-    MediumConnection mediumConnection = new MediumConnection();
+    mediumConnection = new MediumConnection();
     activeResettableMediumMeter = new MediumMeter();
     activeResettableMediumMeter.setNumber("123");
     activeResettableMediumMeter.setUnitName("kwh");
@@ -74,8 +80,6 @@ class MetersControllerE2ETests {
     reading2.setMediumMeter(activeResettableMediumMeter);
     reading2.setReading(13.0);
     reading2.setDate(LocalDate.now().minusDays(29));
-    activeResettableMediumMeter.addReading(reading2);
-    mediumMeterRepository.save(activeResettableMediumMeter);
 
     activeResettableMediumMeter.setMediumConnection(mediumConnection);
     activeResettableMediumMeter.addReading(reading);
@@ -87,11 +91,12 @@ class MetersControllerE2ETests {
   }
 
   @Test
-  @DisplayName("http get request should medium meter webpage "
-      + "with deactivation form and reset form")
-  public void httpGetShowsMeterPage() {
+  @DisplayName("http get request should show active resettable medium meter "
+      + "webpage with deactivation form and reset form")
+  public void httpGetShowsActiveResettableMeterPage() {
     String url =
-        "http://localhost:" + port + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+        "http://localhost:" + port + Mappings.METER_PAGE + "/"
+            + activeResettableMediumMeter
             .getId();
 
     ResponseEntity<String> response =
@@ -123,7 +128,8 @@ class MetersControllerE2ETests {
 
 
     assertEquals(
-        Mappings.METER_PAGE + "/" + activeResettableMediumMeter.getId() + Mappings.DEACTIVATE,
+        Mappings.METER_PAGE + "/" + activeResettableMediumMeter.getId()
+            + Mappings.DEACTIVATE,
         webPage.select("#deactivateForm").attr("action"));
 
     assertEquals(getMessage("page.activeUntil"),
@@ -136,7 +142,8 @@ class MetersControllerE2ETests {
 
 
     assertEquals(
-        Mappings.METER_PAGE + "/" + activeResettableMediumMeter.getId() + Mappings.RESET,
+        Mappings.METER_PAGE + "/" + activeResettableMediumMeter.getId()
+            + Mappings.RESET,
         webPage.select("#resetForm").attr("action"));
 
     assertEquals(getMessage("page.resetDate"),
@@ -160,7 +167,8 @@ class MetersControllerE2ETests {
     Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
 
     List<ReadingBasics> readings =
-        readingRepository.findByMediumMeterId(activeResettableMediumMeter.getId());
+        readingRepository
+            .findByMediumMeterId(activeResettableMediumMeter.getId());
     assertEquals(readings.size(),
         readingsRows.size());
 
@@ -198,6 +206,13 @@ class MetersControllerE2ETests {
 
     assertEquals("submit",
         webPage.select("#newReadingForm > div > button").attr("type"));
+
+  }
+
+  @Test
+  @DisplayName("http get request should return medium meter webpage "
+      + "with reactivation button instead of deactivarion")
+  public void httpGetShowsMeterPage() {
 
   }
 
