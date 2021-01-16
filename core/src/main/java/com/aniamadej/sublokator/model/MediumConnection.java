@@ -24,7 +24,7 @@ public class MediumConnection {
   private long id;
   private String mediumName;
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediumConnection")
+  @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "mediumConnection")
   private List<MediumMeter> mediumMeters = new ArrayList<>();
 
   // == constructors ==
