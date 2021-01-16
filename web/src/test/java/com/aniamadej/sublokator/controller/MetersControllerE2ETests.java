@@ -14,10 +14,10 @@ import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumMeterService;
+import com.aniamadej.sublokator.testService.RequestSenderService;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
 import java.util.List;
-import javax.persistence.EntityManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -28,11 +28,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -42,7 +43,7 @@ class MetersControllerE2ETests {
   private int port;
 
   @Autowired
-  private TestRestTemplate testRestTemplate;
+  private RequestSenderService requestSenderService;
 
   @Autowired
   private ReadingRepository readingRepository;
@@ -63,18 +64,21 @@ class MetersControllerE2ETests {
   private MessageSource messageSource;
 
 
-  @Autowired
-  EntityManager entityManager;
+  private MediumConnection mediumConnection;
 
-  MediumMeter activeResettableMediumMeter;
-  MediumMeter inactiveResettableMediumMeter;
-  MediumMeter activeNotResettableMediumMeter;
-  MediumMeter inactiveNotResettableMediumMeter;
+  private MediumMeter activeResettableMediumMeter;
+  private MediumMeter inactiveResettableMediumMeter;
+  private MediumMeter activeNotResettableMediumMeter;
+  private MediumMeter inactiveNotResettableMediumMeter;
+  private String urlPrefix;
 
   @BeforeAll
   public void init() {
 
-    MediumConnection mediumConnection = new MediumConnection("medium");
+    urlPrefix = "http://localhost:" + port;
+
+
+    mediumConnection = new MediumConnection("medium");
 
     activeResettableMediumMeter = new MediumMeter();
     activeResettableMediumMeter.setNumber("activeResettable");
@@ -120,20 +124,20 @@ class MetersControllerE2ETests {
     reading1.setMediumMeter(activeResettableMediumMeter);
     reading2.setMediumMeter(activeResettableMediumMeter);
 
-    mediumConnectionRepository.save(mediumConnection);
+    mediumConnection = mediumConnectionRepository.save(mediumConnection);
   }
+
 
   @Test
   @DisplayName("http get request should show active resettable medium meter "
       + "webpage with deactivation form and reset form")
-  public void httpGetShowsActiveResettableMeterPage() {
+  public void httpGet_ShowsActiveResettableMeterPage() {
     String url =
         "http://localhost:" + port + Mappings.METER_PAGE + "/"
             + activeResettableMediumMeter
             .getId();
 
-    ResponseEntity<String> response =
-        testRestTemplate.getForEntity(url, String.class);
+    ResponseEntity<String> response = requestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#reactivateForm")).isEmpty();
@@ -205,16 +209,17 @@ class MetersControllerE2ETests {
     assertEquals(readings.size(),
         readingsRows.size());
 
-    readings.forEach(reading -> {
-      assertTrue(readingsRows.stream().anyMatch(tr ->
-          tr.select("td").get(0).text().equals(reading.getDate().toString())
-              && tr.select("td").get(1).text()
-              .equals(Double.toString(reading.getReading()))
-              && tr.select("td > form").attr("method").equals("post")
-              && tr.select("td > form").attr("action").equals(
-              Mappings.READING_PAGE + "/" + reading.getId()
-                  + Mappings.DELETE)));
-    });
+    readings.forEach(reading -> assertTrue(readingsRows.stream().anyMatch(tr ->
+        tr.select("td").get(0).text().equals(reading.getDate().toString())
+            && tr.select("td").get(1).text()
+            .equals(Double.toString(reading.getReading()))
+            && tr.select("td > form").attr("method").equals("post")
+            && tr.select("td > form").attr("action").equals(
+            Mappings.READING_PAGE + "/" + reading.getId()
+                + Mappings.DELETE)
+            && tr.select("td > form > button").text()
+            .equals(getMessage("page.delete"))
+    )));
 
     assertEquals(getMessage("page.addReading"),
         webPage.select("#addReadingHeader").text());
@@ -248,13 +253,12 @@ class MetersControllerE2ETests {
   @Test
   @DisplayName("http get request should return medium meter webPage "
       + "with reactivation button instead of deactivation")
-  public void httpGetShowsMeterPageWithReactivationForm() {
+  public void httpGet_ShowsMeterPageWithReactivationForm() {
     String url =
         "http://localhost:" + port + Mappings.METER_PAGE + "/"
             + inactiveResettableMediumMeter.getId();
 
-    ResponseEntity<String> response =
-        testRestTemplate.getForEntity(url, String.class);
+    ResponseEntity<String> response = requestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#deactivateForm")).isEmpty();
@@ -310,13 +314,13 @@ class MetersControllerE2ETests {
   @Test
   @DisplayName("http get request should return medium meter webPage "
       + "with activation button and without reset button ")
-  public void httpGetShowsMeterPageWithoutResetForm() {
+  public void httpGet_ShowsMeterPageWithoutResetForm() {
+    this.urlPrefix = "http://localhost:" + port;
     String url =
-        "http://localhost:" + port + Mappings.METER_PAGE + "/"
+        this.urlPrefix + Mappings.METER_PAGE + "/"
             + activeNotResettableMediumMeter.getId();
 
-    ResponseEntity<String> response =
-        testRestTemplate.getForEntity(url, String.class);
+    ResponseEntity<String> response = requestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#reactivateForm")).isEmpty();
@@ -352,8 +356,7 @@ class MetersControllerE2ETests {
         "http://localhost:" + port + Mappings.METER_PAGE + "/"
             + inactiveNotResettableMediumMeter.getId();
 
-    ResponseEntity<String> response =
-        testRestTemplate.getForEntity(url, String.class);
+    ResponseEntity<String> response = requestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#deactivateForm")).isEmpty();
@@ -380,6 +383,61 @@ class MetersControllerE2ETests {
         webPage.select("#activeUntil").text());
 
     assertThat(webPage.select("#resetForm")).isEmpty();
+
+  }
+
+  @Test
+  public void httpPost_addsReadingToMeter() {
+
+    List<ReadingBasics> initialReadingsOfMeter = readingRepository
+        .findByMediumMeterId(activeResettableMediumMeter.getId());
+
+    int initialNumberOfReadings = initialReadingsOfMeter.size();
+
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+    Reading lastReading =
+        activeResettableMediumMeter.getReadings().stream()
+            .min((r1, r2) -> r2.getDate().compareTo(r1.getDate())).get();
+
+    String readingDate = lastReading.getDate().plusDays(1).toString();
+    String readingValue = Double.toString(lastReading.getReading() + 1);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Long newReadingId = readingRepository
+        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
+            ReadingBasics::getId).max(Long::compareTo).get();
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings + 1, readingsRows.size());
+
+    assertTrue(readingsRows.stream().anyMatch(tr ->
+        tr.select("td").get(0).text().equals(readingDate)
+            && tr.select("td").get(1).text()
+            .equals(readingValue)
+            && tr.select("td > form").attr("method").equals("post")
+            && tr.select("td > form").attr("action").equals(
+            Mappings.READING_PAGE + "/" + newReadingId
+                + Mappings.DELETE)
+            && tr.select("td > form > button").text()
+            .equals(getMessage("page.delete"))
+    ));
 
   }
 
