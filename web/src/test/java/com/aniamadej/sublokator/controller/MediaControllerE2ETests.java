@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 import com.aniamadej.sublokator.ErrorMessageSource;
+import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
@@ -14,6 +15,7 @@ import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumConnectionService;
+import com.aniamadej.sublokator.testService.RequestSenderService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
@@ -28,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -47,9 +48,6 @@ class MediaControllerE2ETests {
   private int port;
 
   @Autowired
-  private TestRestTemplate testRestTemplate;
-
-  @Autowired
   private MediumConnectionService mediumConnectionService;
 
   @Autowired
@@ -63,10 +61,16 @@ class MediaControllerE2ETests {
   private ErrorMessageSource errorsMessageSource;
 
   @Autowired
-  MediumMeterRepository mediumMeterRepository;
+  private MediumMeterRepository mediumMeterRepository;
 
   @Autowired
-  ReadingRepository readingRepository;
+  private ReadingRepository readingRepository;
+
+  @Autowired
+  private RequestSenderService requestSenderService;
+
+  private String urlPrefix;
+
 
   private MediumConnection medium1;
   private MediumConnection medium2;
@@ -78,6 +82,8 @@ class MediaControllerE2ETests {
 
   @BeforeAll
   public void init() {
+
+    urlPrefix = "http://localhost:" + port;
 
     medium1 = new MediumConnection();
     medium1.setMediumName("Gaz");
@@ -129,15 +135,14 @@ class MediaControllerE2ETests {
 
     int numberOfMedia = mediumConnectionService.getNamesList().size();
 
+    String destinationUrl = urlPrefix + Mappings.MEDIA_PAGE;
+
     ResponseEntity<String> responseEntity =
-        testRestTemplate
-            .getForEntity("http://localhost:" + port + Mappings.MEDIA_PAGE,
-                String.class);
-    String responseBody = responseEntity.getBody();
+        requestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
 
-    Document webPage = Jsoup.parse(responseBody);
+    Document webPage = Jsoup.parse(responseEntity.getBody());
 
     // page title header
     String mediaConnectionsText = getMessage("page.mediaConnections");
@@ -185,11 +190,11 @@ class MediaControllerE2ETests {
   @DisplayName("result of get request to existing medium page should "
       + "contain title of page, name of medium and link to medium meters page")
   public void httpGet_returnsMediumPage() {
-    ResponseEntity<String> responseEntity = testRestTemplate
-        .getForEntity(
-            "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/" + medium1
-                .getId(),
-            String.class);
+    String destinationUrl =
+        urlPrefix + Mappings.MEDIUM_PAGE + "/" + medium1.getId();
+
+    ResponseEntity<String> responseEntity =
+        requestSenderService.sendGet(destinationUrl);
 
     String responseBody = responseEntity.getBody();
 
@@ -227,11 +232,12 @@ class MediaControllerE2ETests {
       + "and list of active medium meters, showInactive button "
       + "and addMeter button")
   public void httpGet_returnsDefaultMediumMetersList() {
-    ResponseEntity<String> responseEntity = testRestTemplate
-        .getForEntity(
-            "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
-                + medium1.getId() + Mappings.METERS_SUBPAGE,
-            String.class);
+
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_SUBPAGE;
+
+    ResponseEntity<String> responseEntity =
+        requestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
@@ -301,11 +307,12 @@ class MediaControllerE2ETests {
           + "and list of active medium meters, showInactive button "
           + "and addMeter button")
   public void httpGet_returnsActiveMediumMetersList() {
-    ResponseEntity<String> responseEntity = testRestTemplate
-        .getForEntity(
-            "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
-                + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=false",
-            String.class);
+
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=false";
+
+    ResponseEntity<String> responseEntity =
+        requestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
@@ -375,11 +382,11 @@ class MediaControllerE2ETests {
           + "and list of inactive medium meters , showActive button "
           + "and addMeter button")
   public void httpGet_returnsInactiveMediumMetersList() {
-    ResponseEntity<String> responseEntity = testRestTemplate
-        .getForEntity(
-            "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
-                + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=true",
-            String.class);
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
+        + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=true";
+
+    ResponseEntity<String> responseEntity =
+        requestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
@@ -447,9 +454,11 @@ class MediaControllerE2ETests {
           + "page title, medium name label, medium name input and add button")
   public void httpGet_returnsMediumConnectionAddingPage() {
 
-    ResponseEntity<String> responseEntity = testRestTemplate
-        .getForEntity("http://localhost:" + port + Mappings.MEDIA_ADD,
-            String.class);
+    String destinationUrl = urlPrefix + Mappings.MEDIA_ADD;
+
+    ResponseEntity<String> responseEntity =
+        requestSenderService.sendGet(destinationUrl);
+
     String responseBody = responseEntity.getBody();
     Document webPage = Jsoup.parse(responseBody);
 
@@ -493,21 +502,20 @@ class MediaControllerE2ETests {
 
     String addedMediumName = "bbb";
 
-    String url =
-        "http://localhost:" + port + Mappings.MEDIA_ADD + "?"
+    String destinationUrl =
+        urlPrefix + Mappings.MEDIA_ADD + "?"
             + Attributes.MEDIUM_NAME + "=" + addedMediumName;
 
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, null,
-            String.class);
+        requestSenderService.sendPost(destinationUrl);
 
     Long addedMediumId = mediumConnectionService.getNamesList().stream()
-        .map(name -> name.getId()).max(Long::compareTo).get();
+        .map(NumberedName::getId).max(Long::compareTo).get();
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
 
     String responseBody = responseEntity.getBody();
-
+    
     Document webPage = Jsoup.parse(responseBody);
     Element mediaList = webPage.getElementById("namesList");
 
@@ -530,12 +538,12 @@ class MediaControllerE2ETests {
           + "page title, and meter adding form with proper fields and button")
   public void httpGet_showsMetersAddingForm() {
 
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
-    ResponseEntity<String> responseEntity = testRestTemplate
-        .getForEntity(
-            url,
-            String.class);
+
+    ResponseEntity<String> responseEntity =
+        requestSenderService.sendGet(destinationUrl);
+
     String responseBody = responseEntity.getBody();
     Document webPage = Jsoup.parse(responseBody);
 
@@ -621,13 +629,9 @@ class MediaControllerE2ETests {
             .getSize();
 
     // request data
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> map =
-        new LinkedMultiValueMap<>();
 
     String meterNumber = "123";
     String meterUnit = "kwh";
@@ -635,20 +639,17 @@ class MediaControllerE2ETests {
     String resettable = "true";
     String firstReading = "12";
 
-    map.add(Attributes.METER_NUMBER, meterNumber);
-    map.add(Attributes.METER_UNIT, meterUnit);
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
-    map.add("resettable", resettable);
-    map.add("firstReading", firstReading);
 
-
-    HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(map, headers);
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+    formInputs.add(Attributes.METER_NUMBER, meterNumber);
+    formInputs.add(Attributes.METER_UNIT, meterUnit);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
+    formInputs.add("resettable", resettable);
+    formInputs.add("firstReading", firstReading);
 
     // sending request
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, request,
-            String.class);
+        requestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
     String responseBody = responseEntity.getBody();
@@ -706,28 +707,19 @@ class MediaControllerE2ETests {
           + "meter form (inputs are null) should show same page with 3 errors")
   public void httpPost_invalidFormNullInputs() {
     // request data
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> map =
+
+    MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
 
-    String activeSince = null;
-    String firstReading = null;
-
-    map.add("firstReading", firstReading);
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
-
-
-    HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(map, headers);
+    formInputs.add(Attributes.FIRST_READING, null);
+    formInputs.add(Attributes.ACTIVE_SINCE, null);
 
     // sending request
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, request,
-            String.class);
+        requestSenderService.sendPost(destinationUrl, formInputs);
 
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
@@ -772,12 +764,12 @@ class MediaControllerE2ETests {
           + "meter form (inputs are blank) should show same page with 3 errors")
   public void httpPost_invalidFormBlankInputs() {
     // request data
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> map =
+    MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
 
     String meterNumber = " ";
@@ -785,23 +777,21 @@ class MediaControllerE2ETests {
     String activeSince = " ";
     String firstReading = " ";
 
-    map.add("firstReading", firstReading);
-    map.add(Attributes.METER_NUMBER, meterNumber);
-    map.add(Attributes.METER_UNIT, meterUnit);
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
+    formInputs.add("firstReading", firstReading);
+    formInputs.add(Attributes.METER_NUMBER, meterNumber);
+    formInputs.add(Attributes.METER_UNIT, meterUnit);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
 
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
 
     HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(map, headers);
+        request = new HttpEntity<>(formInputs, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, request,
-            String.class);
-
+        requestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
 
@@ -844,12 +834,10 @@ class MediaControllerE2ETests {
           + "meter form (inputs are empty) should show same page with 3 errors")
   public void httpPost_invalidFormEmptyInputs() {
     // request data
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> map =
+    MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
 
     String meterNumber = "";
@@ -857,23 +845,17 @@ class MediaControllerE2ETests {
     String activeSince = "";
     String firstReading = "";
 
-    map.add("firstReading", firstReading);
-    map.add(Attributes.METER_NUMBER, meterNumber);
-    map.add(Attributes.METER_UNIT, meterUnit);
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
+    formInputs.add("firstReading", firstReading);
+    formInputs.add(Attributes.METER_NUMBER, meterNumber);
+    formInputs.add(Attributes.METER_UNIT, meterUnit);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
 
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
-
-
-    HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(map, headers);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
     // sending request
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, request,
-            String.class);
-
+        requestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
 
@@ -917,12 +899,10 @@ class MediaControllerE2ETests {
           + " with 1 error")
   public void httpPost_invalidFormWrongDate() {
     // request data
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> map =
+    MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
 
     String meterNumber = "number";
@@ -930,22 +910,18 @@ class MediaControllerE2ETests {
     String activeSince = "wrong date format!";
     String firstReading = "15.5";
 
-    map.add("firstReading", firstReading);
-    map.add(Attributes.METER_NUMBER, meterNumber);
-    map.add(Attributes.METER_UNIT, meterUnit);
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
+    formInputs.add(Attributes.FIRST_READING, firstReading);
+    formInputs.add(Attributes.METER_NUMBER, meterNumber);
+    formInputs.add(Attributes.METER_UNIT, meterUnit);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
 
-    map.add(Attributes.ACTIVE_SINCE, activeSince);
+    formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
-
-    HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(map, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, request,
-            String.class);
+        requestSenderService.sendPost(destinationUrl, formInputs);
 
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
@@ -974,30 +950,23 @@ class MediaControllerE2ETests {
           + "page with 1 error")
   public void httpPost_invalidFormWrongReadingFormat() {
     // request data
-    String url = "http://localhost:" + port + Mappings.MEDIUM_PAGE + "/"
+    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> map =
+    MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
 
     String meterNumber = "number";
     String meterUnit = "unit";
     String firstReading = "wrong reading format";
 
-    map.add("firstReading", firstReading);
-    map.add(Attributes.METER_NUMBER, meterNumber);
-    map.add(Attributes.METER_UNIT, meterUnit);
-
-
-    HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(map, headers);
+    formInputs.add("firstReading", firstReading);
+    formInputs.add(Attributes.METER_NUMBER, meterNumber);
+    formInputs.add(Attributes.METER_UNIT, meterUnit);
 
     // sending request
     ResponseEntity<String> responseEntity =
-        testRestTemplate.postForEntity(url, request,
-            String.class);
+        requestSenderService.sendPost(destinationUrl, formInputs);
 
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);

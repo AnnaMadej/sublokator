@@ -31,13 +31,25 @@ public class RequestSenderService {
     return testRestTemplate.postForEntity(url, httpEntity, String.class);
   }
 
+  public ResponseEntity<String> sendPost(String url,
+                                         MultiValueMap<String, String> formInputs) {
+    final HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+    HttpEntity<MultiValueMap<String, String>> httpEntity =
+        new HttpEntity<>(formInputs, headers);
+
+    return testRestTemplate.postForEntity(url, httpEntity, String.class);
+  }
+
+
   public ResponseEntity<String> sendPost(String url, String refererUrl) {
     final HttpHeaders headers = new HttpHeaders();
     headers.set("referer", refererUrl);
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
     HttpEntity<String> httpEntity =
-        new HttpEntity<>( headers);
+        new HttpEntity<>(headers);
 
     return testRestTemplate.postForEntity(url, httpEntity, String.class);
   }
