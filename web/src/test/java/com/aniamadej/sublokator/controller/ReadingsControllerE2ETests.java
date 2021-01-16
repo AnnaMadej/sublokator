@@ -14,6 +14,7 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumMeterService;
+import com.aniamadej.sublokator.testService.RequestSenderService;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
 import org.jsoup.Jsoup;
@@ -26,10 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -40,9 +38,6 @@ class ReadingsControllerE2ETests {
   private int port;
 
   @Autowired
-  private TestRestTemplate testRestTemplate;
-
-  @Autowired
   private ReadingRepository readingRepository;
 
   @Autowired
@@ -51,6 +46,10 @@ class ReadingsControllerE2ETests {
   @Autowired
   private ErrorMessageSource errorMessageSource;
 
+  @Autowired
+  private RequestSenderService requestSenderService;
+
+  private String urlPrefix;
 
   private MediumConnection mediumConnection;
   private MediumMeter mediumMeter;
@@ -58,6 +57,8 @@ class ReadingsControllerE2ETests {
 
   @BeforeAll
   public void init() {
+
+    urlPrefix = "http://localhost:" + port;
 
     mediumConnection = new MediumConnection();
     mediumMeter = new MediumMeter();
@@ -95,12 +96,13 @@ class ReadingsControllerE2ETests {
     assertTrue(readingRepository.existsById(readingId));
 
     // sending post request
-    String url =
-        "http://localhost:" + port + Mappings.READING_PAGE + "/" + readingId
+    String destinationUrl =
+        urlPrefix + Mappings.READING_PAGE + "/" + readingId
             + Mappings.DELETE;
 
     ResponseEntity<String> response =
-        testRestTemplate.postForEntity(url, null, String.class);
+        requestSenderService.sendPost(destinationUrl);
+
     Elements readingsRows = readingsRows(response);
 
     assertEquals(200, response.getStatusCodeValue());
@@ -140,12 +142,13 @@ class ReadingsControllerE2ETests {
     assertTrue(readingRepository.existsById(readingId));
 
     // sending post request
-    String url =
-        "http://localhost:" + port + Mappings.READING_PAGE + "/" + readingId
+    String destinationUrl =
+        urlPrefix + Mappings.READING_PAGE + "/" + readingId
             + Mappings.DELETE;
 
     ResponseEntity<String> response =
-        testRestTemplate.postForEntity(url, null, String.class);
+        requestSenderService.sendPost(destinationUrl);
+
     assertEquals(200, response.getStatusCodeValue());
 
     // reading does not exist in db
@@ -193,19 +196,18 @@ class ReadingsControllerE2ETests {
     // Setting referer as request header because ExceptionHandlingController
     // needs it to redirect to same page -> this is address of page which usually
     // sends post request
-    String sendingPageUrl =
-        "http://localhost:" + port + Mappings.METER_PAGE + "/" + mediumMeter
+    String referrerUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + mediumMeter
             .getId();
-    final HttpEntity<String> entity =
-        httpEntityWithRefererHeader(sendingPageUrl);
 
-    String url =
-        "http://localhost:" + port + Mappings.READING_PAGE + "/" + readingId
+    String destinationUrl =
+        urlPrefix + Mappings.READING_PAGE + "/" + readingId
             + "/delete";
 
     // sending post request
     ResponseEntity<String> response =
-        testRestTemplate.postForEntity(url, entity, String.class);
+        requestSenderService.sendPost(destinationUrl, referrerUrl);
+
     assertEquals(200, response.getStatusCodeValue());
 
 
@@ -237,19 +239,17 @@ class ReadingsControllerE2ETests {
     // Setting referer as request header because ExceptionHandlingController
     // needs it to redirect to same page -> this is address of page which usually
     // sends post request
-    String sendingPageUrl =
-        "http://localhost:" + port + Mappings.METER_PAGE + "/" + mediumMeter
+    String referrerUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + mediumMeter
             .getId();
-    final HttpEntity<String> entity =
-        httpEntityWithRefererHeader(sendingPageUrl);
 
-    String url =
-        "http://localhost:" + port + Mappings.READING_PAGE + "/" + readingId
+    String destinationUrl =
+        urlPrefix + Mappings.READING_PAGE + "/" + readingId
             + "/delete";
 
     // sending post request
     ResponseEntity<String> response =
-        testRestTemplate.postForEntity(url, entity, String.class);
+        requestSenderService.sendPost(destinationUrl, referrerUrl);
     assertEquals(200, response.getStatusCodeValue());
 
 
@@ -282,11 +282,10 @@ class ReadingsControllerE2ETests {
     assertFalse(readingRepository.existsById(readingId));
 
     // sending post request
-    String url =
-        "http://localhost:" + port + Mappings.READING_PAGE + "/" + readingId
+    String destinationUrl =
+        urlPrefix + Mappings.READING_PAGE + "/" + readingId
             + "/delete";
-    ResponseEntity<String> response =
-        testRestTemplate.postForEntity(url, null, String.class);
+    ResponseEntity<String> response = requestSenderService.sendPost(destinationUrl);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -303,14 +302,6 @@ class ReadingsControllerE2ETests {
     Document webPage = Jsoup.parse(response.getBody());
     return webPage.getElementById("readingsTable").select("tbody").select("tr");
   }
-
-  private HttpEntity<String> httpEntityWithRefererHeader(
-      String refererUrl) {
-    final HttpHeaders headers = new HttpHeaders();
-    headers.set("referer", refererUrl);
-    return new HttpEntity<>(headers);
-  }
-
 
 
 
