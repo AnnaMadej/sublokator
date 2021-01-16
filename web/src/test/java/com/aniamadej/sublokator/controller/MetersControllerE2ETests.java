@@ -69,6 +69,7 @@ class MetersControllerE2ETests {
   MediumMeter activeResettableMediumMeter;
   MediumMeter inactiveResettableMediumMeter;
   MediumMeter activeNotResettableMediumMeter;
+  MediumMeter inactiveNotResettableMediumMeter;
 
   @BeforeAll
   public void init() {
@@ -89,14 +90,24 @@ class MetersControllerE2ETests {
     inactiveResettableMediumMeter.setUnitName("m3");
 
     activeNotResettableMediumMeter = new MediumMeter();
-    activeNotResettableMediumMeter.setNumber("inactiveResettable");
+    activeNotResettableMediumMeter.setNumber("activeNotResettable");
     activeNotResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
     activeNotResettableMediumMeter.setResettable(false);
     activeNotResettableMediumMeter.setUnitName("unit");
 
+    inactiveNotResettableMediumMeter = new MediumMeter();
+    inactiveNotResettableMediumMeter.setNumber("inactiveNotResettable");
+    inactiveNotResettableMediumMeter
+        .setActiveSince(LocalDate.now().minusDays(1));
+    inactiveNotResettableMediumMeter.setActiveUntil(LocalDate.now());
+    inactiveNotResettableMediumMeter.setResettable(false);
+    inactiveNotResettableMediumMeter.setUnitName("some-unit");
+
+
     activeResettableMediumMeter.setMediumConnection(mediumConnection);
     inactiveResettableMediumMeter.setMediumConnection(mediumConnection);
     activeNotResettableMediumMeter.setMediumConnection(mediumConnection);
+    inactiveNotResettableMediumMeter.setMediumConnection(mediumConnection);
 
     Reading reading1 = new Reading();
     reading1.setDate(LocalDate.now().minusDays(1));
@@ -281,6 +292,19 @@ class MetersControllerE2ETests {
     assertEquals("submit", webPage.select("#resetButton").attr("type"));
     assertEquals(getMessage("page.reset"),
         webPage.select("#resetButton").text());
+
+    assertEquals(
+        Mappings.METER_PAGE + "/" + inactiveResettableMediumMeter.getId()
+            + Mappings.RESET,
+        webPage.select("#resetForm").attr("action"));
+
+    assertEquals(getMessage("page.resetDate"),
+        webPage.select("#resetLabel").text());
+    assertEquals("date", webPage.select("#resetDateInput").attr("type"));
+
+    assertEquals("submit", webPage.select("#resetButton").attr("type"));
+    assertEquals(getMessage("page.reset"),
+        webPage.select("#resetButton").text());
   }
 
   @Test
@@ -296,7 +320,7 @@ class MetersControllerE2ETests {
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#reactivateForm")).isEmpty();
-    
+
     Elements deactivateForm = webPage.select("#deactivateForm");
     Element deactivateButton =
         deactivateForm.select("button").first();
@@ -319,6 +343,46 @@ class MetersControllerE2ETests {
     assertThat(webPage.select("#actuveUntil")).isEmpty();
 
   }
+
+  @Test
+  @DisplayName("http get request should return medium meter webPage "
+      + "with reactivation button and without reset button ")
+  public void httpGetShowsMeterPageWithoutResetFormWithReactivationForm() {
+    String url =
+        "http://localhost:" + port + Mappings.METER_PAGE + "/"
+            + inactiveNotResettableMediumMeter.getId();
+
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(url, String.class);
+
+    Document webPage = Jsoup.parse(response.getBody());
+    assertThat(webPage.select("#deactivateForm")).isEmpty();
+
+    Elements reactivateForm = webPage.select("#reactivateForm");
+    Element reactivateButton =
+        reactivateForm.select("button").first();
+    assertEquals("reactivateButton", reactivateButton.id());
+
+    assertEquals(
+        Mappings.METER_PAGE + "/" + inactiveNotResettableMediumMeter.getId()
+            + Mappings.REACTIVATE, reactivateForm.attr("action"));
+
+    assertEquals(
+        "submit", reactivateButton.attr("type"));
+
+    assertEquals(
+        getMessage("page.cancelDeactivation"), reactivateButton.text());
+
+    assertEquals(getMessage("page.activeUntil"),
+        webPage.select("#activeUntilLabel").text());
+
+    assertEquals(inactiveNotResettableMediumMeter.getActiveUntil().toString(),
+        webPage.select("#activeUntil").text());
+
+    assertThat(webPage.select("#resetForm")).isEmpty();
+
+  }
+
 
   private String getMessage(String messageCode) {
     return messageSource
