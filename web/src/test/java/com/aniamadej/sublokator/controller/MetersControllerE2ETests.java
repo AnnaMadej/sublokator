@@ -1,5 +1,6 @@
 package com.aniamadej.sublokator.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,8 +17,10 @@ import com.aniamadej.sublokator.service.MediumMeterService;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
 import java.util.List;
+import javax.persistence.EntityManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -59,35 +62,54 @@ class MetersControllerE2ETests {
   @Autowired
   private MessageSource messageSource;
 
-  private MediumMeter activeResettableMediumMeter;
 
-  private MediumConnection mediumConnection;
+  @Autowired
+  EntityManager entityManager;
+
+  MediumMeter activeResettableMediumMeter;
+  MediumMeter inactiveResettableMediumMeter;
+  MediumMeter activeNotResettableMediumMeter;
 
   @BeforeAll
   public void init() {
 
-    mediumConnection = new MediumConnection();
+    MediumConnection mediumConnection = new MediumConnection("medium");
+
     activeResettableMediumMeter = new MediumMeter();
-    activeResettableMediumMeter.setNumber("123");
-    activeResettableMediumMeter.setUnitName("kwh");
+    activeResettableMediumMeter.setNumber("activeResettable");
     activeResettableMediumMeter.setResettable(true);
-    activeResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(30));
-    Reading reading = new Reading();
-    reading.setDate(LocalDate.now().minusDays(30));
-    reading.setReading(12.0);
-    reading.setMediumMeter(activeResettableMediumMeter);
-    Reading reading2 = new Reading();
-    reading2.setMediumMeter(activeResettableMediumMeter);
-    reading2.setReading(13.0);
-    reading2.setDate(LocalDate.now().minusDays(29));
+    activeResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
+    activeResettableMediumMeter.setUnitName("kwh");
+
+    inactiveResettableMediumMeter = new MediumMeter();
+    inactiveResettableMediumMeter.setNumber("inactiveResettable");
+    inactiveResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
+    inactiveResettableMediumMeter.setActiveUntil(LocalDate.now());
+    inactiveResettableMediumMeter.setResettable(true);
+    inactiveResettableMediumMeter.setUnitName("m3");
+
+    activeNotResettableMediumMeter = new MediumMeter();
+    activeNotResettableMediumMeter.setNumber("inactiveResettable");
+    activeNotResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
+    activeNotResettableMediumMeter.setResettable(false);
+    activeNotResettableMediumMeter.setUnitName("unit");
 
     activeResettableMediumMeter.setMediumConnection(mediumConnection);
-    activeResettableMediumMeter.addReading(reading);
-    activeResettableMediumMeter.addReading(reading2);
-    activeResettableMediumMeter = mediumMeterRepository.save(
-        activeResettableMediumMeter);
+    inactiveResettableMediumMeter.setMediumConnection(mediumConnection);
+    activeNotResettableMediumMeter.setMediumConnection(mediumConnection);
 
+    Reading reading1 = new Reading();
+    reading1.setDate(LocalDate.now().minusDays(1));
+    reading1.setReading(12.);
 
+    Reading reading2 = new Reading();
+    reading2.setDate(LocalDate.now());
+    reading2.setReading(13.);
+
+    reading1.setMediumMeter(activeResettableMediumMeter);
+    reading2.setMediumMeter(activeResettableMediumMeter);
+
+    mediumConnectionRepository.save(mediumConnection);
   }
 
   @Test
@@ -103,10 +125,10 @@ class MetersControllerE2ETests {
         testRestTemplate.getForEntity(url, String.class);
 
     Document webPage = Jsoup.parse(response.getBody());
+    assertThat(webPage.select("#reactivateForm")).isEmpty();
 
     assertEquals(getMessage("page.mediumMeter"),
         webPage.select("#mediumMeterHeader").text());
-
 
     assertEquals(getMessage("page.meterNumber"),
         webPage.select("#meterNumberLabel").text());
@@ -207,12 +229,94 @@ class MetersControllerE2ETests {
     assertEquals("submit",
         webPage.select("#newReadingForm > div > button").attr("type"));
 
+    assertThat(webPage.select("#actuveUntilLabel")).isEmpty();
+    assertThat(webPage.select("#actuveUntil")).isEmpty();
+
   }
 
   @Test
-  @DisplayName("http get request should return medium meter webpage "
-      + "with reactivation button instead of deactivarion")
-  public void httpGetShowsMeterPage() {
+  @DisplayName("http get request should return medium meter webPage "
+      + "with reactivation button instead of deactivation")
+  public void httpGetShowsMeterPageWithReactivationForm() {
+    String url =
+        "http://localhost:" + port + Mappings.METER_PAGE + "/"
+            + inactiveResettableMediumMeter.getId();
+
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(url, String.class);
+
+    Document webPage = Jsoup.parse(response.getBody());
+    assertThat(webPage.select("#deactivateForm")).isEmpty();
+
+    assertEquals(getMessage("page.activeUntil"),
+        webPage.select("#activeUntilLabel").text());
+
+    assertEquals(inactiveResettableMediumMeter.getActiveUntil().toString(),
+        webPage.select("#activeUntil").text());
+
+    Elements reactivateForm = webPage.select("#reactivateForm");
+    Element reactivateButton =
+        reactivateForm.select("button").first();
+    assertEquals("reactivateButton", reactivateButton.id());
+
+    assertEquals(
+        Mappings.METER_PAGE + "/" + inactiveResettableMediumMeter.getId()
+            + Mappings.REACTIVATE, reactivateForm.attr("action"));
+
+    assertEquals(
+        "submit", reactivateButton.attr("type"));
+
+    assertEquals(
+        getMessage("page.cancelDeactivation"), reactivateButton.text());
+
+    assertEquals(
+        Mappings.METER_PAGE + "/" + inactiveResettableMediumMeter.getId()
+            + Mappings.RESET,
+        webPage.select("#resetForm").attr("action"));
+
+    assertEquals(getMessage("page.resetDate"),
+        webPage.select("#resetLabel").text());
+    assertEquals("date", webPage.select("#resetDateInput").attr("type"));
+
+    assertEquals("submit", webPage.select("#resetButton").attr("type"));
+    assertEquals(getMessage("page.reset"),
+        webPage.select("#resetButton").text());
+  }
+
+  @Test
+  @DisplayName("http get request should return medium meter webPage "
+      + "with activation button and without reset button ")
+  public void httpGetShowsMeterPageWithoutResetForm() {
+    String url =
+        "http://localhost:" + port + Mappings.METER_PAGE + "/"
+            + activeNotResettableMediumMeter.getId();
+
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(url, String.class);
+
+    Document webPage = Jsoup.parse(response.getBody());
+    assertThat(webPage.select("#reactivateForm")).isEmpty();
+    
+    Elements deactivateForm = webPage.select("#deactivateForm");
+    Element deactivateButton =
+        deactivateForm.select("button").first();
+    assertEquals("deactivateButton", deactivateButton.id());
+
+    assertEquals(
+        Mappings.METER_PAGE + "/" + activeNotResettableMediumMeter.getId()
+            + Mappings.DEACTIVATE, deactivateForm.attr("action"));
+
+    assertEquals(
+        "submit", deactivateButton.attr("type"));
+
+    assertEquals(
+        getMessage("page.deactivate"), deactivateButton.text());
+
+    assertThat(webPage.select("#resetForm").attr("action")).isEmpty();
+
+
+    assertThat(webPage.select("#actuveUntilLabel")).isEmpty();
+    assertThat(webPage.select("#actuveUntil")).isEmpty();
 
   }
 
