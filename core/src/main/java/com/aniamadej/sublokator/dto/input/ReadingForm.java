@@ -1,5 +1,6 @@
 package com.aniamadej.sublokator.dto.input;
 
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -18,6 +19,7 @@ public class ReadingForm {
   private String date;
   @NotNull(message = "{error.empty}")
   @Digits(integer = 10, fraction = 10, message = "{error.number}")
+  @DecimalMin(value = "0.0", message = "{error.onlyPositive}")
   @NumberFormat
   private String reading = "0.0";
 

@@ -51,7 +51,6 @@ class ReadingsControllerE2ETests {
 
   private String urlPrefix;
 
-  private MediumConnection mediumConnection;
   private MediumMeter mediumMeter;
   private Reading reading;
 
@@ -60,7 +59,7 @@ class ReadingsControllerE2ETests {
 
     urlPrefix = "http://localhost:" + port;
 
-    mediumConnection = new MediumConnection();
+    MediumConnection mediumConnection = new MediumConnection();
     mediumMeter = new MediumMeter();
     mediumMeter.setNumber("123");
     mediumMeter.setUnitName("kwh");
@@ -112,7 +111,7 @@ class ReadingsControllerE2ETests {
     assertFalse(readingRepository.existsById(readingId));
 
 
-    // reading does not show on result webpage
+    // reading does not show on result webPage
     assertTrue(
         readingsRows.stream().noneMatch(tr -> {
           Elements tds = tr.select("td");
@@ -155,7 +154,7 @@ class ReadingsControllerE2ETests {
     assertFalse(readingRepository.existsById(readingId));
 
 
-    // reading does not show on result webpage
+    // reading does not show on result webPage
     Elements readingsRows = readingsRows(response);
     assertTrue(
         readingsRows.stream().noneMatch(tr -> {

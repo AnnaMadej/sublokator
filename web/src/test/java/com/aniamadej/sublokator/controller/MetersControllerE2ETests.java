@@ -13,7 +13,6 @@ import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.service.MediumMeterService;
 import com.aniamadej.sublokator.testService.RequestSenderService;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
@@ -52,9 +51,6 @@ class MetersControllerE2ETests {
   private MediumMeterRepository mediumMeterRepository;
 
   @Autowired
-  private MediumMeterService mediumMeterService;
-
-  @Autowired
   private ErrorMessageSource errorMessageSource;
 
   @Autowired
@@ -63,8 +59,6 @@ class MetersControllerE2ETests {
   @Autowired
   private MessageSource messageSource;
 
-
-  private MediumConnection mediumConnection;
 
   private MediumMeter activeResettableMediumMeter;
   private MediumMeter inactiveResettableMediumMeter;
@@ -78,7 +72,7 @@ class MetersControllerE2ETests {
     urlPrefix = "http://localhost:" + port;
 
 
-    mediumConnection = new MediumConnection("medium");
+    MediumConnection mediumConnection = new MediumConnection("medium");
 
     activeResettableMediumMeter = new MediumMeter();
     activeResettableMediumMeter.setNumber("activeResettable");
@@ -124,13 +118,13 @@ class MetersControllerE2ETests {
     reading1.setMediumMeter(activeResettableMediumMeter);
     reading2.setMediumMeter(activeResettableMediumMeter);
 
-    mediumConnection = mediumConnectionRepository.save(mediumConnection);
+    mediumConnectionRepository.save(mediumConnection);
   }
 
 
   @Test
   @DisplayName("http get request should show active resettable medium meter "
-      + "webpage with deactivation form and reset form")
+      + "webPage with deactivation form and reset form")
   public void httpGet_ShowsActiveResettableMeterPage() {
     String url =
         "http://localhost:" + port + Mappings.METER_PAGE + "/"
@@ -391,10 +385,8 @@ class MetersControllerE2ETests {
       + "add new reading and redirect to same page with this reading visible")
   public void httpPost_addsReadingToMeter() {
 
-    List<ReadingBasics> initialReadingsOfMeter = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId());
-
-    int initialNumberOfReadings = initialReadingsOfMeter.size();
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
 
     String destinationUrl =
@@ -405,9 +397,8 @@ class MetersControllerE2ETests {
         + activeResettableMediumMeter.getId();
 
     MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
-    Reading lastReading =
-        activeResettableMediumMeter.getReadings().stream()
-            .min((r1, r2) -> r2.getDate().compareTo(r1.getDate())).get();
+    ReadingBasics lastReading =
+        getLatestReading(activeResettableMediumMeter);
 
     String readingDate = lastReading.getDate().plusDays(1).toString();
     String readingValue = Double.toString(lastReading.getReading() + 1);
@@ -418,9 +409,7 @@ class MetersControllerE2ETests {
     ResponseEntity<String> response =
         requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
-    Long newReadingId = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo).get();
+    Long newReadingId = getLastInsertedReadingId(activeResettableMediumMeter);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -448,10 +437,8 @@ class MetersControllerE2ETests {
       + "add new reading with null form input values and should show errors")
   public void httpPost_showsErrorNullReadingFormValues() {
 
-    List<ReadingBasics> initialReadingsOfMeter = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId());
-
-    int initialNumberOfReadings = initialReadingsOfMeter.size();
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
 
     String destinationUrl =
@@ -469,10 +456,6 @@ class MetersControllerE2ETests {
     ResponseEntity<String> response =
         requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
-    Long newReadingId = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo).get();
-
     assertEquals(200, response.getStatusCodeValue());
 
     Document webPage = Jsoup.parse(response.getBody());
@@ -480,11 +463,11 @@ class MetersControllerE2ETests {
     Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
     assertEquals(initialNumberOfReadings, readingsRows.size());
 
-    assertEquals(errorMessageSource.getMessage("error.number"),
-        webPage.select("#newReadingError").text());
+    assertThat(webPage.select("#newReadingError").text())
+        .contains(errorMessageSource.getMessage("error.number"));
 
-    assertEquals(errorMessageSource.getMessage("error.date"),
-        webPage.select("#newReadingDateError").text());
+    assertThat(webPage.select("#newReadingDateError").text())
+        .contains(errorMessageSource.getMessage("error.date"));
 
 
   }
@@ -494,10 +477,9 @@ class MetersControllerE2ETests {
       + "add new reading with empty form input values and should show errors")
   public void httpPost_showsErrorEmptyReadingFormValues() {
 
-    List<ReadingBasics> initialReadingsOfMeter = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId());
 
-    int initialNumberOfReadings = initialReadingsOfMeter.size();
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
 
     String destinationUrl =
@@ -515,10 +497,6 @@ class MetersControllerE2ETests {
     ResponseEntity<String> response =
         requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
-    Long newReadingId = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo).get();
-
     assertEquals(200, response.getStatusCodeValue());
 
     Document webPage = Jsoup.parse(response.getBody());
@@ -526,11 +504,11 @@ class MetersControllerE2ETests {
     Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
     assertEquals(initialNumberOfReadings, readingsRows.size());
 
-    assertEquals(errorMessageSource.getMessage("error.number"),
-        webPage.select("#newReadingError").text());
+    assertThat(webPage.select("#newReadingError").text())
+        .contains(errorMessageSource.getMessage("error.number"));
 
-    assertEquals(errorMessageSource.getMessage("error.date"),
-        webPage.select("#newReadingDateError").text());
+    assertThat(webPage.select("#newReadingDateError").text())
+        .contains(errorMessageSource.getMessage("error.date"));
 
 
   }
@@ -540,10 +518,8 @@ class MetersControllerE2ETests {
       + "add new reading with blank form input values and should show errors")
   public void httpPost_showsErrorBlankReadingFormValues() {
 
-    List<ReadingBasics> initialReadingsOfMeter = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId());
-
-    int initialNumberOfReadings = initialReadingsOfMeter.size();
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
 
     String destinationUrl =
@@ -561,10 +537,6 @@ class MetersControllerE2ETests {
     ResponseEntity<String> response =
         requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
-    Long newReadingId = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo).get();
-
     assertEquals(200, response.getStatusCodeValue());
 
     Document webPage = Jsoup.parse(response.getBody());
@@ -572,11 +544,11 @@ class MetersControllerE2ETests {
     Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
     assertEquals(initialNumberOfReadings, readingsRows.size());
 
-    assertEquals(errorMessageSource.getMessage("error.number"),
-        webPage.select("#newReadingError").text());
+    assertThat(webPage.select("#newReadingError").text())
+        .contains(errorMessageSource.getMessage("error.number"));
 
-    assertEquals(errorMessageSource.getMessage("error.date"),
-        webPage.select("#newReadingDateError").text());
+    assertThat(webPage.select("#newReadingDateError").text())
+        .contains(errorMessageSource.getMessage("error.date"));
 
 
   }
@@ -587,10 +559,8 @@ class MetersControllerE2ETests {
       + "and should show errors")
   public void httpPost_showsErrorNotParsableReadingFormValues() {
 
-    List<ReadingBasics> initialReadingsOfMeter = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId());
-
-    int initialNumberOfReadings = initialReadingsOfMeter.size();
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
 
     String destinationUrl =
@@ -608,9 +578,145 @@ class MetersControllerE2ETests {
     ResponseEntity<String> response =
         requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
-    Long newReadingId = readingRepository
-        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo).get();
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings, readingsRows.size());
+
+    assertThat(webPage.select("#newReadingError").text())
+        .contains(errorMessageSource.getMessage("error.number"));
+
+    assertThat(webPage.select("#newReadingDateError").text())
+        .contains(errorMessageSource.getMessage("error.date"));
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "NOT add new reading if it is smaller than before reading value")
+  public void httpPost_showsErrorReadingValueSmallerThanBefore() {
+
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+    ReadingBasics lastReading =
+        getLatestReading(activeResettableMediumMeter);
+
+    Reading beforeReading = new Reading();
+    beforeReading.setDate(lastReading.getDate().plusDays(1));
+    beforeReading.setReading(lastReading.getReading() + 2);
+    activeResettableMediumMeter.addReading(beforeReading);
+    activeResettableMediumMeter =
+        mediumMeterRepository.save(activeResettableMediumMeter);
+
+    String readingDate = beforeReading.getDate().plusDays(1).toString();
+    String readingValue = Double.toString(beforeReading.getReading() - 1);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings + 1, readingsRows.size());
+
+    assertEquals(errorMessageSource.getMessage("error.wrongReadingValue"),
+        webPage.select("#error").text());
+
+
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "NOT add new reading if it is bigger than  than next reading value")
+  public void httpPost_showsErrorReadingValueBiggerThanAfter() {
+
+
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
+
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+    ReadingBasics lastReading =
+        getLatestReading(activeResettableMediumMeter);
+
+    Reading reading = new Reading();
+    reading.setDate(lastReading.getDate().plusDays(2));
+    reading.setReading(lastReading.getReading() + 2);
+    activeResettableMediumMeter.addReading(reading);
+    activeResettableMediumMeter =
+        mediumMeterRepository.save(activeResettableMediumMeter);
+
+    String readingDate = reading.getDate().minusDays(1).toString();
+    String readingValue = Double.toString(reading.getReading() + 1);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings + 1, readingsRows.size());
+
+    assertEquals(errorMessageSource.getMessage("error.wrongReadingValue"),
+        webPage.select("#error").text());
+
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "NOT add new reading if it is before meter activation date")
+  public void httpPost_showsErrorReadingBeforeMeterActivation() {
+
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
+
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String readingDate =
+        activeResettableMediumMeter.getActiveSince().minusDays(1).toString();
+    String readingValue = Double.toString(2L);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -619,13 +725,250 @@ class MetersControllerE2ETests {
     Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
     assertEquals(initialNumberOfReadings, readingsRows.size());
 
-    assertEquals(errorMessageSource.getMessage("error.number"),
-        webPage.select("#newReadingError").text());
+    assertEquals(
+        errorMessageSource.getMessage("error.readingBeforeActivation"),
+        webPage.select("#error").text());
 
-    assertEquals(errorMessageSource.getMessage("error.date"),
-        webPage.select("#newReadingDateError").text());
   }
 
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "NOT add new reading if it is after meter deactivation date")
+  public void httpPost_showsErrorReadingAfterMeterDeactivation() {
+
+
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(inactiveResettableMediumMeter.getId());
+
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + inactiveResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + inactiveResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String readingDate =
+        inactiveResettableMediumMeter.getActiveUntil().plusDays(1).toString();
+    String readingValue = Double.toString(2L);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings, readingsRows.size());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.readingAfterDeactivation"),
+        webPage.select("#error").text());
+
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "NOT add new reading at duplicated reading date")
+  public void httpPost_showsErrorReadingDateDuplicated() {
+
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
+
+    ReadingBasics lastReading =
+        getLatestReading(activeResettableMediumMeter);
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String readingDate = lastReading.getDate().toString();
+    String readingValue = Double.toString(32L);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings, readingsRows.size());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.duplicateReading"),
+        webPage.select("#error").text());
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "add new reading bigger than previous and smaller than next "
+      + "if next is zero")
+  public void httpPost_addsNewReadingBetweenSmallerAndZero() {
+
+    int initialNumberOfReadings =
+        readingRepository
+            .countAllByMediumMeterId(activeResettableMediumMeter.getId());
+
+    ReadingBasics lastReading =
+        getLatestReading(activeResettableMediumMeter);
+
+    Reading zeroReading = new Reading();
+    zeroReading.setDate(lastReading.getDate().plusDays(2));
+    zeroReading.setReading(0.);
+    activeResettableMediumMeter.addReading(zeroReading);
+    activeResettableMediumMeter =
+        mediumMeterRepository.save(activeResettableMediumMeter);
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String readingDate = lastReading.getDate().plusDays(1).toString();
+    String readingValue = Double.toString(lastReading.getReading() + 1);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+
+    assertEquals(initialNumberOfReadings + 2, readingsRows.size());
+
+    Long newReadingId = getLastInsertedReadingId(activeResettableMediumMeter);
+
+    assertTrue(readingsRows.stream().anyMatch(tr ->
+        tr.select("td").get(0).text().equals(readingDate)
+            && tr.select("td").get(1).text()
+            .equals(readingValue)
+            && tr.select("td > form").attr("method").equals("post")
+            && tr.select("td > form").attr("action").equals(
+            Mappings.READING_PAGE + "/" + newReadingId
+                + Mappings.DELETE)
+            && tr.select("td > form > button").text()
+            .equals(getMessage("page.delete"))
+    ));
+
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should "
+      + "NOT add any new reading if meter not exists")
+  public void httpPost_showsErrorMeterNotExists() {
+
+    Long mediumMeterId = 19L;
+
+    while (mediumMeterRepository.existsById(mediumMeterId)) {
+      mediumMeterId++;
+    }
+
+    Long initialNumberOfAllReadings = mediumMeterRepository.count();
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + mediumMeterId
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + mediumMeterId;
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String readingDate = LocalDate.now().plusDays(14).toString();
+    String readingValue = Double.toString(32L);
+
+    formInputs.add("date", readingDate);
+    formInputs.add("reading", readingValue);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.meterNotExists"),
+        webPage.select("#error").text());
+
+    assertEquals(mediumMeterRepository.count(), initialNumberOfAllReadings);
+
+    assertEquals(getMessage("page.mediaConnections"),
+        webPage.select("#pageHeader").text());
+  }
+
+  @Test
+  @DisplayName("post request sent to reading adding meter page should NOT"
+      + "add new reading which has negative value and should show error")
+  public void httpPost_showsErrorNegativeReading() {
+
+
+    int initialNumberOfReadings = readingRepository
+        .countAllByMediumMeterId(activeResettableMediumMeter.getId());
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    ReadingBasics lastReading = getLatestReading(activeResettableMediumMeter);
+
+    formInputs.add("date", lastReading.getDate().plusDays(1).toString());
+    formInputs.add("reading", "-1");
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings, readingsRows.size());
+
+    assertThat(webPage.select("#newReadingError").text())
+        .contains(errorMessageSource.getMessage("error.onlyPositive"));
+
+  }
+
+
+  private Long getLastInsertedReadingId(MediumMeter meter) {
+    return readingRepository
+        .findByMediumMeterId(meter.getId()).stream().map(
+            ReadingBasics::getId).max(Long::compareTo).get();
+  }
+
+  private ReadingBasics getLatestReading(MediumMeter meter) {
+    return readingRepository.findByMediumMeterId(meter.getId()).stream()
+        .min((r1, r2) -> r2.getDate().compareTo(r1.getDate())).get();
+  }
 
   private String getMessage(String messageCode) {
     return messageSource

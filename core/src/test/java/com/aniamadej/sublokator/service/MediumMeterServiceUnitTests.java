@@ -159,33 +159,6 @@ class MediumMeterServiceUnitTests {
             any(MediumMeter.class));
   }
 
-  @Test
-  @DisplayName("adding new reading with date equal to date of meter reset "
-      + "(another reading with 0 value) should throw InputException "
-      + "with proper message")
-  public void addReadingAtMeterResetDateThrowsInputException() {
-    String errorMessage = "error.readingAtReset";
-
-    ReadingForm readingForm = mock(ReadingForm.class);
-    when(readingForm.getDate()).thenReturn(LocalDate.now().toString());
-    when(readingForm.getReading()).thenReturn("12.0");
-
-    when(mockReadingRepository
-        .isResetDate(any(LocalDate.class), anyLong()))
-        .thenReturn(true);
-
-    when(mockMediumMeterRepository.findById(anyLong()))
-        .thenReturn(Optional.of(new MediumMeter()));
-    Throwable exception = catchThrowable(
-        () -> mediumMeterService.addReading(1L, readingForm));
-
-    assertThat(exception).isInstanceOf(InputException.class)
-        .hasMessage(errorMessage);
-
-    verify(mockReadingRepository, times(1))
-        .isResetDate(any(LocalDate.class), anyLong());
-
-  }
 
   @Test
   @DisplayName("adding new reading to medium meter of not existing id "
@@ -229,9 +202,6 @@ class MediumMeterServiceUnitTests {
 
     assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(errorMessage);
-
-    verify(mockReadingRepository, times(1))
-        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
@@ -260,8 +230,6 @@ class MediumMeterServiceUnitTests {
     assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(errorMessage);
 
-    verify(mockReadingRepository, times(1))
-        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
@@ -300,8 +268,6 @@ class MediumMeterServiceUnitTests {
     assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(errorMessage);
 
-    verify(mockReadingRepository, times(1))
-        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
@@ -346,8 +312,6 @@ class MediumMeterServiceUnitTests {
     assertThat(exception).isInstanceOf(InputException.class)
         .hasMessage(errorMessage);
 
-    verify(mockReadingRepository, times(1))
-        .isResetDate(any(LocalDate.class), anyLong());
   }
 
   @Test
