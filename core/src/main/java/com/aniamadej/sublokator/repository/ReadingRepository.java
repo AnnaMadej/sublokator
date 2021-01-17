@@ -58,4 +58,6 @@ public interface ReadingRepository extends JpaRepository<Reading, Long> {
 
   @Query("select r.mediumMeter.id from Reading r where r.id=:readingId")
   Optional<Long> findMeterId(@Param("readingId") Long readingId);
+
+  Integer countAllByMediumMeterId(Long meterId);
 }

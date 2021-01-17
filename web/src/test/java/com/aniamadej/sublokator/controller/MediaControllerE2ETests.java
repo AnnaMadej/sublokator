@@ -33,9 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -667,7 +664,7 @@ class MediaControllerE2ETests {
     // proper medium meter added to db
     Long addedMediumMeterId =
         mediumConnectionRepository.fetchMeterNumbers(medium1.getId()).stream()
-            .map(mn -> mn.getId()).max(Long::compareTo).get();
+            .map(NumberedName::getId).max(Long::compareTo).get();
 
     MediumMeter addedMediumMeter =
         mediumMeterRepository.findById(addedMediumMeterId).get();
@@ -767,8 +764,6 @@ class MediaControllerE2ETests {
     String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
         + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
 
@@ -785,9 +780,6 @@ class MediaControllerE2ETests {
 
     formInputs.add(Attributes.ACTIVE_SINCE, activeSince);
 
-
-    HttpEntity<MultiValueMap<String, String>>
-        request = new HttpEntity<>(formInputs, headers);
 
     // sending request
     ResponseEntity<String> responseEntity =

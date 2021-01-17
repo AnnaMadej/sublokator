@@ -60,11 +60,6 @@ public class MediumMeterService {
           .getMessage("error.duplicateReading"));
     }
 
-    if (readingRepository.isResetDate(readingDate, meterId)) {
-      throw new InputException(
-          errorsMessageSource
-              .getMessage("error.readingAtReset"));
-    }
     if (mediumMeter.getActiveSince().isAfter(readingDate)) {
       throw new InputException(
           errorsMessageSource
