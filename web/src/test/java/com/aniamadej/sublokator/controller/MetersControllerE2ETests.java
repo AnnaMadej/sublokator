@@ -581,6 +581,51 @@ class MetersControllerE2ETests {
 
   }
 
+  @Test
+  @DisplayName("post request sent to reading adding meter page should NOT"
+      + "add new reading with string (not parsable)  form input values "
+      + "and should show errors")
+  public void httpPost_showsErrorNotParsableReadingFormValues() {
+
+    List<ReadingBasics> initialReadingsOfMeter = readingRepository
+        .findByMediumMeterId(activeResettableMediumMeter.getId());
+
+    int initialNumberOfReadings = initialReadingsOfMeter.size();
+
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId()
+            + Mappings.READING_ADD_SUBPAGE;
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add("date", "wrong input");
+    formInputs.add("reading", "wrong input");
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Long newReadingId = readingRepository
+        .findByMediumMeterId(activeResettableMediumMeter.getId()).stream().map(
+            ReadingBasics::getId).max(Long::compareTo).get();
+
+    assertEquals(200, response.getStatusCodeValue());
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+    assertEquals(initialNumberOfReadings, readingsRows.size());
+
+    assertEquals(errorMessageSource.getMessage("error.number"),
+        webPage.select("#newReadingError").text());
+
+    assertEquals(errorMessageSource.getMessage("error.date"),
+        webPage.select("#newReadingDateError").text());
+  }
+
 
   private String getMessage(String messageCode) {
     return messageSource
