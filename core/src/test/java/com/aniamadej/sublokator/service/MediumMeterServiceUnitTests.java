@@ -207,7 +207,7 @@ class MediumMeterServiceUnitTests {
   @Test
   @DisplayName("adding new reading with date after meter deactivation date  "
       + "should throw InputException with proper message")
-  public void addReadingnAfterDeactivationDateThrowsInputException() {
+  public void addReadingAfterDeactivationDateThrowsInputException() {
     String errorMessage = "error.readingAfterDeactivation";
     ReadingForm mockReadingForm = mock(ReadingForm.class);
     when(mockReadingForm.getDate()).thenReturn(LocalDate.now().toString());
@@ -665,7 +665,7 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(LocalDate.parse(deactivationDate1).plusDays(1));
+        .thenReturn(Optional.of(LocalDate.parse(deactivationDate1).plusDays(1)));
 
     Throwable exception1 = catchThrowable(
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
@@ -686,7 +686,7 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
+        .thenReturn(Optional.of(LocalDate.parse(deactivationDate1).minusDays(1)));
 
     mediumMeterService.deactivate(meterId, deactivationDate1);
 
@@ -789,7 +789,7 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.findById(anyLong()))
         .thenReturn(Optional.of(mediumMeter));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(LocalDate.parse(resetDate).plusDays(1));
+        .thenReturn(Optional.of(LocalDate.parse(resetDate).plusDays(1)));
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
@@ -811,7 +811,7 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.findById(anyLong()))
         .thenReturn(Optional.of(mediumMeter));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(LocalDate.parse(resetDate));
+        .thenReturn(Optional.of(LocalDate.parse(resetDate)));
 
     Throwable exception =
         catchThrowable(() -> mediumMeterService.reset(meterId, resetDate));
@@ -832,7 +832,7 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.findById(anyLong()))
         .thenReturn(Optional.of(mockMediumMeter));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(resetDate.minusDays(1));
+        .thenReturn(Optional.of(resetDate.minusDays(1)));
 
     ArgumentCaptor<Reading> readingCaptor =
         ArgumentCaptor.forClass(Reading.class);

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface MediumConnectionRepository
     extends JpaRepository<MediumConnection, Long> {
@@ -35,6 +36,9 @@ public interface MediumConnectionRepository
   @Query("select mc.mediumName from MediumConnection mc "
       + "where mc.id = :connectionId")
   Optional<String> findMediumName(long connectionId);
+
+  @Query("from MediumConnection mc join fetch mc.mediumMeters where mc.id=:id")
+  Optional<MediumConnection> findById(@Param("id") Long id);
 
   boolean existsById(Long mediumId);
 }

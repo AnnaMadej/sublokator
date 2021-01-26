@@ -2,6 +2,7 @@ package com.aniamadej.sublokator.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -14,9 +15,12 @@ import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.testService.RequestSenderService;
+import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import javax.persistence.EntityManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -59,7 +63,10 @@ class MetersControllerE2ETests {
   @Autowired
   private MessageSource messageSource;
 
+  @Autowired
+  EntityManager entityManager;
 
+  private MediumConnection mediumConnection;
   private MediumMeter activeResettableMediumMeter;
   private MediumMeter inactiveResettableMediumMeter;
   private MediumMeter activeNotResettableMediumMeter;
@@ -72,31 +79,32 @@ class MetersControllerE2ETests {
     urlPrefix = "http://localhost:" + port;
 
 
-    MediumConnection mediumConnection = new MediumConnection("medium");
+    mediumConnection = new MediumConnection("medium");
 
     activeResettableMediumMeter = new MediumMeter();
     activeResettableMediumMeter.setNumber("activeResettable");
     activeResettableMediumMeter.setResettable(true);
-    activeResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
+    activeResettableMediumMeter.setActiveSince(LocalDate.now().minusYears(1));
     activeResettableMediumMeter.setUnitName("kwh");
 
     inactiveResettableMediumMeter = new MediumMeter();
     inactiveResettableMediumMeter.setNumber("inactiveResettable");
-    inactiveResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
+    inactiveResettableMediumMeter.setActiveSince(LocalDate.now().minusYears(1));
     inactiveResettableMediumMeter.setActiveUntil(LocalDate.now());
     inactiveResettableMediumMeter.setResettable(true);
     inactiveResettableMediumMeter.setUnitName("m3");
 
     activeNotResettableMediumMeter = new MediumMeter();
     activeNotResettableMediumMeter.setNumber("activeNotResettable");
-    activeNotResettableMediumMeter.setActiveSince(LocalDate.now().minusDays(1));
+    activeNotResettableMediumMeter
+        .setActiveSince(LocalDate.now().minusYears(1));
     activeNotResettableMediumMeter.setResettable(false);
     activeNotResettableMediumMeter.setUnitName("unit");
 
     inactiveNotResettableMediumMeter = new MediumMeter();
     inactiveNotResettableMediumMeter.setNumber("inactiveNotResettable");
     inactiveNotResettableMediumMeter
-        .setActiveSince(LocalDate.now().minusDays(1));
+        .setActiveSince(LocalDate.now().minusYears(1));
     inactiveNotResettableMediumMeter.setActiveUntil(LocalDate.now());
     inactiveNotResettableMediumMeter.setResettable(false);
     inactiveNotResettableMediumMeter.setUnitName("some-unit");
@@ -108,17 +116,18 @@ class MetersControllerE2ETests {
     inactiveNotResettableMediumMeter.setMediumConnection(mediumConnection);
 
     Reading reading1 = new Reading();
-    reading1.setDate(LocalDate.now().minusDays(1));
+    reading1.setDate(activeResettableMediumMeter.getActiveSince());
     reading1.setReading(12.);
 
     Reading reading2 = new Reading();
-    reading2.setDate(LocalDate.now());
+    reading2.setDate(activeResettableMediumMeter.getActiveSince().plusDays(1));
     reading2.setReading(13.);
 
     reading1.setMediumMeter(activeResettableMediumMeter);
     reading2.setMediumMeter(activeResettableMediumMeter);
 
-    mediumConnectionRepository.save(mediumConnection);
+    mediumConnection = mediumConnectionRepository.save(mediumConnection);
+
   }
 
 
@@ -398,7 +407,7 @@ class MetersControllerE2ETests {
 
     MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
     ReadingBasics lastReading =
-        getLatestReading(activeResettableMediumMeter);
+        getLatestReading(activeResettableMediumMeter).get();
 
     String readingDate = lastReading.getDate().plusDays(1).toString();
     String readingValue = Double.toString(lastReading.getReading() + 1);
@@ -409,7 +418,8 @@ class MetersControllerE2ETests {
     ResponseEntity<String> response =
         requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
-    Long newReadingId = getLastInsertedReadingId(activeResettableMediumMeter);
+    Long newReadingId =
+        getLastInsertedReadingId(activeResettableMediumMeter).get();
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -594,7 +604,7 @@ class MetersControllerE2ETests {
 
   @Test
   @DisplayName("post request sent to reading adding meter page should "
-      + "NOT add new reading if it is smaller than before reading value")
+      + "NOT add new reading if it is smaller than previous reading value")
   public void httpPost_showsErrorReadingValueSmallerThanBefore() {
 
     int initialNumberOfReadings = readingRepository
@@ -609,17 +619,17 @@ class MetersControllerE2ETests {
 
     MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
     ReadingBasics lastReading =
-        getLatestReading(activeResettableMediumMeter);
+        getLatestReading(activeResettableMediumMeter).get();
 
-    Reading beforeReading = new Reading();
-    beforeReading.setDate(lastReading.getDate().plusDays(1));
-    beforeReading.setReading(lastReading.getReading() + 2);
-    activeResettableMediumMeter.addReading(beforeReading);
+    Reading previousReading = new Reading();
+    previousReading.setDate(lastReading.getDate().plusDays(1));
+    previousReading.setReading(lastReading.getReading() + 2);
+    activeResettableMediumMeter.addReading(previousReading);
     activeResettableMediumMeter =
         mediumMeterRepository.save(activeResettableMediumMeter);
 
-    String readingDate = beforeReading.getDate().plusDays(1).toString();
-    String readingValue = Double.toString(beforeReading.getReading() - 1);
+    String readingDate = previousReading.getDate().plusDays(1).toString();
+    String readingValue = Double.toString(previousReading.getReading() - 1);
 
     formInputs.add("date", readingDate);
     formInputs.add("reading", readingValue);
@@ -658,7 +668,7 @@ class MetersControllerE2ETests {
 
     MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
     ReadingBasics lastReading =
-        getLatestReading(activeResettableMediumMeter);
+        getLatestReading(activeResettableMediumMeter).get();
 
     Reading reading = new Reading();
     reading.setDate(lastReading.getDate().plusDays(2));
@@ -782,7 +792,7 @@ class MetersControllerE2ETests {
         .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
     ReadingBasics lastReading =
-        getLatestReading(activeResettableMediumMeter);
+        getLatestReading(activeResettableMediumMeter).get();
 
     String destinationUrl =
         urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
@@ -825,7 +835,7 @@ class MetersControllerE2ETests {
             .countAllByMediumMeterId(activeResettableMediumMeter.getId());
 
     ReadingBasics lastReading =
-        getLatestReading(activeResettableMediumMeter);
+        getLatestReading(activeResettableMediumMeter).get();
 
     Reading zeroReading = new Reading();
     zeroReading.setDate(lastReading.getDate().plusDays(2));
@@ -860,7 +870,8 @@ class MetersControllerE2ETests {
 
     assertEquals(initialNumberOfReadings + 2, readingsRows.size());
 
-    Long newReadingId = getLastInsertedReadingId(activeResettableMediumMeter);
+    Long newReadingId =
+        getLastInsertedReadingId(activeResettableMediumMeter).get();
 
     assertTrue(readingsRows.stream().anyMatch(tr ->
         tr.select("td").get(0).text().equals(readingDate)
@@ -936,9 +947,11 @@ class MetersControllerE2ETests {
     String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
         + activeResettableMediumMeter.getId();
 
-    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
 
-    ReadingBasics lastReading = getLatestReading(activeResettableMediumMeter);
+    ReadingBasics lastReading =
+        getLatestReading(activeResettableMediumMeter).get();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
 
     formInputs.add("date", lastReading.getDate().plusDays(1).toString());
     formInputs.add("reading", "-1");
@@ -955,19 +968,317 @@ class MetersControllerE2ETests {
 
     assertThat(webPage.select("#newReadingError").text())
         .contains(errorMessageSource.getMessage("error.onlyPositive"));
+  }
+
+  @Test
+  @DisplayName("post request with correct date sent to medium meter "
+      + "deactivating page of valid meter should deactivate it")
+  public void httpPost_correctDateDeactivatesMeter() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String deactivationDate =
+        getLatestReading(activeResettableMediumMeter).get().getDate()
+            .plusDays(1)
+            .toString();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertNull(webPage.getElementById("error"));
+
+    assertEquals(getMessage("page.activeUntil"),
+        webPage.select("#activeUntilLabel").text());
+
+    assertEquals(deactivationDate,
+        webPage.select("#activeUntil").text());
+
+    // rollback change
+    activeResettableMediumMeter.setActiveUntil(null);
+    activeResettableMediumMeter =
+        mediumMeterRepository.save(activeResettableMediumMeter);
 
   }
 
+  @Test
+  @DisplayName("post request with date before last reading date sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateBeforeLastReadingShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
 
-  private Long getLastInsertedReadingId(MediumMeter meter) {
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String deactivationDate =
+        getLatestReading(activeResettableMediumMeter).get().getDate()
+            .minusDays(1)
+            .toString();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.deactivationBeforeLastReading"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with future date sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateInFutureShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String deactivationDate = LocalDate.now().plusDays(1).toString();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.futureDeactivation"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with date before activation sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateBeforeActivationShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String deactivationDate =
+        activeResettableMediumMeter.getActiveSince().minusDays(1).toString();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.deactivationBeforeActivation"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with null date sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateNullShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, null);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.blankDate"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with empty date sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateEmptyShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, "");
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.blankDate"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with blank date sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateBlankShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, " ");
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.blankDate"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with not parsable date sent to "
+      + "medium meter deactivating page of valid meter "
+      + "should NOT deactivate it and should show error")
+  public void httpPost_deactivationDateNotParsableShowsError() {
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, "i'm not parsable date");
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.blankDate"),
+        webPage.getElementById("error").text());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+  }
+
+  @Test
+  @DisplayName("post request with sent to medium meter deactivating page "
+      + "of not existing meter should NOT should show error")
+  public void httpPost_notExistingMeterDeactivationShowsError() {
+
+    Long meterId = 100L;
+
+    while (mediumMeterRepository.existsById(meterId)) {
+      meterId++;
+    }
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + meterId + Mappings.DEACTIVATE;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + meterId;
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add(Attributes.ACTIVE_UNTIL, LocalDate.now().toString());
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.meterNotExists"),
+        webPage.getElementById("error").text());
+
+    assertEquals(getMessage("page.mediaConnections"),
+        webPage.getElementById("pageHeader").text());
+  }
+
+
+
+
+
+
+
+  private Optional<Long> getLastInsertedReadingId(MediumMeter meter) {
     return readingRepository
         .findByMediumMeterId(meter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo).get();
+            ReadingBasics::getId).max(Long::compareTo);
   }
 
-  private ReadingBasics getLatestReading(MediumMeter meter) {
+  private Optional<ReadingBasics> getLatestReading(MediumMeter meter) {
     return readingRepository.findByMediumMeterId(meter.getId()).stream()
-        .min((r1, r2) -> r2.getDate().compareTo(r1.getDate())).get();
+        .min((r1, r2) -> r2.getDate().compareTo(r1.getDate()));
   }
 
   private String getMessage(String messageCode) {
