@@ -30,7 +30,7 @@ public interface MediumMeterRepository
   LocalDate getActiveSince(@Param("meterId") Long meterId);
 
   @Query("select max(r.date) from Reading  r where r.mediumMeter.id =:meterId")
-  LocalDate getLastReadingDate(@Param("meterId") Long meterId);
+  Optional<LocalDate> getLastReadingDate(@Param("meterId") Long meterId);
 
   @Query("select m.resettable from MediumMeter m where m.id=:meterId")
   Boolean isResettable(@Param("meterId") Long meterId);

@@ -99,12 +99,13 @@ public class MediumMeterService {
               .getMessage("error.deactivationBeforeActivation"));
     }
 
-    if (activeUntil
-        .isBefore(mediumMeterRepository.getLastReadingDate(meterId))) {
-      throw new InputException(
-          errorsMessageSource
-              .getMessage("error.deactivationBeforeLastReading"));
-    }
+    mediumMeterRepository.getLastReadingDate(meterId).ifPresent(date -> {
+      if (activeUntil.isBefore(date)) {
+        throw new InputException(
+            errorsMessageSource
+                .getMessage("error.deactivationBeforeLastReading"));
+      }
+    });
 
     mediumMeterRepository
         .deactivate(meterId, activeUntil);
@@ -127,18 +128,16 @@ public class MediumMeterService {
       throw new InputException(errorsMessageSource
           .getMessage("error.notResettable"));
     }
-    if (
-        mediumMeterRepository.getLastReadingDate(meterId)
-            .isAfter(dateOfReset)
-            || mediumMeterRepository.getLastReadingDate(meterId)
-            .isEqual(dateOfReset)) {
-      throw new InputException(
-          errorsMessageSource
-              .getMessage("error.resetNotAfterLastReading"));
-    }
+
+    mediumMeterRepository.getLastReadingDate(meterId).ifPresent(date -> {
+      if (date.isAfter(dateOfReset) || date.isEqual(dateOfReset)) {
+        throw new InputException(
+            errorsMessageSource
+                .getMessage("error.resetNotAfterLastReading"));
+      }
+    });
 
     addReading(mediumMeter, dateOfReset, 0D);
-
   }
 
 
