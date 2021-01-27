@@ -113,6 +113,10 @@ public class MediumMeterService {
 
   @Transactional
   public void reactivate(Long meterId) {
+    if (!mediumMeterRepository.existsById(meterId)) {
+      throw new MainException(errorsMessageSource
+          .getMessage("error.meterNotExists"));
+    }
     if (!mediumMeterRepository.isActive(meterId)) {
       mediumMeterRepository.reactivate(meterId);
     }

@@ -890,7 +890,7 @@ class MetersControllerE2ETests {
   @Test
   @DisplayName("post request sent to reading adding meter page should "
       + "NOT add any new reading if meter not exists")
-  public void httpPost_showsErrorMeterNotExists() {
+  public void httpPost_addingReadingShowsErrorMeterNotExists() {
 
     Long mediumMeterId = 19L;
 
@@ -1232,7 +1232,7 @@ class MetersControllerE2ETests {
 
   @Test
   @DisplayName("post request with sent to medium meter deactivating page "
-      + "of not existing meter should NOT should show error")
+      + "of not existing meter should show error")
   public void httpPost_notExistingMeterDeactivationShowsError() {
 
     Long meterId = 100L;
@@ -1264,10 +1264,266 @@ class MetersControllerE2ETests {
         webPage.getElementById("pageHeader").text());
   }
 
+  @Test
+  @DisplayName("post request with sent to medium meter reactivating page "
+      + "of valid medium meter should make it active")
+  public void httpPost_reactivatesMeter() {
+    LocalDate originalActiveUntilDate =
+        inactiveResettableMediumMeter.getActiveUntil();
 
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + inactiveResettableMediumMeter
+            .getId() + Mappings.REACTIVATE;
 
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + inactiveResettableMediumMeter
+        .getId();
 
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
 
+    formInputs.add(Attributes.ACTIVE_UNTIL, LocalDate.now().toString());
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertNull(webPage.getElementById("activeUntilLabel"));
+    assertNull(webPage.getElementById("activeUntil"));
+
+    // rollback change
+    inactiveResettableMediumMeter.setActiveUntil(originalActiveUntilDate);
+    inactiveResettableMediumMeter =
+        mediumMeterRepository.save(inactiveResettableMediumMeter);
+  }
+
+  @Test
+  @DisplayName("post request with sent to medium meter reactivating page "
+      + "of not existing medium meter should redirect to main page with error")
+  public void httpPost_reactivationOfNotExistingMeterShowsError() {
+    Long meterId = 100L;
+
+    while (mediumMeterRepository.existsById(meterId)) {
+      meterId++;
+    }
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + meterId + Mappings.REACTIVATE;
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.meterNotExists"),
+        webPage.getElementById("error").text());
+
+    assertEquals(getMessage("page.mediaConnections"),
+        webPage.getElementById("pageHeader").text());
+  }
+
+  @Test
+  @DisplayName("post request with correct date sent to resettable medium meter "
+      + "reset page should reset it")
+  public void httpPost_correctDateResetsResettableMeter() {
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.RESET;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String resetDate = mediumMeterRepository
+        .getLastReadingDate(activeResettableMediumMeter.getId())
+        .orElse(activeResettableMediumMeter.getActiveSince())
+        .plusDays(1)
+        .toString();
+
+    formInputs.add(Attributes.RESET_DATE, resetDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    Long lastReadingId =
+        getLastInsertedReadingId(activeResettableMediumMeter).get();
+
+    Element lastReadingRow =
+        webPage.select("#readingsTable > tbody > tr").first();
+
+    assertEquals(lastReadingRow.select("td").first().text(), resetDate);
+    assertEquals(lastReadingRow.select("td").get(1).text(),
+        Double.toString(0D));
+    assertEquals(
+        lastReadingRow.select("td").get(2)
+            .select("form")
+            .attr("action"),
+        Mappings.READING_PAGE + "/" + lastReadingId + Mappings.DELETE);
+
+    assertEquals(
+        lastReadingRow.select("td").get(2)
+            .select("form").select("button").text(),
+        getMessage("page.delete"));
+
+  }
+
+  @Test
+  @DisplayName("post request with correct date sent to NOT resettable "
+      + "medium meter reset  page should NOT reset it")
+  public void httpPost_correctDateDoesNotResetNotResettableMeter() {
+
+    int initialNumberOfReadings =
+        activeNotResettableMediumMeter.getReadings().size();
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeNotResettableMediumMeter
+            .getId() + Mappings.RESET;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeNotResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String resetDate = mediumMeterRepository
+        .getLastReadingDate(activeNotResettableMediumMeter.getId())
+        .orElse(activeNotResettableMediumMeter.getActiveSince())
+        .plusDays(1)
+        .toString();
+
+    formInputs.add(Attributes.RESET_DATE, resetDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.notResettable"),
+        webPage.getElementById("error").text());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+
+    assertEquals(readingsRows.size(), initialNumberOfReadings);
+
+  }
+
+  @Test
+  @DisplayName("post request with date before last reading sent to  resettable "
+      + "medium meter reset  page should NOT reset it")
+  public void httpPost_dateBeforeLastReadingDoesNotResetResettableMeter() {
+
+    int initialNumberOfReadings = readingRepository
+        .findByMediumMeterId(activeResettableMediumMeter.getId()).size();
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.RESET;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String resetDate = mediumMeterRepository
+        .getLastReadingDate(activeResettableMediumMeter.getId())
+        .orElse(activeResettableMediumMeter.getActiveSince())
+        .minusDays(1)
+        .toString();
+
+    formInputs.add(Attributes.RESET_DATE, resetDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.resetNotAfterLastReading"),
+        webPage.getElementById("error").text());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+
+    assertEquals(readingsRows.size(), initialNumberOfReadings);
+
+  }
+
+  @Test
+  @DisplayName("post request with date at last reading sent to  resettable "
+      + "medium meter reset  page should NOT reset it")
+  public void httpPost_dateAtLastReadingDoesNotResetResettableMeter() {
+
+    int initialNumberOfReadings = readingRepository
+        .findByMediumMeterId(activeResettableMediumMeter.getId()).size();
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + activeResettableMediumMeter
+            .getId() + Mappings.RESET;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + activeResettableMediumMeter.getId();
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    String resetDate = mediumMeterRepository
+        .getLastReadingDate(activeResettableMediumMeter.getId())
+        .orElse(activeResettableMediumMeter.getActiveSince())
+        .toString();
+
+    formInputs.add(Attributes.RESET_DATE, resetDate);
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.resetNotAfterLastReading"),
+        webPage.getElementById("error").text());
+
+    Elements readingsRows = webPage.select("#readingsTable > tbody > tr");
+
+    assertEquals(readingsRows.size(), initialNumberOfReadings);
+
+  }
+
+  @Test
+  @DisplayName("post request with sent to medium meter reset page "
+      + "of not existing meter should show error")
+  public void httpPost_notExistingMeterResetShowsError() {
+
+    Long meterId = 100L;
+
+    while (mediumMeterRepository.existsById(meterId)) {
+      meterId++;
+    }
+
+    String destinationUrl =
+        urlPrefix + Mappings.METER_PAGE + "/" + meterId + Mappings.RESET;
+
+    String refererUrl = urlPrefix + Mappings.METER_PAGE + "/"
+        + meterId;
+
+    MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
+
+    formInputs.add(Attributes.RESET_DATE, LocalDate.now().toString());
+
+    ResponseEntity<String> response =
+        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+
+    Document webPage = Jsoup.parse(response.getBody());
+
+    assertEquals(
+        errorMessageSource.getMessage("error.meterNotExists"),
+        webPage.getElementById("error").text());
+
+    assertEquals(getMessage("page.mediaConnections"),
+        webPage.getElementById("pageHeader").text());
+  }
 
 
   private Optional<Long> getLastInsertedReadingId(MediumMeter meter) {

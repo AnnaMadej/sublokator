@@ -665,7 +665,8 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(Optional.of(LocalDate.parse(deactivationDate1).plusDays(1)));
+        .thenReturn(
+            Optional.of(LocalDate.parse(deactivationDate1).plusDays(1)));
 
     Throwable exception1 = catchThrowable(
         () -> mediumMeterService.deactivate(meterId, deactivationDate1));
@@ -686,7 +687,8 @@ class MediumMeterServiceUnitTests {
     when(mockMediumMeterRepository.getActiveSince(meterId))
         .thenReturn(LocalDate.parse(deactivationDate1).minusDays(1));
     when(mockMediumMeterRepository.getLastReadingDate(meterId))
-        .thenReturn(Optional.of(LocalDate.parse(deactivationDate1).minusDays(1)));
+        .thenReturn(
+            Optional.of(LocalDate.parse(deactivationDate1).minusDays(1)));
 
     mediumMeterService.deactivate(meterId, deactivationDate1);
 
@@ -852,6 +854,7 @@ class MediumMeterServiceUnitTests {
   @DisplayName("reactivation of active medium meter should not call any method"
       + "of repository")
   public void reactivationOfActiveMeterDoesNothing() {
+    when(mockMediumMeterRepository.existsById(anyLong())).thenReturn(true);
     when(mockMediumMeterRepository.isActive(anyLong())).thenReturn(true);
     mediumMeterService.reactivate(1L);
     verify(mockMediumMeterRepository, times(0)).reactivate(anyLong());
@@ -862,8 +865,28 @@ class MediumMeterServiceUnitTests {
       + "of repository")
   public void reactivationOfInactiveMeterCallsRepoMethod() {
     when(mockMediumMeterRepository.isActive(anyLong())).thenReturn(false);
+    when(mockMediumMeterRepository.existsById(anyLong())).thenReturn(true);
+
     mediumMeterService.reactivate(1L);
     verify(mockMediumMeterRepository, times(1))
         .reactivate(1L);
+  }
+
+  @Test
+  @DisplayName("reactivation of not existing medium meter should throw error")
+  public void reactivationOfNotExistingMeterThrowsError() {
+    String errorMessage = "error.meterNotExists";
+
+    when(mockMediumMeterRepository.existsById(anyLong())).thenReturn(false);
+
+    Throwable exception =
+        catchThrowable(() -> mediumMeterService.reactivate(1L));
+    assertThat(exception).isInstanceOf(MainException.class)
+        .hasMessage(errorMessage);
+
+    verify(mockMediumMeterRepository, times(0))
+        .reactivate(1L);
+    verify(mockMediumMeterRepository, times(1))
+        .existsById(1L);
   }
 }
