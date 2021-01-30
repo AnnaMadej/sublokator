@@ -14,22 +14,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-public class MetersController {
+@RequestMapping(Mappings.METER_PAGE)
+public class MeterController {
 
   private final MediumMeterService mediumMeterService;
 
   @Autowired
-  MetersController(
+  MeterController(
       MediumMeterService mediumMeterService) {
     this.mediumMeterService = mediumMeterService;
   }
 
 
-  @GetMapping(Mappings.METER_PAGE + "/{meterId}")
+  @GetMapping("/{meterId}")
   public String showMediumMeter(@PathVariable("meterId") long meterId,
                                 Model model) {
     if (!model.containsAttribute(Attributes.READING_FORM)) {
@@ -41,8 +43,7 @@ public class MetersController {
     return Views.METER;
   }
 
-  @PostMapping(
-      Mappings.METER_PAGE + "/{meterId}" + Mappings.READING_ADD_SUBPAGE)
+  @PostMapping("/{meterId}" + Mappings.READING_ADD_SUBPAGE)
   public String addNewReading(@PathVariable("meterId") Long meterId,
                               @ModelAttribute(Attributes.READING_FORM)
                               @Valid ReadingForm readingForm,
@@ -62,7 +63,7 @@ public class MetersController {
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
-  @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.DEACTIVATE)
+  @PostMapping("/{meterId}" + Mappings.DEACTIVATE)
   public String deactivateMeter(@PathVariable("meterId") Long meterId,
                                 @RequestParam(Attributes.ACTIVE_UNTIL)
                                     String deactivationDate) {
@@ -71,13 +72,13 @@ public class MetersController {
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
-  @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.REACTIVATE)
+  @PostMapping("/{meterId}" + Mappings.REACTIVATE)
   public String reactivateMeter(@PathVariable("meterId") Long meterId) {
     mediumMeterService.reactivate(meterId);
     return "redirect:" + Mappings.METER_PAGE + "/" + meterId;
   }
 
-  @PostMapping(Mappings.METER_PAGE + "/{meterId}" + Mappings.RESET)
+  @PostMapping("/{meterId}" + Mappings.RESET)
   public String resetMeter(@PathVariable("meterId") Long meterId,
                            @RequestParam(Attributes.RESET_DATE)
                                String deactivationDate) {

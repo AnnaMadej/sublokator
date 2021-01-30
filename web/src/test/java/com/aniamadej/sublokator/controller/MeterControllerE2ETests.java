@@ -40,7 +40,7 @@ import org.springframework.util.MultiValueMap;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MetersControllerE2ETests {
+class MeterControllerE2ETests {
 
   @LocalServerPort
   private int port;

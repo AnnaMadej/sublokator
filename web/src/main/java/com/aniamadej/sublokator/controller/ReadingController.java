@@ -6,20 +6,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-public class ReadingsController {
+@RequestMapping(Mappings.READING_PAGE)
+public class ReadingController {
 
   private final ReadingService readingService;
 
 
   @Autowired
-  ReadingsController(
+  ReadingController(
       ReadingService readingService) {
     this.readingService = readingService;
   }
 
-  @PostMapping(Mappings.READING_PAGE + "/{readingId}" + Mappings.DELETE)
+  @PostMapping("/{readingId}" + Mappings.DELETE)
   public String showMediumMeter(@PathVariable("readingId") long readingId) {
     Long meterId;
     meterId = readingService.findMediumId(readingId);

@@ -32,7 +32,7 @@ import org.springframework.http.ResponseEntity;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ReadingsControllerE2ETests {
+class ReadingControllerE2ETests {
 
   @LocalServerPort
   private int port;

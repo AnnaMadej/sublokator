@@ -37,7 +37,8 @@ public interface MediumConnectionRepository
       + "where mc.id = :connectionId")
   Optional<String> findMediumName(long connectionId);
 
-  @Query("from MediumConnection mc join fetch mc.mediumMeters where mc.id=:id")
+  @Query("from MediumConnection mc left join fetch mc.mediumMeters "
+      + "where mc.id=:id")
   Optional<MediumConnection> findById(@Param("id") Long id);
 
   boolean existsById(Long mediumId);
