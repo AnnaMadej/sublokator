@@ -40,9 +40,10 @@ public class MediaController {
 
   @PostMapping(Mappings.ADD)
   public String addNewMedium(
-      @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName) {
-    mediumConnectionService.save(mediumName);
-    return "redirect:" + Mappings.MEDIA_PAGE;
+      @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName,
+      Model model) {
+    Long mediumId = mediumConnectionService.save(mediumName);
+    return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId;
   }
 
 

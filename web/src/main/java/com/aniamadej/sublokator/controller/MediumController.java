@@ -40,7 +40,7 @@ public class MediumController {
 
   @GetMapping("/{mediumId}" + Mappings.METERS_SUBPAGE)
   public String showMediumMeters(Model model, @PathVariable long mediumId,
-                                 @RequestParam(required = false)
+                                 @RequestParam(defaultValue = "false")
                                      boolean inactive,
                                  Pageable pageable) {
 
@@ -61,7 +61,7 @@ public class MediumController {
 
 
   @PostMapping(
-    "/{mediumId}" + Mappings.METERS_ADD_SUBPAGE)
+      "/{mediumId}" + Mappings.METERS_ADD_SUBPAGE)
   public String addNewMediumMeter(@PathVariable Long mediumId,
                                   @ModelAttribute("mediumMeterForm")
                                   @Valid MediumMeterForm mediumMeterForm,

@@ -246,18 +246,14 @@ class MediaControllerE2ETests {
     String responseBody = responseEntity.getBody();
     
     Document webPage = Jsoup.parse(responseBody);
-    Element mediaList = webPage.getElementById("namesList");
 
-    Elements media = mediaList.select("li");
+    Element metersButton = webPage.getElementById("metersButton");
+    String addMeterLinkText = getMessage("page.meters");
+    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + addedMediumId
+        + Mappings.METERS_SUBPAGE;
 
-
-    // added medium link on page
-    assertThat(media.size()).isEqualTo(initialNumberOfMedia + 1);
-
-    assertTrue(media.stream().map(m -> m.select("a").get(0))
-        .anyMatch(a -> a.text().equals(addedMediumName)
-            && a.attr("href")
-            .equals(Mappings.MEDIUM_PAGE + "/" + addedMediumId)));
+    assertEquals(metersButton.attr("href"), addMeterLinkHref);
+    assertEquals(metersButton.text(), addMeterLinkText);
 
   }
 

@@ -3,6 +3,7 @@ package com.aniamadej.sublokator.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -57,6 +58,10 @@ class MediumConnectionServiceUnitTests {
     when(mockErrorMessageSource
         .getMessage(errorCodeCaptor.capture()))
         .thenAnswer(i -> errorCodeCaptor.getValue());
+
+    when(mockMediumConnectionRepository.save(any(MediumConnection.class)))
+        .then(returnsFirstArg());
+
   }
 
   @Test

@@ -62,7 +62,7 @@ public class MediumConnectionService {
     return mediumConnectionRepository.existsById(mediumConnectionId);
   }
 
-  public void save(String name) {
+  public Long save(String name) {
     if (null == name || name.equals("") || name.equals(" ")) {
       throw new InputException(
           errorMessageSource.getMessage("error.blankName"));
@@ -75,7 +75,7 @@ public class MediumConnectionService {
 
     MediumConnection connection = new MediumConnection();
     connection.setMediumName(name);
-    mediumConnectionRepository.save(connection);
+    return mediumConnectionRepository.save(connection).getId();
   }
 
 
