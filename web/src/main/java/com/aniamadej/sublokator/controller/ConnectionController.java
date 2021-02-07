@@ -35,7 +35,7 @@ public class ConnectionController {
   public String showMediumConnection(Model model, @PathVariable long mediumId) {
     model.addAttribute(Attributes.MEDIUM_NAME,
         mediumConnectionService.getMediumName(mediumId));
-    return Views.MEDIUM;
+    return Views.CONNECTION;
   }
 
   @GetMapping("/{mediumId}" + Mappings.METERS_SUBPAGE)

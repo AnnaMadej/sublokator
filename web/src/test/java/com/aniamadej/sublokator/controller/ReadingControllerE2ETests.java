@@ -13,9 +13,11 @@ import com.aniamadej.sublokator.model.Medium;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
+import com.aniamadej.sublokator.repository.MediumRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumMeterService;
-import com.aniamadej.sublokator.testService.RequestSenderService;
+import com.aniamadej.sublokator.testService.DataGeneratorService;
+import com.aniamadej.sublokator.testService.HttpRequestSenderService;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
 import org.jsoup.Jsoup;
@@ -48,18 +50,23 @@ class ReadingControllerE2ETests {
   private ErrorMessageSource errorMessageSource;
 
   @Autowired
-  private RequestSenderService requestSenderService;
+  private HttpRequestSenderService httpRequestSenderService;
+
+  @Autowired
+  private MediumRepository mediumRepository;
+
+  @Autowired
+  private DataGeneratorService dataGeneratorService;
 
   private String urlPrefix;
 
   private MediumMeter mediumMeter;
   private Reading reading;
-  private Medium medium;
 
   @BeforeAll
   public void init() {
 
-    Medium medium = new Medium("prąd");
+    Medium medium = new Medium(dataGeneratorService.generateUniqueMediumName());
 
     urlPrefix = "http://localhost:" + port;
 
@@ -105,7 +112,7 @@ class ReadingControllerE2ETests {
             + Mappings.DELETE;
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl);
+        httpRequestSenderService.sendPost(destinationUrl);
 
     Elements readingsRows = readingsRows(response);
 
@@ -151,7 +158,7 @@ class ReadingControllerE2ETests {
             + Mappings.DELETE;
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl);
+        httpRequestSenderService.sendPost(destinationUrl);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -210,7 +217,7 @@ class ReadingControllerE2ETests {
 
     // sending post request
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, referrerUrl);
+        httpRequestSenderService.sendPost(destinationUrl, referrerUrl);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -253,7 +260,7 @@ class ReadingControllerE2ETests {
 
     // sending post request
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, referrerUrl);
+        httpRequestSenderService.sendPost(destinationUrl, referrerUrl);
     assertEquals(200, response.getStatusCodeValue());
 
 
@@ -289,7 +296,8 @@ class ReadingControllerE2ETests {
     String destinationUrl =
         urlPrefix + Mappings.READING_PAGE + "/" + readingId
             + "/delete";
-    ResponseEntity<String> response = requestSenderService.sendPost(destinationUrl);
+    ResponseEntity<String> response =
+        httpRequestSenderService.sendPost(destinationUrl);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -306,7 +314,6 @@ class ReadingControllerE2ETests {
     Document webPage = Jsoup.parse(response.getBody());
     return webPage.getElementById("readingsTable").select("tbody").select("tr");
   }
-
 
 
 }

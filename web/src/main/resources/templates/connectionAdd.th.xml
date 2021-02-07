@@ -11,6 +11,14 @@
     <attr sel="#mediumNameLabel" th:text="#{page.mediumName}"/>
     <attr sel="#mediumNameInput"
           th:name="${T(com.aniamadej.sublokator.util.Attributes).MEDIUM_NAME}"/>
+    <attr sel="#mediaList">
+        <attr sel="option" th:each="name : ${__${T(com.aniamadej.sublokator.util.Attributes).MEDIA}__}"
+        th:value="${name.name}" th:text="${name.name}"/>
+    </attr>
+
+    <attr sel="#connectionDescriptionLabel" th:text="#{page.connectionDescription}"/>
+    <attr sel="#connectionDescription"
+          th:name="${T(com.aniamadej.sublokator.util.Attributes).DESCRIPTION}"/>
     <attr sel="#error" th:if="${error}"
           th:text="${error}"/>
 </thLogic>

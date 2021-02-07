@@ -17,10 +17,12 @@ import com.aniamadej.sublokator.Exceptions.InputException;
 import com.aniamadej.sublokator.Exceptions.MainException;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.input.MediumMeterForm;
+import com.aniamadej.sublokator.model.Medium;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
+import com.aniamadej.sublokator.repository.MediumRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,7 @@ class MediumConnectionServiceUnitTests {
   private static MediumConnectionRepository mockMediumConnectionRepository;
   private static MediumConnectionService mediumConnectionService;
   private static MediumMeterRepository mockMediumMeterRepository;
+  private static MediumRepository mockMediumRepository;
 
   @BeforeEach
   public void setUp() {
@@ -47,10 +50,12 @@ class MediumConnectionServiceUnitTests {
         mock(ErrorMessageSource.class);
     mockMediumMeterRepository = mock(MediumMeterRepository.class);
 
+    mockMediumRepository = mock(MediumRepository.class);
 
     mediumConnectionService
         = new MediumConnectionService(mockMediumConnectionRepository,
-        mockMediumMeterRepository, mockErrorMessageSource);
+        mockMediumMeterRepository, mockErrorMessageSource,
+        mockMediumRepository);
 
     ArgumentCaptor<String> errorCodeCaptor =
         ArgumentCaptor.forClass(String.class);
@@ -142,11 +147,17 @@ class MediumConnectionServiceUnitTests {
   }
 
   @Test
-  @DisplayName("should add medium connection with proper name to database")
-  public void addsMediumConnectionWithGoodName() {
-    String mediumName = "medium name";
+  @DisplayName("should add  connection with proper name to existing medium ")
+  public void addsMediumConnectionWithGoodNameExistingMedium() {
 
-    mediumConnectionService.save(mediumName);
+    String mediumName = "medium name";
+    Medium medium = new Medium(mediumName);
+    when(mockMediumRepository.findByName(any(String.class)))
+        .thenReturn(Optional.of(medium));
+
+    String connectionDescription = "description";
+
+    mediumConnectionService.save(mediumName, connectionDescription);
 
     ArgumentCaptor<MediumConnection> argumentCaptor
         = ArgumentCaptor.forClass(MediumConnection.class);
@@ -154,7 +165,30 @@ class MediumConnectionServiceUnitTests {
         .save(argumentCaptor.capture());
     MediumConnection mediumConnection = argumentCaptor.getValue();
 
-    assertEquals(mediumName, mediumConnection.getDescription());
+    assertEquals(connectionDescription, mediumConnection.getDescription());
+    assertEquals(mediumName, mediumConnection.getMedium().getName());
+  }
+
+  @Test
+  @DisplayName("should add  connection with proper name to not existing medium")
+  public void addsMediumConnectionWithGoodNameNewMedium() {
+
+    String mediumName = "some medium";
+    when(mockMediumRepository.findByName(any(String.class)))
+        .thenReturn(Optional.empty());
+
+    String connectionDescription = "description";
+
+    mediumConnectionService.save(mediumName, connectionDescription);
+
+    ArgumentCaptor<MediumConnection> argumentCaptor
+        = ArgumentCaptor.forClass(MediumConnection.class);
+    verify(mockMediumConnectionRepository, times(1))
+        .save(argumentCaptor.capture());
+    MediumConnection mediumConnection = argumentCaptor.getValue();
+
+    assertEquals(connectionDescription, mediumConnection.getDescription());
+    assertEquals(mediumName, mediumConnection.getMedium().getName());
   }
 
   @Test
@@ -165,9 +199,11 @@ class MediumConnectionServiceUnitTests {
     String errorCode = "error.tooLongName";
 
     String mediumName = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    String mediumDescription = "aa ";
 
     Throwable exception
-        = catchThrowable(() -> mediumConnectionService.save(mediumName));
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName, mediumDescription));
 
     assertThat(exception)
         .isInstanceOf(InputException.class)
@@ -181,18 +217,81 @@ class MediumConnectionServiceUnitTests {
   public void saveBlankMediumNameThrowsIllegalArgumentException() {
     String errorCode = "error.blankName";
 
+    String mediumDescription = "aa ";
+
     String mediumName1 = " ";
     String mediumName2 = "";
     String mediumName3 = null;
 
     Throwable exception1
-        = catchThrowable(() -> mediumConnectionService.save(mediumName1));
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName1, mediumDescription));
 
     Throwable exception2
-        = catchThrowable(() -> mediumConnectionService.save(mediumName2));
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName2, mediumDescription));
 
     Throwable exception3
-        = catchThrowable(() -> mediumConnectionService.save(mediumName3));
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName3, mediumDescription));
+
+    assertThat(exception1)
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
+
+    assertThat(exception2)
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
+
+    assertThat(exception3)
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
+  }
+
+  @Test
+  @DisplayName("adding medium connection to database should throw "
+      + "illegal argument exception because description is too long")
+  public void saveTooLongDescriptionThrowsIllegalArgumentException() {
+
+    String errorCode = "error.tooLongDescription";
+
+    String mediumName = "aa";
+    String mediumDescription =
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ";
+
+    Throwable exception
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName, mediumDescription));
+
+    assertThat(exception)
+        .isInstanceOf(InputException.class)
+        .hasMessage(errorCode);
+  }
+
+  @Test
+  @DisplayName("adding medium connection to database should throw "
+      + "InputException with proper message  "
+      + "because description is null, empty or space")
+  public void saveBlankDescriptionThrowsIllegalArgumentException() {
+    String errorCode = "error.blankDescription";
+
+    String mediumName = "aa ";
+
+    String mediumDescription1 = " ";
+    String mediumDescription2 = "";
+    String mediumDescription3 = null;
+
+    Throwable exception1
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName, mediumDescription1));
+
+    Throwable exception2
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName, mediumDescription2));
+
+    Throwable exception3
+        = catchThrowable(
+        () -> mediumConnectionService.save(mediumName, mediumDescription3));
 
     assertThat(exception1)
         .isInstanceOf(InputException.class)

@@ -2,7 +2,7 @@ drop table if exists media;
 
 create table media(
 id bigint AUTO_INCREMENT not null,
-name varchar(255) not null,
+name varchar(255) not null unique,
 primary key (id)
 );
 

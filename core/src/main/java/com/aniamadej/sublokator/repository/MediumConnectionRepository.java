@@ -12,7 +12,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface MediumConnectionRepository
     extends JpaRepository<MediumConnection, Long> {
-  @Query("select concat(mc.medium.name, ' (',mc.description,')') as name, mc.id as id from MediumConnection mc")
+  @Query("select concat(mc.medium.name, ' (',mc.description,')') "
+      + "as name, mc.id as id from MediumConnection mc")
   List<NumberedName> findMediaNames();
 
 
@@ -33,8 +34,10 @@ public interface MediumConnectionRepository
       + "where mc.id=:connectionId")
   List<NumberedName> fetchMeterNumbers(long connectionId);
 
-  @Query("select concat(mc.medium.name, ' (',mc.description,')') from MediumConnection mc "
-      + "where mc.id = :connectionId")
+  @Query(
+      "select concat(mc.medium.name, ' (',mc.description,')') "
+          + "from MediumConnection mc "
+          + "where mc.id = :connectionId")
   Optional<String> findMediumName(long connectionId);
 
   @Query("from MediumConnection mc left join fetch mc.mediumMeters "

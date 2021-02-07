@@ -3,6 +3,7 @@ package com.aniamadej.sublokator.util;
 public final class Attributes {
 
   public static final String NAMES = "names";
+  public static final String MEDIA = "media";
   public static final String REDIRECT_PAGE = "redirectPage";
   public static final String MEDIUM_NAME = "mediumName";
   public static final String MEDIUM_FORM = "newMediumForm";
@@ -16,6 +17,7 @@ public final class Attributes {
   public static final String RESET_DATE = "resetDate";
   public static final String ERROR = "error";
   public static final String MEDIUM_METER = "mediumMeter";
+  public static final String DESCRIPTION = "description";
 
   private Attributes() {
   }

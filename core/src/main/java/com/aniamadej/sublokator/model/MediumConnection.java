@@ -38,6 +38,11 @@ public class MediumConnection {
     this.description = description;
   }
 
+  public MediumConnection(Medium medium, String description) {
+    this.description = description;
+    this.medium = medium;
+  }
+
   // == public methods ==
   public void addMediumMeter(MediumMeter mediumMeter) {
     if (!mediumMeters.contains(mediumMeter)) {

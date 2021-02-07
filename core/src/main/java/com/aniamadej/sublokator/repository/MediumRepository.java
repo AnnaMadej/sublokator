@@ -3,6 +3,7 @@ package com.aniamadej.sublokator.repository;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.model.Medium;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,4 +12,6 @@ public interface MediumRepository extends JpaRepository<Medium, Long> {
   List<NumberedName> findMediaNames();
 
   boolean existsById(Long mediumId);
+
+  Optional<Medium> findByName(String mediumName);
 }

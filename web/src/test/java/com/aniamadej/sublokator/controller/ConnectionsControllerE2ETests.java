@@ -6,14 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 import com.aniamadej.sublokator.ErrorMessageSource;
+import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.model.Medium;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
-import com.aniamadej.sublokator.repository.ReadingRepository;
+import com.aniamadej.sublokator.repository.MediumRepository;
 import com.aniamadej.sublokator.service.MediumConnectionService;
-import com.aniamadej.sublokator.testService.RequestSenderService;
+import com.aniamadej.sublokator.testService.DataGeneratorService;
+import com.aniamadej.sublokator.testService.HttpRequestSenderService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
@@ -56,10 +58,13 @@ class ConnectionsControllerE2ETests {
   private MediumMeterRepository mediumMeterRepository;
 
   @Autowired
-  private ReadingRepository readingRepository;
+  private MediumRepository mediumRepository;
 
   @Autowired
-  private RequestSenderService requestSenderService;
+  private HttpRequestSenderService httpRequestSenderService;
+
+  @Autowired
+  private DataGeneratorService dataGeneratorService;
 
   private String urlPrefix;
 
@@ -80,7 +85,7 @@ class ConnectionsControllerE2ETests {
 
     urlPrefix = "http://localhost:" + port;
 
-    medium1 = new Medium("Gaz");
+    medium1 = new Medium(dataGeneratorService.generateUniqueMediumName());
 
     connection1 = new MediumConnection();
     connection1.setDescription("connection 1");
@@ -118,7 +123,8 @@ class ConnectionsControllerE2ETests {
     mediumMeter3 = mediumMeterRepository.save(mediumMeter3);
     mediumMeter4 = mediumMeterRepository.save(mediumMeter4);
 
-    medium2 = new Medium("Prąd");
+    medium2 = new Medium(dataGeneratorService.generateUniqueMediumName());
+
     connection2 = new MediumConnection();
     connection2.setDescription("connection2");
     connection2.setMedium(medium2);
@@ -138,7 +144,7 @@ class ConnectionsControllerE2ETests {
     String destinationUrl = urlPrefix + Mappings.CONNECTIONS_PAGE;
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
 
@@ -195,7 +201,7 @@ class ConnectionsControllerE2ETests {
     String destinationUrl = urlPrefix + Mappings.CONNECTION_ADD;
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     String responseBody = responseEntity.getBody();
     Document webPage = Jsoup.parse(responseBody);
@@ -231,39 +237,88 @@ class ConnectionsControllerE2ETests {
 
   @Test
   @DisplayName(
-      "post request to medium connection adding page should add medium meter "
-          + "with provided name and redirect to valid page with added medium "
-          + "on the list")
+      "post request to connection adding page should add medium connection "
+          + "with provided name to existing medium with provided name "
+          + "and redirect to valid page of  added connection")
   public void httpPost_addsMediumConnectionWithGivenName() {
 
-//    int initialNumberOfMedia = mediumConnectionService.getNamesList().size();
-//
-//    String addedMediumName = "bbb";
-//
-//    String destinationUrl =
-//        urlPrefix + Mappings.CONNECTION_ADD + "?"
-//            + Attributes.MEDIUM_NAME + "=" + addedMediumName;
-//
-//    ResponseEntity<String> responseEntity =
-//        requestSenderService.sendPost(destinationUrl);
-//
-//    Long addedMediumId = mediumConnectionService.getNamesList().stream()
-//        .map(NumberedName::getId).max(Long::compareTo).get();
-//
-//    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
-//
-//    String responseBody = responseEntity.getBody();
-//
-//    Document webPage = Jsoup.parse(responseBody);
-//
-//    Element metersButton = webPage.getElementById("metersButton");
-//    String addMeterLinkText = getMessage("page.meters");
-//    String addMeterLinkHref = Mappings.CONNECTION_PAGE + "/" + addedMediumId
-//        + Mappings.METERS_SUBPAGE;
-//
-//    assertEquals(metersButton.attr("href"), addMeterLinkHref);
-//    assertEquals(metersButton.text(), addMeterLinkText);
 
+    String addedConnectionDescription = "desc";
+    String mediumName = medium2.getName();
+
+    String destinationUrl =
+        urlPrefix + Mappings.CONNECTION_ADD + "?"
+            + Attributes.MEDIUM_NAME + "=" + mediumName + "&"
+            + Attributes.DESCRIPTION + "=" + addedConnectionDescription;
+
+    ResponseEntity<String> responseEntity =
+        httpRequestSenderService.sendPost(destinationUrl);
+
+    Long addedMediumId = mediumConnectionService.getNamesList().stream()
+        .map(NumberedName::getId).max(Long::compareTo).get();
+
+    String responseBody = responseEntity.getBody();
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element mediumNameP = webPage.getElementById("mediumName");
+
+    assertThat(mediumNameP.text()).contains(mediumName);
+    assertThat(mediumNameP.text()).contains(addedConnectionDescription);
+
+
+    Element metersButton = webPage.getElementById("metersButton");
+    String metersLinkText = getMessage("page.meters");
+    String metersLinkHref = Mappings.CONNECTION_PAGE + "/" + addedMediumId
+        + Mappings.METERS_SUBPAGE;
+
+    assertEquals(metersButton.attr("href"), metersLinkHref);
+    assertEquals(metersButton.text(), metersLinkText);
   }
+
+  @Test
+  @DisplayName(
+      "post request to connection adding page should add medium connection "
+          + "with provided name to NEW medium with provided name "
+          + "and redirect to valid page of  added connection")
+  public void httpPost_addsMediumConnectionWithGivenNameToNewMedium() {
+
+    String addedConnectionDescription = "description";
+    String mediumName = dataGeneratorService.generateUniqueMediumName();
+
+    String destinationUrl =
+        urlPrefix + Mappings.CONNECTION_ADD + "?"
+            + Attributes.MEDIUM_NAME + "=" + mediumName + "&"
+            + Attributes.DESCRIPTION + "=" + addedConnectionDescription;
+
+    ResponseEntity<String> responseEntity =
+        httpRequestSenderService.sendPost(destinationUrl);
+
+    Long addedMediumId = mediumConnectionService.getNamesList().stream()
+        .map(NumberedName::getId).max(Long::compareTo).get();
+
+    String responseBody = responseEntity.getBody();
+
+    assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+
+    Document webPage = Jsoup.parse(responseBody);
+
+    Element mediumNameP = webPage.getElementById("mediumName");
+
+    assertThat(mediumNameP.text()).contains(mediumName);
+    assertThat(mediumNameP.text()).contains(addedConnectionDescription);
+
+
+    Element metersButton = webPage.getElementById("metersButton");
+    String metersLinkText = getMessage("page.meters");
+    String metersLinkHref = Mappings.CONNECTION_PAGE + "/" + addedMediumId
+        + Mappings.METERS_SUBPAGE;
+
+    assertEquals(metersButton.attr("href"), metersLinkHref);
+    assertEquals(metersButton.text(), metersLinkText);
+  }
+
 
 }

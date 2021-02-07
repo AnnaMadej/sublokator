@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 @Service
-public class RequestSenderService {
+public class HttpRequestSenderService {
 
   @Autowired
   private TestRestTemplate testRestTemplate;

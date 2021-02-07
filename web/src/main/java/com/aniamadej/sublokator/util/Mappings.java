@@ -10,7 +10,8 @@ public final class Mappings {
   public static final String ADD = "/add";
   public static final String METERS_ADD_SUBPAGE =
       Mappings.METERS_SUBPAGE + Mappings.ADD;
-  public static final String CONNECTION_ADD = Mappings.CONNECTIONS_PAGE + Mappings.ADD;
+  public static final String CONNECTION_ADD =
+      Mappings.CONNECTIONS_PAGE + Mappings.ADD;
   public static final String DEACTIVATE = "/deactivate";
   public static final String RESET = "/reset";
   public static final String REACTIVATE = "/reactivate";

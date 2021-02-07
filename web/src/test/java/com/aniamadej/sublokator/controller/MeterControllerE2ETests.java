@@ -14,8 +14,10 @@ import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
+import com.aniamadej.sublokator.repository.MediumRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
-import com.aniamadej.sublokator.testService.RequestSenderService;
+import com.aniamadej.sublokator.testService.DataGeneratorService;
+import com.aniamadej.sublokator.testService.HttpRequestSenderService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
@@ -47,7 +49,7 @@ class MeterControllerE2ETests {
   private int port;
 
   @Autowired
-  private RequestSenderService requestSenderService;
+  private HttpRequestSenderService httpRequestSenderService;
 
   @Autowired
   private ReadingRepository readingRepository;
@@ -65,7 +67,13 @@ class MeterControllerE2ETests {
   private MessageSource messageSource;
 
   @Autowired
+  private MediumRepository mediumRepository;
+
+  @Autowired
   EntityManager entityManager;
+
+  @Autowired
+  private DataGeneratorService dataGeneratorService;
 
   private MediumConnection mediumConnection;
   private MediumMeter activeResettableMediumMeter;
@@ -74,12 +82,10 @@ class MeterControllerE2ETests {
   private MediumMeter inactiveNotResettableMediumMeter;
   private String urlPrefix;
 
-  private Medium medium;
-
   @BeforeAll
   public void init() {
 
-    Medium medium = new Medium("Prąd");
+    Medium medium = new Medium(dataGeneratorService.generateUniqueMediumName());
 
     urlPrefix = "http://localhost:" + port;
 
@@ -146,7 +152,7 @@ class MeterControllerE2ETests {
             + activeResettableMediumMeter
             .getId();
 
-    ResponseEntity<String> response = requestSenderService.sendGet(url);
+    ResponseEntity<String> response = httpRequestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#reactivateForm")).isEmpty();
@@ -267,7 +273,7 @@ class MeterControllerE2ETests {
         "http://localhost:" + port + Mappings.METER_PAGE + "/"
             + inactiveResettableMediumMeter.getId();
 
-    ResponseEntity<String> response = requestSenderService.sendGet(url);
+    ResponseEntity<String> response = httpRequestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#deactivateForm")).isEmpty();
@@ -329,7 +335,7 @@ class MeterControllerE2ETests {
         this.urlPrefix + Mappings.METER_PAGE + "/"
             + activeNotResettableMediumMeter.getId();
 
-    ResponseEntity<String> response = requestSenderService.sendGet(url);
+    ResponseEntity<String> response = httpRequestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#reactivateForm")).isEmpty();
@@ -365,7 +371,7 @@ class MeterControllerE2ETests {
         "http://localhost:" + port + Mappings.METER_PAGE + "/"
             + inactiveNotResettableMediumMeter.getId();
 
-    ResponseEntity<String> response = requestSenderService.sendGet(url);
+    ResponseEntity<String> response = httpRequestSenderService.sendGet(url);
 
     Document webPage = Jsoup.parse(response.getBody());
     assertThat(webPage.select("#deactivateForm")).isEmpty();
@@ -422,7 +428,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Long newReadingId =
         getLastInsertedReadingId(activeResettableMediumMeter).get();
@@ -470,7 +476,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", null);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -511,7 +517,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", "");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -551,7 +557,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", " ");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -592,7 +598,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", "wrong input");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -625,7 +631,7 @@ class MeterControllerE2ETests {
 
     MultiValueMap<String, String> formInputs = new LinkedMultiValueMap<>();
     ReadingBasics lastReading =
-        getLatestReading(activeResettableMediumMeter).get();
+       getLatestReading(activeResettableMediumMeter).get();
 
     Reading previousReading = new Reading();
     previousReading.setDate(lastReading.getDate().plusDays(1));
@@ -641,7 +647,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -691,7 +697,7 @@ class MeterControllerE2ETests {
 
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
 
     assertEquals(200, response.getStatusCodeValue());
@@ -732,7 +738,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -774,7 +780,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -816,7 +822,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -866,7 +872,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -921,7 +927,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", readingValue);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -963,7 +969,7 @@ class MeterControllerE2ETests {
     formInputs.add("reading", "-1");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     assertEquals(200, response.getStatusCodeValue());
 
@@ -997,7 +1003,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1038,7 +1044,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1070,7 +1076,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1103,7 +1109,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, deactivationDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1133,7 +1139,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, null);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1163,7 +1169,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, "");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1193,7 +1199,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, " ");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1223,7 +1229,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, "i'm not parsable date");
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1258,7 +1264,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, LocalDate.now().toString());
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1290,7 +1296,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.ACTIVE_UNTIL, LocalDate.now().toString());
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1317,7 +1323,7 @@ class MeterControllerE2ETests {
         urlPrefix + Mappings.METER_PAGE + "/" + meterId + Mappings.REACTIVATE;
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl);
+        httpRequestSenderService.sendPost(destinationUrl);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1352,7 +1358,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.RESET_DATE, resetDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1404,7 +1410,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.RESET_DATE, resetDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1444,7 +1450,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.RESET_DATE, resetDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1483,7 +1489,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.RESET_DATE, resetDate);
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1519,7 +1525,7 @@ class MeterControllerE2ETests {
     formInputs.add(Attributes.RESET_DATE, LocalDate.now().toString());
 
     ResponseEntity<String> response =
-        requestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, refererUrl, formInputs);
 
     Document webPage = Jsoup.parse(response.getBody());
 
@@ -1532,21 +1538,23 @@ class MeterControllerE2ETests {
   }
 
 
-  private Optional<Long> getLastInsertedReadingId(MediumMeter meter) {
-    return readingRepository
-        .findByMediumMeterId(meter.getId()).stream().map(
-            ReadingBasics::getId).max(Long::compareTo);
-  }
 
-  private Optional<ReadingBasics> getLatestReading(MediumMeter meter) {
-    return readingRepository.findByMediumMeterId(meter.getId()).stream()
-        .min((r1, r2) -> r2.getDate().compareTo(r1.getDate()));
-  }
 
   private String getMessage(String messageCode) {
     return messageSource
         .getMessage(messageCode, null,
             LocaleContextHolder.getLocale());
+  }
+
+  public Optional<Long> getLastInsertedReadingId(MediumMeter meter) {
+    return readingRepository
+        .findByMediumMeterId(meter.getId()).stream().map(
+            ReadingBasics::getId).max(Long::compareTo);
+  }
+
+  public Optional<ReadingBasics> getLatestReading(MediumMeter meter) {
+    return readingRepository.findByMediumMeterId(meter.getId()).stream()
+        .min((r1, r2) -> r2.getDate().compareTo(r1.getDate()));
   }
 
 

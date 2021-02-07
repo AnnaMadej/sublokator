@@ -17,7 +17,8 @@ import com.aniamadej.sublokator.repository.MediumMeterRepository;
 import com.aniamadej.sublokator.repository.MediumRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumConnectionService;
-import com.aniamadej.sublokator.testService.RequestSenderService;
+import com.aniamadej.sublokator.testService.DataGeneratorService;
+import com.aniamadej.sublokator.testService.HttpRequestSenderService;
 import com.aniamadej.sublokator.util.Attributes;
 import com.aniamadej.sublokator.util.Mappings;
 import java.time.LocalDate;
@@ -66,10 +67,13 @@ class ConnectionControllerE2ETests {
   private ReadingRepository readingRepository;
 
   @Autowired
-  private RequestSenderService requestSenderService;
+  private HttpRequestSenderService httpRequestSenderService;
 
   @Autowired
   private MediumRepository mediumRepository;
+
+  @Autowired
+  private DataGeneratorService dataGeneratorService;
 
   private String urlPrefix;
 
@@ -88,15 +92,11 @@ class ConnectionControllerE2ETests {
   public void init() {
     urlPrefix = "http://localhost:" + port;
 
-    medium1 = new Medium("gaz");
+    medium1 = new Medium(dataGeneratorService.generateUniqueMediumName());
+
     connection1 = new MediumConnection();
     connection1.setDescription("connection 1");
     connection1.setMedium(medium1);
-
-    medium2 = new Medium("prąd");
-    connection2 = new MediumConnection();
-    connection2.setDescription("connection 2");
-    connection2.setMedium(medium2);
 
     mediumMeter1 = new MediumMeter();
     mediumMeter1.setNumber("Active, Resettable");
@@ -131,6 +131,11 @@ class ConnectionControllerE2ETests {
     mediumMeter4 = mediumMeterRepository.save(mediumMeter4);
 
     connection1 = mediumMeter1.getMediumConnection();
+
+    medium2 = new Medium(dataGeneratorService.generateUniqueMediumName());
+    connection2 = new MediumConnection();
+    connection2.setDescription("connection 2");
+    connection2.setMedium(medium2);
     connection2 = mediumConnectionRepository.save(connection2);
 
 
@@ -152,7 +157,7 @@ class ConnectionControllerE2ETests {
         urlPrefix + Mappings.CONNECTION_PAGE + "/" + connection1.getId();
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     String responseBody = responseEntity.getBody();
 
@@ -202,7 +207,7 @@ class ConnectionControllerE2ETests {
         + connection1.getId() + Mappings.METERS_SUBPAGE;
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
@@ -218,8 +223,10 @@ class ConnectionControllerE2ETests {
         .contains(metersText);
 
     // medium name
-    assertThat(webPage.getElementById("mediumName").text().contains(connection1.getDescription()));
-    assertThat(webPage.getElementById("mediumName").text().contains(medium1.getName()));
+    assertThat(webPage.getElementById("mediumName").text()
+        .contains(connection1.getDescription()));
+    assertThat(webPage.getElementById("mediumName").text()
+        .contains(medium1.getName()));
 
     // number of list entries
     Element mediaList = webPage.getElementById("namesList");
@@ -277,7 +284,7 @@ class ConnectionControllerE2ETests {
         + connection1.getId() + Mappings.METERS_SUBPAGE + "?inactive=false";
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
@@ -294,8 +301,10 @@ class ConnectionControllerE2ETests {
 
 
     // medium name
-    assertThat(webPage.getElementById("mediumName").text().contains(connection1.getDescription()));
-    assertThat(webPage.getElementById("mediumName").text().contains(medium1.getName()));
+    assertThat(webPage.getElementById("mediumName").text()
+        .contains(connection1.getDescription()));
+    assertThat(webPage.getElementById("mediumName").text()
+        .contains(medium1.getName()));
 
     // number of list entries
     Element metersList = webPage.getElementById("namesList");
@@ -352,7 +361,7 @@ class ConnectionControllerE2ETests {
         + connection1.getId() + Mappings.METERS_SUBPAGE + "?inactive=true";
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     assertEquals(200, responseEntity.getStatusCodeValue());
     String responseBody = responseEntity.getBody();
@@ -369,10 +378,11 @@ class ConnectionControllerE2ETests {
 
     // medium name
     // medium name
-    assertThat(webPage.getElementById("mediumName").text().contains(connection1.getDescription()));
-    assertThat(webPage.getElementById("mediumName").text().contains(medium1.getName()));
+    assertThat(webPage.getElementById("mediumName").text()
+        .contains(connection1.getDescription()));
+    assertThat(webPage.getElementById("mediumName").text()
+        .contains(medium1.getName()));
 
-    System.out.println(responseBody);
     // number of list entries
     Element metersList = webPage.getElementById("namesList");
 
@@ -426,7 +436,7 @@ class ConnectionControllerE2ETests {
         + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendGet(destinationUrl);
+        httpRequestSenderService.sendGet(destinationUrl);
 
     String responseBody = responseEntity.getBody();
     Document webPage = Jsoup.parse(responseBody);
@@ -533,7 +543,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
     String responseBody = responseEntity.getBody();
@@ -618,7 +628,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
     String responseBody = responseEntity.getBody();
@@ -689,7 +699,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
@@ -756,7 +766,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
 
@@ -820,7 +830,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
 
@@ -886,7 +896,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
@@ -931,7 +941,7 @@ class ConnectionControllerE2ETests {
 
     // sending request
     ResponseEntity<String> responseEntity =
-        requestSenderService.sendPost(destinationUrl, formInputs);
+        httpRequestSenderService.sendPost(destinationUrl, formInputs);
 
 
     assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
@@ -956,4 +966,6 @@ class ConnectionControllerE2ETests {
         getMessage("page.addMeter"));
 
   }
+
+
 }
