@@ -188,7 +188,8 @@ class MediumConnectionServiceUnitTests {
     MediumConnection mediumConnection = argumentCaptor.getValue();
 
     assertEquals(connectionDescription, mediumConnection.getDescription());
-    assertEquals(mediumName, mediumConnection.getMedium().getName());
+    assertEquals(mediumName.toUpperCase().trim(),
+        mediumConnection.getMedium().getName());
   }
 
   @Test

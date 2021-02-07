@@ -73,6 +73,8 @@ public class MediumConnectionService {
           errorMessageSource.getMessage("error.blankName"));
     }
 
+    name = name.toUpperCase().trim();
+
     if (name.length() > 50) {
       throw new InputException(
           errorMessageSource.getMessage("error.tooLongName"));
@@ -92,7 +94,9 @@ public class MediumConnectionService {
     Medium medium = mediumRepository.findByName(name).orElse(new Medium(name));
 
     MediumConnection connection = new MediumConnection(medium, description);
+
     return mediumConnectionRepository.save(connection).getId();
+
   }
 
 

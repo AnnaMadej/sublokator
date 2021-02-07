@@ -265,7 +265,7 @@ class ConnectionsControllerE2ETests {
 
     Element mediumNameP = webPage.getElementById("mediumName");
 
-    assertThat(mediumNameP.text()).contains(mediumName);
+    assertThat(mediumNameP.text()).contains(mediumName.toUpperCase().trim());
     assertThat(mediumNameP.text()).contains(addedConnectionDescription);
 
 
@@ -307,7 +307,7 @@ class ConnectionsControllerE2ETests {
 
     Element mediumNameP = webPage.getElementById("mediumName");
 
-    assertThat(mediumNameP.text()).contains(mediumName);
+    assertThat(mediumNameP.text()).contains(mediumName.toUpperCase().trim());
     assertThat(mediumNameP.text()).contains(addedConnectionDescription);
 
 
