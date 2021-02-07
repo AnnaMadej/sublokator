@@ -20,7 +20,7 @@ public class ExceptionHandlingController {
     String errorMessage = e.getMessage();
 
     redirectAttrs.addFlashAttribute(Attributes.ERROR, errorMessage);
-    return "redirect:" + Mappings.MEDIA_PAGE;
+    return "redirect:" + Mappings.CONNECTIONS_PAGE;
   }
 
   @ExceptionHandler(InputException.class)

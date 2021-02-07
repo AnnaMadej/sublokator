@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.dto.ReadingBasics;
 import com.aniamadej.sublokator.dto.input.ReadingForm;
+import com.aniamadej.sublokator.model.Medium;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
@@ -53,13 +54,17 @@ class ReadingControllerE2ETests {
 
   private MediumMeter mediumMeter;
   private Reading reading;
+  private Medium medium;
 
   @BeforeAll
   public void init() {
 
+    Medium medium = new Medium("prąd");
+
     urlPrefix = "http://localhost:" + port;
 
     MediumConnection mediumConnection = new MediumConnection();
+    mediumConnection.setMedium(medium);
     mediumMeter = new MediumMeter();
     mediumMeter.setNumber("123");
     mediumMeter.setUnitName("kwh");

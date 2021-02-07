@@ -9,10 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.dto.NumberedName;
 import com.aniamadej.sublokator.dto.ReadingBasics;
+import com.aniamadej.sublokator.model.Medium;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.repository.MediumConnectionRepository;
 import com.aniamadej.sublokator.repository.MediumMeterRepository;
+import com.aniamadej.sublokator.repository.MediumRepository;
 import com.aniamadej.sublokator.repository.ReadingRepository;
 import com.aniamadej.sublokator.service.MediumConnectionService;
 import com.aniamadej.sublokator.testService.RequestSenderService;
@@ -39,7 +41,7 @@ import org.springframework.util.MultiValueMap;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MediumControllerE2ETests {
+class ConnectionControllerE2ETests {
 
   @LocalServerPort
   private int port;
@@ -66,24 +68,35 @@ class MediumControllerE2ETests {
   @Autowired
   private RequestSenderService requestSenderService;
 
+  @Autowired
+  private MediumRepository mediumRepository;
+
   private String urlPrefix;
 
-
-  private MediumConnection medium1;
-  private MediumConnection medium2;
+  private MediumConnection connection1;
+  private MediumConnection connection2;
 
   private MediumMeter mediumMeter1;
   private MediumMeter mediumMeter2;
   private MediumMeter mediumMeter3;
   private MediumMeter mediumMeter4;
 
+  private Medium medium1;
+  private Medium medium2;
+
   @BeforeAll
   public void init() {
-
     urlPrefix = "http://localhost:" + port;
 
-    medium1 = new MediumConnection();
-    medium1.setMediumName("Gaz");
+    medium1 = new Medium("gaz");
+    connection1 = new MediumConnection();
+    connection1.setDescription("connection 1");
+    connection1.setMedium(medium1);
+
+    medium2 = new Medium("prąd");
+    connection2 = new MediumConnection();
+    connection2.setDescription("connection 2");
+    connection2.setMedium(medium2);
 
     mediumMeter1 = new MediumMeter();
     mediumMeter1.setNumber("Active, Resettable");
@@ -107,19 +120,18 @@ class MediumControllerE2ETests {
     mediumMeter4.setActiveUntil(LocalDate.now());
     mediumMeter4.setResettable(false);
 
-    mediumMeter1.setMediumConnection(medium1);
-    mediumMeter2.setMediumConnection(medium1);
-    mediumMeter3.setMediumConnection(medium1);
-    mediumMeter4.setMediumConnection(medium1);
+    mediumMeter1.setMediumConnection(connection1);
+    mediumMeter2.setMediumConnection(connection1);
+    mediumMeter3.setMediumConnection(connection1);
+    mediumMeter4.setMediumConnection(connection1);
 
     mediumMeter1 = mediumMeterRepository.save(mediumMeter1);
     mediumMeter2 = mediumMeterRepository.save(mediumMeter2);
     mediumMeter3 = mediumMeterRepository.save(mediumMeter3);
     mediumMeter4 = mediumMeterRepository.save(mediumMeter4);
 
-    medium2 = new MediumConnection();
-    medium2.setMediumName("Prąd");
-    medium2 = mediumConnectionRepository.save(medium2);
+    connection1 = mediumMeter1.getMediumConnection();
+    connection2 = mediumConnectionRepository.save(connection2);
 
 
   }
@@ -137,7 +149,7 @@ class MediumControllerE2ETests {
       + "contain title of page, name of medium and link to medium meters page")
   public void httpGet_returnsMediumPage() {
     String destinationUrl =
-        urlPrefix + Mappings.MEDIUM_PAGE + "/" + medium1.getId();
+        urlPrefix + Mappings.CONNECTION_PAGE + "/" + connection1.getId();
 
     ResponseEntity<String> responseEntity =
         requestSenderService.sendGet(destinationUrl);
@@ -155,10 +167,16 @@ class MediumControllerE2ETests {
     assertThat(webPage.getElementById("pageHeader").text())
         .contains(mediaConnectionsText);
 
+    assertThat(webPage.getElementById("mediumName").text())
+        .contains(connection1.getDescription());
+
+    assertThat(webPage.getElementById("mediumName").text())
+        .contains(medium1.getName());
+
 
     // meters link
     String metersLinkText = getMessage("page.meters");
-    String metersLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
+    String metersLinkHref = Mappings.CONNECTION_PAGE + "/" + connection1.getId()
         + Mappings.METERS_SUBPAGE;
 
     Elements pageLinks = webPage.select("a");
@@ -168,7 +186,8 @@ class MediumControllerE2ETests {
 
     // medium name
     assertThat(
-        webPage.getElementsContainingOwnText(medium1.getMediumName()).size()
+        webPage.getElementsContainingOwnText(connection1.getDescription())
+            .size()
             == 1);
   }
 
@@ -179,8 +198,8 @@ class MediumControllerE2ETests {
       + "and addMeter button")
   public void httpGet_returnsDefaultMediumMetersList() {
 
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_SUBPAGE;
 
     ResponseEntity<String> responseEntity =
         requestSenderService.sendGet(destinationUrl);
@@ -198,11 +217,9 @@ class MediumControllerE2ETests {
     assertThat(webPage.getElementById("pageHeader").text())
         .contains(metersText);
 
-
     // medium name
-    assertEquals(1, webPage
-        .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
-        .size());
+    assertThat(webPage.getElementById("mediumName").text().contains(connection1.getDescription()));
+    assertThat(webPage.getElementById("mediumName").text().contains(medium1.getName()));
 
     // number of list entries
     Element mediaList = webPage.getElementById("namesList");
@@ -210,7 +227,8 @@ class MediumControllerE2ETests {
     Elements meters = mediaList.select("li");
 
     assertThat(meters.size()).isEqualTo(
-        mediumConnectionService.getMeterNumbers(medium1.getId(), null, false)
+        mediumConnectionService
+            .getMeterNumbers(connection1.getId(), null, false)
             .size());
 
     // proper meters links
@@ -238,8 +256,9 @@ class MediumControllerE2ETests {
 
     // meter add link
     String addMeterLinkText = getMessage("page.addMeter");
-    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
-        + Mappings.METERS_ADD_SUBPAGE;
+    String addMeterLinkHref =
+        Mappings.CONNECTION_PAGE + "/" + connection1.getId()
+            + Mappings.METERS_ADD_SUBPAGE;
 
     assertTrue(pageLinks.stream().anyMatch(
         l -> l.text().equals(addMeterLinkText) && l.attr("href")
@@ -254,8 +273,8 @@ class MediumControllerE2ETests {
           + "and addMeter button")
   public void httpGet_returnsActiveMediumMetersList() {
 
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=false";
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_SUBPAGE + "?inactive=false";
 
     ResponseEntity<String> responseEntity =
         requestSenderService.sendGet(destinationUrl);
@@ -275,9 +294,8 @@ class MediumControllerE2ETests {
 
 
     // medium name
-    assertEquals(1, webPage
-        .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
-        .size());
+    assertThat(webPage.getElementById("mediumName").text().contains(connection1.getDescription()));
+    assertThat(webPage.getElementById("mediumName").text().contains(medium1.getName()));
 
     // number of list entries
     Element metersList = webPage.getElementById("namesList");
@@ -285,7 +303,8 @@ class MediumControllerE2ETests {
     Elements meters = metersList.select("li");
 
     assertThat(meters.size()).isEqualTo(
-        mediumConnectionService.getMeterNumbers(medium1.getId(), null, false)
+        mediumConnectionService
+            .getMeterNumbers(connection1.getId(), null, false)
             .size());
 
     // proper meters links
@@ -313,8 +332,9 @@ class MediumControllerE2ETests {
 
     // meter add link
     String addMeterLinkText = getMessage("page.addMeter");
-    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
-        + Mappings.METERS_ADD_SUBPAGE;
+    String addMeterLinkHref =
+        Mappings.CONNECTION_PAGE + "/" + connection1.getId()
+            + Mappings.METERS_ADD_SUBPAGE;
 
     assertTrue(pageLinks.stream().anyMatch(
         l -> l.text().equals(addMeterLinkText) && l.attr("href")
@@ -328,8 +348,8 @@ class MediumControllerE2ETests {
           + "and list of inactive medium meters , showActive button "
           + "and addMeter button")
   public void httpGet_returnsInactiveMediumMetersList() {
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_SUBPAGE + "?inactive=true";
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_SUBPAGE + "?inactive=true";
 
     ResponseEntity<String> responseEntity =
         requestSenderService.sendGet(destinationUrl);
@@ -348,9 +368,9 @@ class MediumControllerE2ETests {
 
 
     // medium name
-    assertEquals(1, webPage
-        .getElementsContainingOwnText("[" + medium1.getMediumName() + "]")
-        .size());
+    // medium name
+    assertThat(webPage.getElementById("mediumName").text().contains(connection1.getDescription()));
+    assertThat(webPage.getElementById("mediumName").text().contains(medium1.getName()));
 
     System.out.println(responseBody);
     // number of list entries
@@ -359,7 +379,7 @@ class MediumControllerE2ETests {
     Elements meters = metersList.select("li");
 
     assertThat(meters.size()).isEqualTo(
-        mediumConnectionService.getMeterNumbers(medium1.getId(), null, true)
+        mediumConnectionService.getMeterNumbers(connection1.getId(), null, true)
             .size());
 
     // proper meters links
@@ -387,8 +407,9 @@ class MediumControllerE2ETests {
 
     // meter add link
     String addMeterLinkText = getMessage("page.addMeter");
-    String addMeterLinkHref = Mappings.MEDIUM_PAGE + "/" + medium1.getId()
-        + Mappings.METERS_ADD_SUBPAGE;
+    String addMeterLinkHref =
+        Mappings.CONNECTION_PAGE + "/" + connection1.getId()
+            + Mappings.METERS_ADD_SUBPAGE;
 
     assertTrue(pageLinks.stream().anyMatch(
         l -> l.text().equals(addMeterLinkText) && l.attr("href")
@@ -401,8 +422,8 @@ class MediumControllerE2ETests {
           + "page title, and meter adding form with proper fields and button")
   public void httpGet_showsMetersAddingForm() {
 
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     ResponseEntity<String> responseEntity =
         requestSenderService.sendGet(destinationUrl);
@@ -412,8 +433,8 @@ class MediumControllerE2ETests {
 
     Element form = webPage.getElementById(Attributes.MEDIUM_METER_FORM);
 
-    assertEquals(form.attr("action"), Mappings.MEDIUM_PAGE
-        + "/" + medium1.getId() + Mappings.METERS_ADD_SUBPAGE);
+    assertEquals(form.attr("action"), Mappings.CONNECTION_PAGE
+        + "/" + connection1.getId() + Mappings.METERS_ADD_SUBPAGE);
     assertEquals(form.attr("method"), "post");
 
     Elements labels = form.select("div > label");
@@ -486,14 +507,14 @@ class MediumControllerE2ETests {
   public void httpPost_addsMediumMeterToConnectionWithMeters() {
     int initialNumberOfMeters =
         mediumConnectionRepository
-            .fetchActiveMeterNumbers(medium1.getId(), null)
+            .fetchActiveMeterNumbers(connection1.getId(), null)
             .getSize() + mediumConnectionRepository
-            .fetchInactiveMeterNumbers(medium1.getId(), null)
+            .fetchInactiveMeterNumbers(connection1.getId(), null)
             .getSize();
 
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
 
     String meterNumber = "123";
@@ -520,16 +541,17 @@ class MediumControllerE2ETests {
     // number of meters increased after post
     long resultNumberOfMeters =
         mediumConnectionRepository
-            .fetchActiveMeterNumbers(medium1.getId(), null)
+            .fetchActiveMeterNumbers(connection1.getId(), null)
             .getSize() + mediumConnectionRepository
-            .fetchInactiveMeterNumbers(medium1.getId(), null)
+            .fetchInactiveMeterNumbers(connection1.getId(), null)
             .getSize();
 
     assertEquals(resultNumberOfMeters, initialNumberOfMeters + 1);
 
     // proper medium meter added to db
     Long addedMediumMeterId =
-        mediumConnectionRepository.fetchMeterNumbers(medium1.getId()).stream()
+        mediumConnectionRepository.fetchMeterNumbers(connection1.getId())
+            .stream()
             .map(NumberedName::getId).max(Long::compareTo).get();
 
     MediumMeter addedMediumMeter =
@@ -570,14 +592,14 @@ class MediumControllerE2ETests {
   public void httpPost_addsMediumMeterToConnectionWithNoMeters() {
     int initialNumberOfMeters =
         mediumConnectionRepository
-            .fetchActiveMeterNumbers(medium2.getId(), null)
+            .fetchActiveMeterNumbers(connection2.getId(), null)
             .getSize() + mediumConnectionRepository
-            .fetchInactiveMeterNumbers(medium2.getId(), null)
+            .fetchInactiveMeterNumbers(connection2.getId(), null)
             .getSize();
 
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium2.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection2.getId() + Mappings.METERS_ADD_SUBPAGE;
 
 
     String meterNumber = "123";
@@ -604,16 +626,17 @@ class MediumControllerE2ETests {
     // number of meters increased after post
     long resultNumberOfMeters =
         mediumConnectionRepository
-            .fetchActiveMeterNumbers(medium2.getId(), null)
+            .fetchActiveMeterNumbers(connection2.getId(), null)
             .getSize() + mediumConnectionRepository
-            .fetchInactiveMeterNumbers(medium2.getId(), null)
+            .fetchInactiveMeterNumbers(connection2.getId(), null)
             .getSize();
 
     assertEquals(resultNumberOfMeters, initialNumberOfMeters + 1);
 
     // proper medium meter added to db
     Long addedMediumMeterId =
-        mediumConnectionRepository.fetchMeterNumbers(medium2.getId()).stream()
+        mediumConnectionRepository.fetchMeterNumbers(connection2.getId())
+            .stream()
             .map(NumberedName::getId).max(Long::compareTo).get();
 
     MediumMeter addedMediumMeter =
@@ -654,8 +677,8 @@ class MediumControllerE2ETests {
           + "meter form (inputs are null) should show same page with 3 errors")
   public void httpPost_invalidFormNullInputs() {
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
 
     MultiValueMap<String, String> formInputs =
@@ -711,8 +734,8 @@ class MediumControllerE2ETests {
           + "meter form (inputs are blank) should show same page with 3 errors")
   public void httpPost_invalidFormBlankInputs() {
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
@@ -776,8 +799,8 @@ class MediumControllerE2ETests {
           + "meter form (inputs are empty) should show same page with 3 errors")
   public void httpPost_invalidFormEmptyInputs() {
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
@@ -841,8 +864,8 @@ class MediumControllerE2ETests {
           + " with 1 error")
   public void httpPost_invalidFormWrongDate() {
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();
@@ -892,8 +915,8 @@ class MediumControllerE2ETests {
           + "page with 1 error")
   public void httpPost_invalidFormWrongReadingFormat() {
     // request data
-    String destinationUrl = urlPrefix + Mappings.MEDIUM_PAGE + "/"
-        + medium1.getId() + Mappings.METERS_ADD_SUBPAGE;
+    String destinationUrl = urlPrefix + Mappings.CONNECTION_PAGE + "/"
+        + connection1.getId() + Mappings.METERS_ADD_SUBPAGE;
 
     MultiValueMap<String, String> formInputs =
         new LinkedMultiValueMap<>();

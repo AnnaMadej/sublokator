@@ -24,7 +24,7 @@ public class MediumConnection {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
-  private String mediumName;
+  private String description;
 
   @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "mediumConnection")
   private List<MediumMeter> mediumMeters = new ArrayList<>();
@@ -34,8 +34,8 @@ public class MediumConnection {
   private Medium medium;
 
   // == constructors ==
-  public MediumConnection(String mediumName) {
-    this.mediumName = mediumName;
+  public MediumConnection(String description) {
+    this.description = description;
   }
 
   // == public methods ==

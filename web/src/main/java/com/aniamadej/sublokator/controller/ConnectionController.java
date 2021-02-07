@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping(Mappings.MEDIUM_PAGE)
-public class MediumController {
+@RequestMapping(Mappings.CONNECTION_PAGE)
+public class ConnectionController {
 
   private final MediumConnectionService mediumConnectionService;
 
   @Autowired
-  MediumController(
+  ConnectionController(
       MediumConnectionService mediumConnectionService) {
     this.mediumConnectionService = mediumConnectionService;
   }
@@ -72,7 +72,7 @@ public class MediumController {
     }
     mediumConnectionService.addMediumMeter(mediumId, mediumMeterForm);
 
-    return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId
+    return "redirect:" + Mappings.CONNECTION_PAGE + "/" + mediumId
         + Mappings.METERS_SUBPAGE;
   }
 

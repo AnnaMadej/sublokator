@@ -154,7 +154,7 @@ class MediumConnectionServiceUnitTests {
         .save(argumentCaptor.capture());
     MediumConnection mediumConnection = argumentCaptor.getValue();
 
-    assertEquals(mediumName, mediumConnection.getMediumName());
+    assertEquals(mediumName, mediumConnection.getDescription());
   }
 
   @Test
@@ -423,7 +423,7 @@ class MediumConnectionServiceUnitTests {
   private MediumConnection getMediumConnection() {
     MediumConnection mediumConnection = new MediumConnection();
     mediumConnection.setId(1L);
-    mediumConnection.setMediumName("medium name");
+    mediumConnection.setDescription("medium name");
     return mediumConnection;
   }
 

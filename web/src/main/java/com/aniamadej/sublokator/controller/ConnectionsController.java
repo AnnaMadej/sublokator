@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping(Mappings.MEDIA_PAGE)
-public class MediaController {
+@RequestMapping(Mappings.CONNECTIONS_PAGE)
+public class ConnectionsController {
 
   private final MediumConnectionService mediumConnectionService;
 
   @Autowired
-  MediaController(
+  ConnectionsController(
       MediumConnectionService mediumConnectionService) {
     this.mediumConnectionService = mediumConnectionService;
   }
@@ -29,12 +29,13 @@ public class MediaController {
   public String showMediaConnections(Model model) {
     model
         .addAttribute(Attributes.NAMES, mediumConnectionService.getNamesList());
-    model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.MEDIUM_PAGE);
+    model.addAttribute(Attributes.REDIRECT_PAGE, Mappings.CONNECTION_PAGE);
     return Views.MEDIA_CONNECTIONS;
   }
 
   @GetMapping(Mappings.ADD)
   public String addNewMedium() {
+
     return Views.ADD_MEDIUM;
   }
 
@@ -43,7 +44,7 @@ public class MediaController {
       @RequestParam(name = Attributes.MEDIUM_NAME) String mediumName,
       Model model) {
     Long mediumId = mediumConnectionService.save(mediumName);
-    return "redirect:" + Mappings.MEDIUM_PAGE + "/" + mediumId;
+    return "redirect:" + Mappings.CONNECTION_PAGE + "/" + mediumId;
   }
 
 

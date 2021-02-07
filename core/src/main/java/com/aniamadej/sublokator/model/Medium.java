@@ -22,4 +22,7 @@ class Medium {
 
   private String name;
 
+  public Medium(String name) {
+    this.name = name;
+  }
 }

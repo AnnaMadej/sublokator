@@ -74,7 +74,7 @@ public class MediumConnectionService {
     }
 
     MediumConnection connection = new MediumConnection();
-    connection.setMediumName(name);
+    connection.setDescription(name);
     return mediumConnectionRepository.save(connection).getId();
   }
 

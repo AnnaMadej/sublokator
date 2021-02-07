@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.aniamadej.sublokator.ErrorMessageSource;
 import com.aniamadej.sublokator.dto.ReadingBasics;
+import com.aniamadej.sublokator.model.Medium;
 import com.aniamadej.sublokator.model.MediumConnection;
 import com.aniamadej.sublokator.model.MediumMeter;
 import com.aniamadej.sublokator.model.Reading;
@@ -73,13 +74,18 @@ class MeterControllerE2ETests {
   private MediumMeter inactiveNotResettableMediumMeter;
   private String urlPrefix;
 
+  private Medium medium;
+
   @BeforeAll
   public void init() {
+
+    Medium medium = new Medium("Prąd");
 
     urlPrefix = "http://localhost:" + port;
 
 
     mediumConnection = new MediumConnection("medium");
+    mediumConnection.setMedium(medium);
 
     activeResettableMediumMeter = new MediumMeter();
     activeResettableMediumMeter.setNumber("activeResettable");
