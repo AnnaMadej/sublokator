@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import lombok.Data;
@@ -26,6 +28,10 @@ public class MediumConnection {
 
   @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "mediumConnection")
   private List<MediumMeter> mediumMeters = new ArrayList<>();
+
+  @ManyToOne(cascade = CascadeType.PERSIST)
+  @JoinColumn(name = "medium_id")
+  private Medium medium;
 
   // == constructors ==
   public MediumConnection(String mediumName) {
