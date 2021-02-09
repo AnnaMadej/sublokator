@@ -1,3 +1,4 @@
+drop table if exists medium_connections;
 CREATE TABLE medium_connections (
   id bigint AUTO_INCREMENT NOT NULL,
   description varchar(255) DEFAULT NULL,

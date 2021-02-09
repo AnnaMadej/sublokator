@@ -1,3 +1,4 @@
+drop table if exists medium_meters;
 create table medium_meters(
   id bigint AUTO_INCREMENT NOT NULL,
   number varchar(255) DEFAULT NULL,

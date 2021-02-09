@@ -1,3 +1,5 @@
+drop table if exists readings;
+
 CREATE TABLE readings (
   id bigint AUTO_INCREMENT NOT NULL,
   date date DEFAULT NULL,
